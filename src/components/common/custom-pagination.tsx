@@ -33,24 +33,34 @@ const CustomPagination: React.FC<CustomPaginationProps> = ({
   onPageChange,
   onRecordsPerPageChange,
 }) => {
-  const startRecord = (currentPage - 1) * recordsPerPage + 1;
+  const startRecord =
+    totalRecords === 0 ? 0 : (currentPage - 1) * recordsPerPage + 1;
   const endRecord = Math.min(currentPage * recordsPerPage, totalRecords);
+
+  // Ensure current page is valid
+  React.useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      onPageChange(totalPages);
+    }
+  }, [currentPage, totalPages, onPageChange]);
 
   return (
     <div className="flex flex-wrap justify-between items-center mt-4 gap-4">
       {/* Number of Records */}
-      <div className="text-sm text-gray-600">
-        Showing {startRecord} of {totalPages} pages
+      <div className="text-sm text-muted-foreground">
+        Showing <span className="font-medium">{startRecord}</span> to{" "}
+        <span className="font-medium">{endRecord}</span> of{" "}
+        <span className="font-medium">{totalRecords}</span> records
       </div>
 
       {/* Records Per Page Selector */}
       <div className="flex items-center gap-2">
-        <span className="text-sm text-gray-600">Records per page:</span>
+        <span className="text-sm text-muted-foreground">Records per page:</span>
         <Select
           value={recordsPerPage.toString()}
           onValueChange={(value) => onRecordsPerPageChange(Number(value))}
         >
-          <SelectTrigger className="w-[100px]">
+          <SelectTrigger className="w-[70px] h-8">
             <SelectValue placeholder={`${recordsPerPage}`} />
           </SelectTrigger>
           <SelectContent>
@@ -58,48 +68,118 @@ const CustomPagination: React.FC<CustomPaginationProps> = ({
             <SelectItem value="10">10</SelectItem>
             <SelectItem value="20">20</SelectItem>
             <SelectItem value="50">50</SelectItem>
+            <SelectItem value="100">100</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      {/* ShadCN Pagination */}
-      <Pagination>
-        <PaginationContent>
-          {/* Previous Button */}
-          <PaginationItem>
-            {currentPage !== 1 ? (
-              <PaginationPrevious onClick={() => onPageChange(currentPage - 1)}>
-                Previous
-              </PaginationPrevious>
-            ) : (
-              <PaginationPrevious isActive={false}>Previous</PaginationPrevious>
-            )}
-          </PaginationItem>
-
-          {/* Page Numbers */}
-          {Array.from({ length: totalPages }, (_, index) => (
-            <PaginationItem key={index}>
-              <PaginationLink
-                isActive={currentPage === index + 1}
-                onClick={() => onPageChange(index + 1)}
-              >
-                {index + 1}
-              </PaginationLink>
+      {totalPages > 0 && (
+        <Pagination>
+          <PaginationContent>
+            {/* Previous Button */}
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => currentPage > 1 && onPageChange(currentPage - 1)}
+                className={
+                  currentPage === 1
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
+              />
             </PaginationItem>
-          ))}
 
-          {/* Next Button */}
-          <PaginationItem>
-            {currentPage < totalPages ? (
-              <PaginationNext onClick={() => onPageChange(currentPage + 1)}>
-                Next
-              </PaginationNext>
+            {/* Page Numbers */}
+            {totalPages <= 7 ? (
+              // If 7 or fewer pages, show all page numbers
+              Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      isActive={currentPage === page}
+                      onClick={() => onPageChange(page)}
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                )
+              )
             ) : (
-              <PaginationNext isActive={false}>Next</PaginationNext>
+              // If more than 7 pages, show a more compact view with ellipsis
+              <>
+                {/* Always show first page */}
+                <PaginationItem>
+                  <PaginationLink
+                    isActive={currentPage === 1}
+                    onClick={() => onPageChange(1)}
+                  >
+                    1
+                  </PaginationLink>
+                </PaginationItem>
+
+                {/* Show ellipsis if not on first few pages */}
+                {currentPage > 3 && (
+                  <PaginationItem>
+                    <span className="px-4">...</span>
+                  </PaginationItem>
+                )}
+
+                {/* Show pages around current page */}
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(
+                    (page) =>
+                      page !== 1 &&
+                      page !== totalPages &&
+                      (Math.abs(page - currentPage) < 2 ||
+                        (currentPage <= 3 && page <= 5) ||
+                        (currentPage >= totalPages - 2 &&
+                          page >= totalPages - 4))
+                  )
+                  .map((page) => (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        isActive={currentPage === page}
+                        onClick={() => onPageChange(page)}
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+
+                {/* Show ellipsis if not on last few pages */}
+                {currentPage < totalPages - 2 && (
+                  <PaginationItem>
+                    <span className="px-4">...</span>
+                  </PaginationItem>
+                )}
+
+                {/* Always show last page */}
+                <PaginationItem>
+                  <PaginationLink
+                    isActive={currentPage === totalPages}
+                    onClick={() => onPageChange(totalPages)}
+                  >
+                    {totalPages}
+                  </PaginationLink>
+                </PaginationItem>
+              </>
             )}
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+
+            {/* Next Button */}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() =>
+                  currentPage < totalPages && onPageChange(currentPage + 1)
+                }
+                className={
+                  currentPage >= totalPages
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
     </div>
   );
 };

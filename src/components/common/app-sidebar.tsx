@@ -13,6 +13,7 @@ import {
   PieChart,
   Settings2,
   SquareTerminal,
+  MessageCircle,
   Icon,
 } from "lucide-react";
 
@@ -57,22 +58,23 @@ const initialData = {
           url: "/categories",
           icon: UsersRound,
         },
+        {
+          name: "Site Settings",
+          url: "/site",
+          icon: Settings2,
+        },
+        {
+          name: "Training",
+          url: "/trainings",
+          icon: UsersRound,
+        },
+        {
+          name: "Messages",
+          url: "/messages",
+          icon: MessageCircle,
+        },
       ],
-      // navMain: [
-      //   {
-      //     title: "Masters",
-      //     url: "#",
-      //     icon: SquareTerminal,
-      //     isActive: true,
-      //     items: [
-      //       { title: "Country", url: "/countries" },
-      //       { title: "State", url: "./states" },
-      //       { title: "City", url: "/cities" },
-      //       { title: "Sector", url: "/sectors" },
-      //       { title: "Branches", url: "/branches" },
-      //     ],
-      //   },
-      // ],
+      navMain: [], // Adding empty navMain array
     },
     admin: {
       projects: [],
@@ -120,11 +122,11 @@ const initialData = {
   ],
 };
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [data, setData] = React.useState({
     ...initialData,
-    projects: [],
-    navMain: [],
+    projects: [] as typeof initialData.roles.super_admin.projects,
+    navMain: [] as typeof initialData.roles.admin.navMain,
   });
 
   React.useEffect(() => {
@@ -132,8 +134,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
-        parsedUser.avatarName = parsedUser.name.charAt(0).toUpperCase();
-        const role = parsedUser.role || "admin";
+        parsedUser.avatarName = parsedUser.name?.charAt(0).toUpperCase() || 'U';
+        
+        // Default to admin if no role is specified, then fallback to super_admin for safety
+        let role = (parsedUser.role as keyof typeof initialData.roles) || "admin";
+        
+        // If role doesn't exist in our initialData, default to super_admin
+        if (!initialData.roles[role]) {
+          role = "super_admin";
+        }
+        
         const roleData = initialData.roles[role];
 
         setData((prevData) => ({
@@ -144,7 +154,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         }));
       } catch (error) {
         console.error("Failed to parse user from localStorage", error);
+        // If there's an error, set default projects for navigation
+        setData((prevData) => ({
+          ...prevData,
+          projects: initialData.roles.super_admin.projects,
+          navMain: initialData.roles.super_admin.navMain,
+        }));
       }
+    } else {
+      // No user in localStorage, show default navigation
+      setData((prevData) => ({
+        ...prevData,
+        projects: initialData.roles.super_admin.projects,
+        navMain: initialData.roles.super_admin.navMain,
+      }));
     }
   }, []);
 
@@ -177,3 +200,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     </Sidebar>
   );
 }
+
+export { AppSidebar };

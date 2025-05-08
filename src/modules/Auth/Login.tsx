@@ -126,7 +126,7 @@ const Login = () => {
       localStorage.setItem("refreshToken", data.accesstoken);
       localStorage.setItem("user", JSON.stringify(data.user));
       // queryClient.invalidateQueries(...) // Consider invalidating relevant queries
-      navigate("/dashboard");
+      navigate("/users");
       toast.success("Login successful!");
     },
     onError: (error: unknown) => {

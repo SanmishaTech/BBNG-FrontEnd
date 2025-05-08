@@ -85,9 +85,11 @@ const CreateLocation: React.FC<CreateLocationProps> = ({ isOpen, onClose }) => {
           <DialogTitle>Add Location</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-          <div className="grid gap-4">
+          <div className="grid gap-4 gap-y-6 mt-4">
             <div className="relative">
-              <Label htmlFor="zoneId">Zone</Label>
+              <Label htmlFor="zoneId" className="mb-2">
+                Zone
+              </Label>
               <Select onValueChange={(value) => setValue("zoneId", value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a zone" />
@@ -97,7 +99,11 @@ const CreateLocation: React.FC<CreateLocationProps> = ({ isOpen, onClose }) => {
                     <SelectItem key={zone.id} value={zone.id.toString()}>
                       {zone.name}
                     </SelectItem>
-                  ))}
+                  )) || (
+                    <SelectItem value="no-zones" disabled>
+                      No zones available
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
               {errors.zoneId && (
@@ -107,8 +113,10 @@ const CreateLocation: React.FC<CreateLocationProps> = ({ isOpen, onClose }) => {
               )}
             </div>
 
-            <div className="relative">
-              <Label htmlFor="location">Location Name</Label>
+            <div className="relative ">
+              <Label htmlFor="location" className="mb-2">
+                Location Name
+              </Label>
               <Input
                 id="location"
                 placeholder="Enter Location Name..."
