@@ -73,6 +73,16 @@ const initialData = {
           url: "/messages",
           icon: MessageCircle,
         },
+        {
+          name: "Chapters",
+          url: "/chapters",
+          icon: UsersRound,
+        },
+        {
+          name: "Members",
+          url: "/members",
+          icon: PieChart,
+        },
       ],
       navMain: [], // Adding empty navMain array
     },
@@ -134,16 +144,17 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
-        parsedUser.avatarName = parsedUser.name?.charAt(0).toUpperCase() || 'U';
-        
+        parsedUser.avatarName = parsedUser.name?.charAt(0).toUpperCase() || "U";
+
         // Default to admin if no role is specified, then fallback to super_admin for safety
-        let role = (parsedUser.role as keyof typeof initialData.roles) || "admin";
-        
+        let role =
+          (parsedUser.role as keyof typeof initialData.roles) || "admin";
+
         // If role doesn't exist in our initialData, default to super_admin
         if (!initialData.roles[role]) {
           role = "super_admin";
         }
-        
+
         const roleData = initialData.roles[role];
 
         setData((prevData) => ({

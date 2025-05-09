@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { LogOut, UserPen, ChevronsUpDown } from "lucide-react";
+import { LogOut, UserPen, ChevronsUpDown, KeySquare } from "lucide-react";
 import ConfirmDialog from "@/components/common/confirm-dialog";
 import { useNavigate } from "react-router-dom";
 import {
@@ -93,6 +93,12 @@ export function NavUser({
                 >
                   <UserPen className="mr-2 h-4 w-4" />
                   Update Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => navigate("/forgot-password")}
+                  className="cursor-pointer"
+                >
+                  <KeySquare /> Change Password
                 </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />

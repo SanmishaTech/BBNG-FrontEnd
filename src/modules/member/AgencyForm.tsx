@@ -400,7 +400,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
   }
 
   return (
-    <Card className="mx-auto my-8 max-w-4xl">
+    <Card className="mx-auto my-8 ">
       {" "}
       {/* Added max-width for better layout */}
       <CardHeader>
@@ -452,7 +452,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                         onValueChange={(v) => field.onChange(Number(v))}
                         disabled={loadingChapters}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select a chapter" />
                         </SelectTrigger>
                         <SelectContent>
@@ -482,7 +482,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                         value={field.value}
                         onValueChange={field.onChange}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select business category" />
                         </SelectTrigger>
                         <SelectContent>
@@ -523,7 +523,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                         value={field.value || ""}
                         onValueChange={field.onChange}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select gender" />
                         </SelectTrigger>
                         <SelectContent>

@@ -181,7 +181,9 @@ const createMemberSchema = (mode: "create" | "edit") => {
 const IMAGE_BASE_URL = "http://localhost:3000"; // Replace with your actual image base URL
 
 export default function MemberForm({ mode }: MemberFormProps) {
-  const { id } = useParams<{ id: string }>();
+  // const { id } = useParams<{ id: string }>();
+  const id = JSON.parse(localStorage.getItem("user"))?.id;
+  console.log("ID from localStorage:", id);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -335,7 +337,8 @@ export default function MemberForm({ mode }: MemberFormProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["members"] });
       toast.success("Member created successfully");
-      navigate("/members");
+
+      // navigate("/members");
     },
     onError: (error: any) => {
       Validate(error, form.setError);
@@ -366,7 +369,8 @@ export default function MemberForm({ mode }: MemberFormProps) {
       queryClient.invalidateQueries({ queryKey: ["members"] });
       queryClient.invalidateQueries({ queryKey: ["member", id] });
       toast.success("Member updated successfully");
-      navigate("/members");
+      window.location.reload();
+      // navigate("/members");
     },
     onError: (error: any) => {
       Validate(error, form.setError);
@@ -400,17 +404,17 @@ export default function MemberForm({ mode }: MemberFormProps) {
   }
 
   return (
-    <Card className="mx-auto my-8 max-w-4xl">
+    <Card className="mx-auto my-8 ">
       {" "}
       {/* Added max-width for better layout */}
       <CardHeader>
         <CardTitle>
-          {mode === "create" ? "Create New Member" : "Edit Member"}
+          {mode === "create" ? "Create New Profile" : "Edit Profile"}
         </CardTitle>
         <CardDescription>
           {mode === "create"
             ? "Fill out the form to create a member profile."
-            : "Update the member details below."}
+            : "Update the Profile details below."}
         </CardDescription>
       </CardHeader>
       <Form {...form}>
@@ -452,7 +456,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                         onValueChange={(v) => field.onChange(Number(v))}
                         disabled={loadingChapters}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select a chapter" />
                         </SelectTrigger>
                         <SelectContent>
@@ -482,7 +486,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                         value={field.value}
                         onValueChange={field.onChange}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select business category" />
                         </SelectTrigger>
                         <SelectContent>
@@ -523,7 +527,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                         value={field.value || ""}
                         onValueChange={field.onChange}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select gender" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1107,7 +1111,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate("/members")}
+              // onClick={() => navigate("/members")}
               disabled={isLoading}
             >
               Cancel
@@ -1120,7 +1124,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                 ? "Saving..."
                 : mode === "create"
                 ? "Create Member"
-                : "Update Member"}
+                : "Update Profile"}
             </Button>
           </CardFooter>
         </form>

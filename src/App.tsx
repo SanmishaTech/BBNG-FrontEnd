@@ -22,6 +22,7 @@ import EditChapters from "./modules/chapter/EditAgency";
 import Members from "./modules/member/AgencyList";
 import CreateMembers from "./modules/member/CreateAgency";
 import EditMembers from "./modules/member/EditAgency";
+import Profile from "./modules/profile/EditAgency";
 
 import { Toaster } from "sonner";
 import "./App.css";
@@ -145,6 +146,22 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <EditMembers />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reset-password/:token"
+              element={
+                <ProtectedRoute>
+                  <ResetPassword />
                 </ProtectedRoute>
               }
             />
