@@ -58,19 +58,6 @@ const chapterSchema = z
     meetingday: z.string().min(1, "Meeting day is required"),
     status: z.boolean(),
     venue: z.string().min(1, "Venue is required"),
-    monthlyVenue: z.number().int().nonnegative(),
-    quarterlyVenue: z.number().int().nonnegative(),
-    halfYearlyVenue: z.number().int().nonnegative(),
-    yearlyVenue: z.number().int().nonnegative(),
-    earlybirdVenue: z.number().int().nonnegative(),
-    quarterlyHo: z.number().int().nonnegative(),
-    halfyearlyHo: z.number().int().nonnegative(),
-    yearlyHo: z.number().int().nonnegative(),
-    earlybirdHo: z.number().int().nonnegative(),
-    bankopeningbalance: z.number().int(),
-    bankclosingbalance: z.number().int(),
-    cashopeningbalance: z.number().int(),
-    cashclosingbalance: z.number().int(),
   })
   .superRefine((data, ctx) => {
     // If a zone is selected, require a location
@@ -134,19 +121,6 @@ export default function ChapterForm({ mode }: { mode: "create" | "edit" }) {
       meetingday: "",
       status: true,
       venue: "",
-      monthlyVenue: 0,
-      quarterlyVenue: 0,
-      halfYearlyVenue: 0,
-      yearlyVenue: 0,
-      earlybirdVenue: 0,
-      quarterlyHo: 0,
-      halfyearlyHo: 0,
-      yearlyHo: 0,
-      earlybirdHo: 0,
-      bankopeningbalance: 0,
-      bankclosingbalance: 0,
-      cashopeningbalance: 0,
-      cashclosingbalance: 0,
     },
   });
 
@@ -160,67 +134,72 @@ export default function ChapterForm({ mode }: { mode: "create" | "edit" }) {
     queryKey: ["chapter", id],
     queryFn: async () => {
       const apiData = await get(`/chapters/${id}`);
-      reset({
-        ...apiData,
-        date: apiData.date ? new Date(apiData.date) : new Date(),
-        zoneId: apiData.zoneId ?? 0,
-        locationId: apiData.locationId ?? null,
-      });
+      // Wait for zones and locations to be loaded before setting form values
+      if (!loadingZones && !loadingLocations) {
+        reset({
+          ...apiData,
+          date: apiData.date ? new Date(apiData.date) : new Date(),
+          zoneId: apiData.zoneId ?? 0,
+          locationId: apiData.locationId ?? null,
+        });
+      }
       return apiData;
     },
     enabled: mode === "edit",
   });
 
-  // ------------------------------------------
-  // 5) Sync + Clear Location When Zone Changes
-  // ------------------------------------------
+  // Re-run form reset when dependencies are loaded
+  useEffect(() => {
+    if (mode === "edit" && !loadingZones && !loadingLocations && id) {
+      get(`/chapters/${id}`).then((apiData) => {
+        reset({
+          ...apiData,
+          date: apiData.date ? new Date(apiData.date) : new Date(),
+          zoneId: apiData.zoneId ?? 0,
+          locationId: apiData.locationId ?? null,
+        });
+      });
+    }
+  }, [mode, loadingZones, loadingLocations, id, reset]);
+
   // ------------------------------------------
   // 5) Sync + Clear Location When Zone Changes
   // ------------------------------------------
   useEffect(() => {
     const currentFormLocationId = getValues("locationId");
 
-    // If no zone is selected, locationId should be null.
+    // Skip all checks if we're still loading locations
+    if (loadingLocations) {
+      return;
+    }
+
+    // If no zone is selected, locationId should be null
     if (!selectedZoneId) {
       if (currentFormLocationId !== null) {
-        // Only set if it's not already null
         setValue("locationId", null, { shouldValidate: true });
       }
       return;
     }
 
-    // IMPORTANT: If locations are still loading, or not yet populated,
-    // don't try to validate or clear the locationId.
-    // This prevents clearing a locationId set by `reset` before locations are ready.
-    // This prevents clearing a locationId set by `reset` before locations are ready.
-    if (loadingLocations || (locations.length === 0 && selectedZoneId > 0)) {
-      // Added loadingLocations check and ensure locations has items if a zone is selected
-      // If we have a selectedZoneId but no locations yet, it implies locations are still loading or there are genuinely no locations.
-      // We should wait for loadingLocations to be false to make a decision.
-      // If currentFormLocationId is already set (e.g., by reset), we don't want to clear it prematurely.
+    // Skip validation if we have a valid locationId and locations aren't loaded yet
+    // This preserves the location during initial load in edit mode
+    if (currentFormLocationId && locations.length === 0) {
       return;
     }
 
-    // If a zone is selected AND locations are loaded:
-    // Check if the current locationId (if any) is valid for the selected zone.
-    // This handles:
-    // 1. User manually changing the zone (clears incompatible location).
-    // 2. Initial load: after `reset` and `locations` are both ready, it re-validates.
-    //    If `reset` set a locationId that became invalid due to some other logic or bad data, it would be cleared.
-    //    More commonly, it will correctly *keep* the locationId if it's valid.
+    // If we have a locationId, validate it against the selected zone
     if (currentFormLocationId !== null) {
       const isValidLocationForZone = locations.some(
         (loc) =>
           loc.zoneId === selectedZoneId && loc.id === currentFormLocationId
       );
+      // Only clear the location if it's invalid for the selected zone
       if (!isValidLocationForZone) {
         setValue("locationId", null, { shouldValidate: true });
       }
     }
-    // If currentFormLocationId is null, and selectedZoneId is present,
-    // the superRefine in Zod schema will handle the validation message if needed.
-    // No need to explicitly set it to null again here if it's already null.
-  }, [selectedZoneId, locations, setValue, getValues, loadingLocations]); // Add loadingLocations to dependency array
+  }, [selectedZoneId, locations, setValue, getValues, loadingLocations]);
+
   // Memoize filtered locations for dropdown
   const filteredLocations = useMemo(
     () => locations.filter((loc) => loc.zoneId === selectedZoneId),
@@ -473,164 +452,6 @@ export default function ChapterForm({ mode }: { mode: "create" | "edit" }) {
                   </FormItem>
                 )}
               />
-            </div>
-
-            {/* --- Venue Contributions --- */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">
-                Venue Contributions
-              </h3>
-              <div className="grid md:grid-cols-3 gap-6">
-                {[
-                  ["monthlyVenue", "Monthly Venue Fee"],
-                  ["quarterlyVenue", "Quarterly Venue Fee"],
-                  ["halfYearlyVenue", "Half-Yearly Venue Fee"],
-                ].map(([name, label]) => (
-                  <FormField
-                    key={name}
-                    control={form.control}
-                    name={name as keyof ChapterFormInputs}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{label}</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            {...field}
-                            value={String(field.value ?? "")}
-                            onChange={(e) =>
-                              field.onChange(
-                                e.target.value === ""
-                                  ? 0
-                                  : parseInt(e.target.value, 10)
-                              )
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                ))}
-              </div>
-              <div className="grid md:grid-cols-2 gap-6 mt-6">
-                {(
-                  [
-                    ["yearlyVenue", "Yearly Venue Fee"],
-                    ["earlybirdVenue", "Early Bird Venue Fee"],
-                  ] as const
-                ).map(([name, label]) => (
-                  <FormField
-                    key={name}
-                    control={form.control}
-                    name={name}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{label}</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            {...field}
-                            value={String(field.value ?? "")}
-                            onChange={(e) =>
-                              field.onChange(
-                                e.target.value === ""
-                                  ? 0
-                                  : parseInt(e.target.value, 10)
-                              )
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* --- Head Office Contributions --- */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">
-                Head Office Contributions
-              </h3>
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {(
-                  [
-                    ["quarterlyHo", "Quarterly HO Share"],
-                    ["halfyearlyHo", "Half-Yearly HO Share"],
-                    ["yearlyHo", "Yearly HO Share"],
-                    ["earlybirdHo", "Early Bird HO Share"],
-                  ] as const
-                ).map(([name, label]) => (
-                  <FormField
-                    key={name}
-                    control={form.control}
-                    name={name}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{label}</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            {...field}
-                            value={String(field.value ?? "")}
-                            onChange={(e) =>
-                              field.onChange(
-                                e.target.value === ""
-                                  ? 0
-                                  : parseInt(e.target.value, 10)
-                              )
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* --- Account Balances --- */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Account Balances</h3>
-              <div className="grid md:grid-cols-2 gap-6">
-                {(
-                  [
-                    ["bankopeningbalance", "Bank Opening Balance"],
-                    ["bankclosingbalance", "Bank Closing Balance"],
-                    ["cashopeningbalance", "Cash Opening Balance"],
-                    ["cashclosingbalance", "Cash Closing Balance"],
-                  ] as const
-                ).map(([name, label]) => (
-                  <FormField
-                    key={name}
-                    control={form.control}
-                    name={name}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{label}</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            {...field}
-                            value={String(field.value ?? "")}
-                            onChange={(e) =>
-                              field.onChange(
-                                e.target.value === ""
-                                  ? 0
-                                  : parseInt(e.target.value, 10)
-                              )
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                ))}
-              </div>
             </div>
           </CardContent>
 
