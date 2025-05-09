@@ -55,7 +55,8 @@ const ResetPassword = () => {
     unknown,
     ResetPasswordRequest
   >({
-    mutationFn: (data) => post("/auth/reset-password", data),
+    mutationFn: (data) =>
+      post(`/auth/reset-password/${token}`, { password: data.password }),
     onSuccess: () => {
       toast.success("Password reset successful!");
       navigate("/");
@@ -78,7 +79,6 @@ const ResetPassword = () => {
 
     resetPasswordMutation.mutate({
       password: data.password,
-      token,
     });
   };
 

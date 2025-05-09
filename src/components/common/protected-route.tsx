@@ -1,20 +1,30 @@
-import React, { JSX } from 'react';
+import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 
 interface ProtectedRouteProps {
-  children: JSX.Element;
+  children: React.ReactElement;
+  roles?: string[];
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const authToken = localStorage.getItem('authToken'); // Check for auth token in localStorage
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, roles }) => {
   const location = useLocation();
+  const authToken = localStorage.getItem('authToken');
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
 
   if (!authToken) {
-    // Pass a state to the Navigate component
     return <Navigate to="/" replace state={{ from: location, unauthorized: true }} />;
   }
 
-  return children; // Render the protected component if authenticated
+  // Check for role-based access if roles are specified
+  if (roles?.length && user?.role) {
+    const hasRequiredRole = roles.includes(user.role);
+    if (!hasRequiredRole) {
+      return <Navigate to="/unauthorized" replace state={{ from: location }} />;
+    }
+  }
+
+  return children;
 };
 
 export default ProtectedRoute;
