@@ -16,6 +16,12 @@ import CreateChapter from '@/modules/chapter/CreateAgency';
 import EditChapters from '@/modules/chapter/EditAgency';
 import SiteSettings from '@/modules/SiteSettings/SiteSettingsList';
 import ProtectedRoute from '@/components/common/protected-route';
+import ChapterMeetingList from '@/modules/chaptermeeting/ChapterMeetingList';
+import CreateChapterMeeting from '@/modules/chaptermeeting/CreateChapterMeeting';
+import EditChapterMeeting from '@/modules/chaptermeeting/EditChapterMeeting';
+import VisitorList from '@/modules/visitor/VisitorList';
+import VisitorForm from '@/modules/visitor/VisitorForm';
+import EditAttendance from '@/modules/attendance/EditAttendance';
 
 // Define route types for better type safety
 export type AppRouteObject = RouteObject & {
@@ -53,6 +59,13 @@ const protectedRoutes: AppRouteObject[] = [
       { path: 'chapters', element: <ProtectedRoute><Chapters /></ProtectedRoute>, auth: true },
       { path: 'chapters/create', element: <ProtectedRoute><CreateChapter /></ProtectedRoute>, auth: true },
       { path: 'chapters/:id/edit', element: <ProtectedRoute><EditChapters /></ProtectedRoute>, auth: true },
+      { path: 'chaptermeetings', element: <ProtectedRoute><ChapterMeetingList /></ProtectedRoute>, auth: true },
+      { path: 'chaptermeetings/create', element: <ProtectedRoute><CreateChapterMeeting /></ProtectedRoute>, auth: true },
+      { path: 'chaptermeetings/:id/edit', element: <ProtectedRoute><EditChapterMeeting /></ProtectedRoute>, auth: true },
+      { path: 'chaptermeetings/:meetingId/visitors', element: <ProtectedRoute><VisitorList /></ProtectedRoute>, auth: true },
+      { path: 'chaptermeetings/:meetingId/visitors/add', element: <ProtectedRoute><VisitorForm isEditing={false} /></ProtectedRoute>, auth: true },
+      { path: 'chaptermeetings/:meetingId/visitors/:visitorId/edit', element: <ProtectedRoute><VisitorForm isEditing={true} /></ProtectedRoute>, auth: true },
+      { path: 'chaptermeetings/:meetingId/attendance', element: <ProtectedRoute><EditAttendance /></ProtectedRoute>, auth: true },
       // Redirect from root to users page for authenticated users
       { index: true, element: <Navigate to="/users" replace /> },
     ],
