@@ -57,11 +57,11 @@ const CustomPagination: React.FC<CustomPaginationProps> = ({
       <div className="flex items-center gap-2">
         <span className="text-sm text-muted-foreground">Records per page:</span>
         <Select
-          value={recordsPerPage.toString()}
+          value={recordsPerPage?.toString() || "10"}
           onValueChange={(value) => onRecordsPerPageChange(Number(value))}
         >
           <SelectTrigger className="w-[70px] h-8">
-            <SelectValue placeholder={`${recordsPerPage}`} />
+            <SelectValue placeholder={`${recordsPerPage || 10}`} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="5">5</SelectItem>
