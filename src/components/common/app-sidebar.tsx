@@ -93,6 +93,11 @@ const initialData = {
           url: "/memberships",
           icon: UsersRound,
         },
+        {
+          name: "Chapter Meetings",
+          url: "/chaptermeetings",
+          icon: BookOpen,
+        },
       ],
       navMain: [], // Adding empty navMain array
     },
