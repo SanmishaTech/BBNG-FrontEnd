@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { appName } from "./config"; // Import appName from config
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useParams } from "react-router-dom";
 
 import AuthLayout from "./layouts/AuthLayout";
 import MainLayout from "./layouts/MainLayout";
@@ -23,9 +23,28 @@ import Members from "./modules/member/AgencyList";
 import CreateMembers from "./modules/member/CreateAgency";
 import EditMembers from "./modules/member/EditAgency";
 import Profile from "./modules/profile/EditAgency";
+import MembershipList from "./modules/membership/MembershipList";
+import PackageList from "./modules/package/PackageList";
+import CreatePackage from "./modules/package/CreatePackage";
+import EditPackage from "./modules/package/EditPackage";
+import CreateMembership from "./modules/membership/CreatePackage";
+import EditMembership from "./modules/membership/EditMembership";
 
 import { Toaster } from "sonner";
 import "./App.css";
+
+// MembershipList wrapper component to handle showing all memberships
+const MembershipListWrapper = () => {
+  return <MembershipList />;
+};
+
+// MembershipList wrapper for a specific member
+const MemberMembershipList = () => {
+  const { memberId } = useParams<{ memberId: string }>();
+  const memberIdNumber = memberId ? parseInt(memberId) : undefined;
+  
+  return <MembershipList memberId={memberIdNumber} />;
+};
 
 const App = () => {
   useEffect(() => {
@@ -42,7 +61,6 @@ const App = () => {
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
-            {/* Add other auth routes here */}
           </Route>
           <Route element={<MainLayout />}>
             <Route
@@ -162,6 +180,70 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <ResetPassword />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/memberships"
+              element={
+                <ProtectedRoute>
+                  <MembershipListWrapper />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/members/:memberId/memberships"
+              element={
+                <ProtectedRoute>
+                  <MemberMembershipList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/packages"
+              element={
+                <ProtectedRoute>
+                  <PackageList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/packages/create"
+              element={
+                <ProtectedRoute>
+                  <CreatePackage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/packages/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <EditPackage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/memberships/add"
+              element={
+                <ProtectedRoute>
+                  <CreateMembership />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/memberships/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <EditMembership />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/members/:memberId/memberships/add"
+              element={
+                <ProtectedRoute>
+                  <CreateMembership />
                 </ProtectedRoute>
               }
             />
