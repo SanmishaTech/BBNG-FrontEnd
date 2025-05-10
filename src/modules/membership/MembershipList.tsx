@@ -51,11 +51,13 @@ const MembershipList: React.FC<MembershipListProps> = ({ memberId }) => {
   const [sortOrder, setSortOrder] = useState("desc");
   const [search, setSearch] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [membershipToDelete, setMembershipToDelete] = useState<number | null>(null);
+  const [membershipToDelete, setMembershipToDelete] = useState<number | null>(
+    null
+  );
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Build the API endpoint based on whether we have a memberId
-  const apiEndpoint = memberId 
+  const apiEndpoint = memberId
     ? `/memberships/member/${memberId}`
     : `/memberships?page=${currentPage}&limit=${recordsPerPage}&sortBy=${sortBy}&sortOrder=${sortOrder}&search=${search}`;
 
@@ -74,9 +76,13 @@ const MembershipList: React.FC<MembershipListProps> = ({ memberId }) => {
   });
 
   // Format data based on whether we have a specific member or general list
-  const memberships = memberId ? (data || []) : (data?.memberships || []);
-  const totalPages = memberId ? Math.ceil((data?.length || 0) / recordsPerPage) : (data?.totalPages || 1);
-  const totalMemberships = memberId ? (data?.length || 0) : (data?.totalMemberships || 0);
+  const memberships = memberId ? data || [] : data?.memberships || [];
+  const totalPages = memberId
+    ? Math.ceil((data?.length || 0) / recordsPerPage)
+    : data?.totalPages || 1;
+  const totalMemberships = memberId
+    ? data?.length || 0
+    : data?.totalMemberships || 0;
 
   // Delete mutation
   const deleteMutation = useMutation({
@@ -162,7 +168,13 @@ const MembershipList: React.FC<MembershipListProps> = ({ memberId }) => {
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center gap-2">
               <Button
-                onClick={() => navigate(memberId ? `/members/${memberId}/memberships/add` : "/memberships/add")}
+                onClick={() =>
+                  navigate(
+                    memberId
+                      ? `/members/${memberId}/memberships/add`
+                      : "/memberships/add"
+                  )
+                }
                 className="bg-primary hover:bg-primary/90 text-white shadow-sm transition-all duration-200 hover:shadow-md"
               >
                 <PlusCircle className="mr-2 h-5 w-5" />
@@ -232,7 +244,8 @@ const MembershipList: React.FC<MembershipListProps> = ({ memberId }) => {
                 </TableHeader>
                 <TableBody>
                   {memberships.map((membership: any) => {
-                    const isActive = new Date(membership.packageEndDate) >= new Date();
+                    const isActive =
+                      new Date(membership.packageEndDate) >= new Date();
                     const packageType = membership.package.isVenueFee
                       ? "Venue Fee"
                       : "Membership";
@@ -240,11 +253,21 @@ const MembershipList: React.FC<MembershipListProps> = ({ memberId }) => {
                     return (
                       <TableRow key={membership.id}>
                         <TableCell>{membership.invoiceNumber}</TableCell>
-                        <TableCell>{formatDate(membership.invoiceDate)}</TableCell>
-                        {!memberId && <TableCell>{membership.member.memberName}</TableCell>}
+                        <TableCell>
+                          {formatDate(membership.invoiceDate)}
+                        </TableCell>
+                        {!memberId && (
+                          <TableCell>{membership.member.memberName}</TableCell>
+                        )}
                         <TableCell>{membership.package.packageName}</TableCell>
                         <TableCell>
-                          <Badge variant={membership.package.isVenueFee ? "secondary" : "default"}>
+                          <Badge
+                            variant={
+                              membership.package.isVenueFee
+                                ? "secondary"
+                                : "default"
+                            }
+                          >
                             {packageType}
                           </Badge>
                         </TableCell>
@@ -271,7 +294,9 @@ const MembershipList: React.FC<MembershipListProps> = ({ memberId }) => {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => navigate(`/memberships/${membership.id}/edit`)}
+                              onClick={() =>
+                                navigate(`/memberships/${membership.id}/edit`)
+                              }
                             >
                               <Edit size={16} />
                             </Button>
@@ -321,7 +346,13 @@ const MembershipList: React.FC<MembershipListProps> = ({ memberId }) => {
                 No memberships found.
               </p>
               <Button
-                onClick={() => navigate(memberId ? `/members/${memberId}/memberships/add` : "/memberships/add")}
+                onClick={() =>
+                  navigate(
+                    memberId
+                      ? `/members/${memberId}/memberships/add`
+                      : "/memberships/add"
+                  )
+                }
                 variant="default"
               >
                 <PlusCircle className="mr-2 h-4 w-4" />
@@ -338,15 +369,19 @@ const MembershipList: React.FC<MembershipListProps> = ({ memberId }) => {
           <DialogHeader>
             <DialogTitle>Delete Membership</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this membership? This action cannot be undone.
+              Are you sure you want to delete this membership? This action
+              cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setShowConfirmation(false)}>
+            <Button
+              variant="secondary"
+              onClick={() => setShowConfirmation(false)}
+            >
               Cancel
             </Button>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={handleDelete}
               disabled={isDeleting}
             >
@@ -366,4 +401,4 @@ const MembershipList: React.FC<MembershipListProps> = ({ memberId }) => {
   );
 };
 
-export default MembershipList; 
+export default MembershipList;

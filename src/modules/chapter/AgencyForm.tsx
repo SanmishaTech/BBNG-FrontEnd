@@ -58,6 +58,10 @@ const chapterSchema = z
     meetingday: z.string().min(1, "Meeting day is required"),
     status: z.boolean(),
     venue: z.string().min(1, "Venue is required"),
+    bankopeningbalance: z.number().nullable(),
+    bankclosingbalance: z.number().nullable(),
+    cashopeningbalance: z.number().nullable(),
+    cashclosingbalance: z.number().nullable(),
   })
   .superRefine((data, ctx) => {
     // If a zone is selected, require a location
@@ -121,6 +125,10 @@ export default function ChapterForm({ mode }: { mode: "create" | "edit" }) {
       meetingday: "",
       status: true,
       venue: "",
+      bankopeningbalance: null,
+      bankclosingbalance: null,
+      cashopeningbalance: null,
+      cashclosingbalance: null,
     },
   });
 
@@ -452,6 +460,113 @@ export default function ChapterForm({ mode }: { mode: "create" | "edit" }) {
                   </FormItem>
                 )}
               />
+
+              {/* Balance Information Section */}
+              <div className="grid md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="bankopeningbalance"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bank Opening Balance</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="Enter bank opening balance"
+                          {...field}
+                          onChange={(e) => {
+                            const value = e.target.value
+                              ? parseFloat(e.target.value)
+                              : null;
+                            field.onChange(value);
+                          }}
+                          value={field.value ?? ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="bankclosingbalance"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bank Closing Balance</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="Enter bank closing balance"
+                          {...field}
+                          onChange={(e) => {
+                            const value = e.target.value
+                              ? parseFloat(e.target.value)
+                              : null;
+                            field.onChange(value);
+                          }}
+                          value={field.value ?? ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="cashopeningbalance"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Cash Opening Balance</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="Enter cash opening balance"
+                          {...field}
+                          onChange={(e) => {
+                            const value = e.target.value
+                              ? parseFloat(e.target.value)
+                              : null;
+                            field.onChange(value);
+                          }}
+                          value={field.value ?? ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="cashclosingbalance"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Cash Closing Balance</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="Enter cash closing balance"
+                          {...field}
+                          onChange={(e) => {
+                            const value = e.target.value
+                              ? parseFloat(e.target.value)
+                              : null;
+                            field.onChange(value);
+                          }}
+                          value={field.value ?? ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
           </CardContent>
 

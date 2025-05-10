@@ -83,6 +83,16 @@ const initialData = {
           url: "/members",
           icon: PieChart,
         },
+        {
+          name: "Packages",
+          url: "/packages",
+          icon: UsersRound,
+        },
+        {
+          name: "Membership",
+          url: "/memberships",
+          icon: UsersRound,
+        },
       ],
       navMain: [], // Adding empty navMain array
     },
