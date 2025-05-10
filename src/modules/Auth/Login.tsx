@@ -130,7 +130,7 @@ const Login = () => {
       toast.success("Login successful!");
     },
     onError: (error: unknown) => {
-      Validate(error, setError);
+      toast.error(error.message || "An error occurred during login.");
       // console.log(error);
       // throwAsZodError(error);
       console.error("Login error details:", error);

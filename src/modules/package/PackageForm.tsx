@@ -98,11 +98,11 @@ export default function PackageForm({ mode }: { mode: "create" | "edit" }) {
   const isVenueFee = watch("isVenueFee");
   const basicFees = watch("basicFees");
   const gstRate = watch("gstRate");
-  
+
   // Calculate GST amount and total fees
   const [calculatedValues, setCalculatedValues] = useState({
     gstAmount: 0,
-    totalFees: 0
+    totalFees: 0,
   });
 
   // Update calculations when form values change
@@ -112,15 +112,15 @@ export default function PackageForm({ mode }: { mode: "create" | "edit" }) {
       const gstRateNum = Number(gstRate);
       const gstAmount = (basicFeesNum * gstRateNum) / 100;
       const totalFees = basicFeesNum + gstAmount;
-      
+
       setCalculatedValues({
         gstAmount,
-        totalFees
+        totalFees,
       });
     } else {
       setCalculatedValues({
         gstAmount: 0,
-        totalFees: 0
+        totalFees: 0,
       });
     }
   }, [basicFees, gstRate]);
@@ -351,25 +351,36 @@ export default function PackageForm({ mode }: { mode: "create" | "edit" }) {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-gray-700">Basic Fees:</span>
-                    <span className="font-medium">₹{Number(basicFees || 0).toLocaleString('en-IN', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
-                    })}</span>
+                    <span className="font-medium">
+                      ₹
+                      {Number(basicFees || 0).toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-700">GST ({gstRate || 0}%):</span>
-                    <span className="font-medium">₹{calculatedValues.gstAmount.toLocaleString('en-IN', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
-                    })}</span>
+                    <span className="text-gray-700">
+                      GST ({gstRate || 0}%):
+                    </span>
+                    <span className="font-medium">
+                      ₹
+                      {calculatedValues.gstAmount.toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
                   </div>
                   <div className="h-px bg-gray-200 my-2"></div>
                   <div className="flex justify-between font-bold">
                     <span>Total:</span>
-                    <span className="text-primary">₹{calculatedValues.totalFees.toLocaleString('en-IN', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
-                    })}</span>
+                    <span className="text-primary">
+                      ₹
+                      {calculatedValues.totalFees.toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -396,7 +407,7 @@ export default function PackageForm({ mode }: { mode: "create" | "edit" }) {
                 )}
               />
             </CardContent>
-            <CardFooter className="flex justify-between">
+            <CardFooter className="flex justify-between mt-6">
               <Button
                 type="button"
                 variant="outline"
@@ -417,4 +428,4 @@ export default function PackageForm({ mode }: { mode: "create" | "edit" }) {
       </Card>
     </div>
   );
-} 
+}
