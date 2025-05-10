@@ -149,6 +149,10 @@ export default function ChapterForm({ mode }: { mode: "create" | "edit" }) {
           date: apiData.date ? new Date(apiData.date) : new Date(),
           zoneId: apiData.zoneId ?? 0,
           locationId: apiData.locationId ?? null,
+          bankopeningbalance: apiData.bankopeningbalance ? Number(apiData.bankopeningbalance) : null,
+          bankclosingbalance: apiData.bankclosingbalance ? Number(apiData.bankclosingbalance) : null,
+          cashopeningbalance: apiData.cashopeningbalance ? Number(apiData.cashopeningbalance) : null,
+          cashclosingbalance: apiData.cashclosingbalance ? Number(apiData.cashclosingbalance) : null,
         });
       }
       return apiData;
@@ -165,6 +169,10 @@ export default function ChapterForm({ mode }: { mode: "create" | "edit" }) {
           date: apiData.date ? new Date(apiData.date) : new Date(),
           zoneId: apiData.zoneId ?? 0,
           locationId: apiData.locationId ?? null,
+          bankopeningbalance: apiData.bankopeningbalance ? Number(apiData.bankopeningbalance) : null,
+          bankclosingbalance: apiData.bankclosingbalance ? Number(apiData.bankclosingbalance) : null,
+          cashopeningbalance: apiData.cashopeningbalance ? Number(apiData.cashopeningbalance) : null,
+          cashclosingbalance: apiData.cashclosingbalance ? Number(apiData.cashclosingbalance) : null,
         });
       });
     }

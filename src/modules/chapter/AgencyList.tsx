@@ -20,6 +20,7 @@ import {
   Trash2,
   Search,
   PlusCircle,
+  ArrowRightLeft,
 } from "lucide-react";
 import CustomPagination from "@/components/common/custom-pagination";
 import ConfirmDialog from "@/components/common/confirm-dialog";
@@ -185,6 +186,15 @@ const AgencyList = () => {
                             }
                           >
                             <Edit size={16} />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              navigate(`/chapters/${chapter.id}/transactions`)
+                            }
+                          >
+                            <ArrowRightLeft size={16} />
                           </Button>
                           <Button
                             variant="destructive"

@@ -29,6 +29,9 @@ import CreatePackage from "./modules/package/CreatePackage";
 import EditPackage from "./modules/package/EditPackage";
 import CreateMembership from "./modules/membership/CreatePackage";
 import EditMembership from "./modules/membership/EditMembership";
+import TransactionList from "./modules/chapter/TransactionList";
+import CreateTransaction from "./modules/chapter/CreateTransaction";
+import EditTransaction from "./modules/chapter/EditTransaction";
 
 import { Toaster } from "sonner";
 import "./App.css";
@@ -140,6 +143,30 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <EditChapters />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/chapters/:chapterId/transactions"
+              element={
+                <ProtectedRoute>
+                  <TransactionList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/chapters/:chapterId/transactions/add"
+              element={
+                <ProtectedRoute>
+                  <CreateTransaction />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/chapters/:chapterId/transactions/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <EditTransaction />
                 </ProtectedRoute>
               }
             />
