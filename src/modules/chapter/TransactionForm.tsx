@@ -58,6 +58,9 @@ const transactionSchema = z.object({
   amount: z
     .number({ required_error: "Amount is required" })
     .positive("Amount must be positive"),
+  transactionHead: z.string().optional(),
+  narration: z.string().optional(),
+  transactionDetails: z.string().optional(),
   description: z.string().optional(),
   reference: z.string().optional(),
   hasInvoice: z.boolean().default(false),
@@ -85,6 +88,9 @@ export default function TransactionForm({ mode }: { mode: "create" | "edit" }) {
       accountType: "cash",
       transactionType: "credit",
       amount: 0,
+      transactionHead: "",
+      narration: "",
+      transactionDetails: "",
       description: "",
       reference: "",
       hasInvoice: false,
@@ -100,6 +106,7 @@ export default function TransactionForm({ mode }: { mode: "create" | "edit" }) {
   const { reset } = form;
   const hasInvoice = form.watch("hasInvoice");
   const isCredit = form.watch("transactionType") === "credit";
+  const isBankAccount = form.watch("accountType") === "bank";
 
   // Fetch transaction data if in edit mode
   const { data: transaction, isLoading: loadingTransaction } = useQuery({
@@ -352,6 +359,41 @@ export default function TransactionForm({ mode }: { mode: "create" | "edit" }) {
   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
     <FormField
       control={form.control}
+      name="transactionHead"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Transaction Head</FormLabel>
+          <FormControl>
+            <Input
+              placeholder="Enter transaction head"
+              {...field}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+
+    <FormField
+      control={form.control}
+      name="narration"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Narration</FormLabel>
+          <FormControl>
+            <Textarea
+              placeholder="Enter narration"
+              className="resize-none"
+              {...field}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+
+    <FormField
+      control={form.control}
       name="description"
       render={({ field }) => (
         <FormItem>
@@ -368,22 +410,44 @@ export default function TransactionForm({ mode }: { mode: "create" | "edit" }) {
       )}
     />
 
-    <FormField
-      control={form.control}
-      name="reference"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Reference (Optional)</FormLabel>
-          <FormControl>
-            <Input
-              placeholder="Enter reference number or details"
-              {...field}
-            />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+    {isBankAccount && (
+      <FormField
+        control={form.control}
+        name="transactionDetails"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Transaction Details</FormLabel>
+            <FormControl>
+              <Textarea
+                placeholder="Enter transaction details"
+                className="resize-none"
+                {...field}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    )}
+
+    {isBankAccount && (
+      <FormField
+        control={form.control}
+        name="reference"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Reference Number</FormLabel>
+            <FormControl>
+              <Input
+                placeholder="Enter reference number"
+                {...field}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    )}
   </div>
 
 
