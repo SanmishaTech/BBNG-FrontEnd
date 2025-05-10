@@ -1,6 +1,6 @@
-# VoyageCentral
+# BBNG
 
-VoyageCentral is a modern React-based project built with Vite, TypeScript, TailwindCSS, and Radix UI components. It includes advanced features like form validation, routing, and reusable UI components.
+BBNG is a modern React-based project built with Vite, TypeScript, TailwindCSS, and Radix UI components. It includes advanced features like form validation, routing, and reusable UI components.
 
 ---
 
