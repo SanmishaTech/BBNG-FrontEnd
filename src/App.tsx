@@ -1,6 +1,11 @@
 import { useEffect } from "react";
 import { appName } from "./config"; // Import appName from config
-import { BrowserRouter as Router, Routes, Route, useParams } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useParams,
+} from "react-router-dom";
 
 import AuthLayout from "./layouts/AuthLayout";
 import MainLayout from "./layouts/MainLayout";
@@ -33,6 +38,13 @@ import TransactionList from "./modules/chapter/TransactionList";
 import CreateTransaction from "./modules/chapter/CreateTransaction";
 import EditTransaction from "./modules/chapter/EditTransaction";
 
+import Chaptermeeting from "./modules/chaptermeeting/ChapterMeetingList";
+import ChapterMeetingCreate from "./modules/chaptermeeting/CreateChapterMeeting";
+import ChapterMeetingEdit from "./modules/chaptermeeting/EditChapterMeeting";
+import VisitorList from "./modules/visitor/VisitorList";
+import VisitorForm from "./modules/visitor/VisitorForm";
+import EditAttendance from "./modules/attendance/EditAttendance";
+
 import { Toaster } from "sonner";
 import "./App.css";
 
@@ -45,7 +57,7 @@ const MembershipListWrapper = () => {
 const MemberMembershipList = () => {
   const { memberId } = useParams<{ memberId: string }>();
   const memberIdNumber = memberId ? parseInt(memberId) : undefined;
-  
+
   return <MembershipList memberId={memberIdNumber} />;
 };
 
@@ -271,6 +283,62 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <CreateMembership />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/chaptermeetings"
+              element={
+                <ProtectedRoute>
+                  <Chaptermeeting />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/chaptermeetings/create"
+              element={
+                <ProtectedRoute>
+                  <ChapterMeetingCreate />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/chaptermeetings/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <ChapterMeetingEdit />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/chaptermeetings/:meetingId/visitors"
+              element={
+                <ProtectedRoute>
+                  <VisitorList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/chaptermeetings/:meetingId/visitors/add"
+              element={
+                <ProtectedRoute>
+                  <VisitorForm isEditing={false} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/chaptermeetings/:meetingId/visitors/:visitorId/edit"
+              element={
+                <ProtectedRoute>
+                  <VisitorForm isEditing={true} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/chaptermeetings/:meetingId/attendance"
+              element={
+                <ProtectedRoute>
+                  <EditAttendance />
                 </ProtectedRoute>
               }
             />
