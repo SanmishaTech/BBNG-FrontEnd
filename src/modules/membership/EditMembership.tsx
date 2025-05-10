@@ -5,4 +5,4 @@ const EditMembership: React.FC = () => {
   return <Membershipform mode="edit" />;
 };
 
-export default EditMembership; 
+export default EditMembership;

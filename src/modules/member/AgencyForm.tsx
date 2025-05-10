@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import MembershipStatusAlert from "@/components/common/MembershipStatusAlert";
 import Validate from "@/lib/Handlevalidation"; // Assuming this is correctly implemented
 import {
   Select,
@@ -241,6 +242,16 @@ export default function MemberForm({ mode }: MemberFormProps) {
 
   const { reset } = form;
 
+  // Fetch membership status data
+  const { data: membershipStatus } = useQuery({
+    queryKey: ["membershipStatus", id],
+    queryFn: async () => {
+      const data = await get(`/api/members/${id}/membership-status`);
+      return data;
+    },
+    enabled: mode === "edit" && !!id,
+  });
+
   // Fetch member data for editing
   const { isLoading: loadingMember } = useQuery({
     queryKey: ["member", id],
@@ -415,6 +426,18 @@ export default function MemberForm({ mode }: MemberFormProps) {
       </CardHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
+          {/* Membership Status Alert - Only show when editing */}
+          {mode === "edit" && membershipStatus && (
+            <div className="mb-6">
+              <MembershipStatusAlert
+                isActive={membershipStatus.isActive}
+                expiryDate={membershipStatus.expiryDate}
+                expiryType={membershipStatus.expiryType}
+                daysUntilExpiry={membershipStatus.daysUntilExpiry}
+              />
+            </div>
+          )}
+          
           {/* Basic Details */}
           <Card className="mb-6 shadow-none border-0">
             <CardHeader>

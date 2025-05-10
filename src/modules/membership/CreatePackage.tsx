@@ -5,4 +5,4 @@ const CreateMembership: React.FC = () => {
   return <Membershipform mode="create" />;
 };
 
-export default CreateMembership; 
+export default CreateMembership;

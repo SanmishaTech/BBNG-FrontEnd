@@ -117,16 +117,16 @@ const MemberList = () => {
     },
   });
 
-  // Status change mutation
-  const changeStatusMutation = useMutation({
-    mutationFn: ({ memberId, active }: { memberId: number; active: boolean }) =>
-      patch(`/api/members/${memberId}/status`, { active: !active }),
-    onSuccess: () => {
-      toast.success("Status updated successfully");
+  // User status change mutation (only affects user table)
+  const changeUserStatusMutation = useMutation({
+    mutationFn: (memberId: number) =>
+      patch(`/api/members/${memberId}/user-status`, {}),
+    onSuccess: (data) => {
+      toast.success(`User ${data.active ? 'activated' : 'deactivated'} successfully`);  
       queryClient.invalidateQueries({ queryKey: ["members"] });
     },
     onError: () => {
-      toast.error("Failed to update status");
+      toast.error("Failed to update user status");
     },
   });
 
@@ -144,8 +144,8 @@ const MemberList = () => {
     }
   };
 
-  const handleChangeStatus = (memberId: number, currentStatus: boolean) => {
-    changeStatusMutation.mutate({ memberId, active: currentStatus });
+  const handleChangeStatus = (memberId: number) => {
+    changeUserStatusMutation.mutate(memberId);
   };
 
   const handleSort = (column: string) => {
@@ -371,7 +371,25 @@ const MemberList = () => {
                         )}
                       </div>
                     </TableHead>
+                     <TableHead
+                      onClick={() => handleSort("expiryDate")}
+                      className="cursor-pointer"
+                    >
+                      <div className="flex items-center">
+                        <span>Expiry</span>
+                        {sortBy === "expiryDate" && (
+                          <span className="ml-1">
+                            {sortOrder === "asc" ? (
+                              <ChevronUp size={16} />
+                            ) : (
+                              <ChevronDown size={16} />
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    </TableHead>
                     <TableHead>Actions</TableHead>
+
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -382,10 +400,31 @@ const MemberList = () => {
                       <TableCell>{member.mobile1}</TableCell>
                       <TableCell>{member.organizationName}</TableCell>
                       <TableCell>
-                        {member.active ? (
-                          <Badge variant="outline">Active</Badge>
+                        {member.isActive ? (
+                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Active</Badge>
                         ) : (
                           <Badge variant="secondary">Inactive</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {member.isActive ? (
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{member.expiryDate ? formatDate(member.expiryDate) : 'N/A'}</span>
+                              {/* {member.expiryType && (
+                                <Badge variant="outline" className="w-fit">
+                                  {member.expiryType}
+                                </Badge>
+                              )} */}
+                            </div>
+                            {member.daysUntilExpiry && (
+                              <span className={`text-xs mt-1 ${member.daysUntilExpiry < 30 ? 'text-red-600 font-medium' : 'text-muted-foreground'}`}>
+                                {member.daysUntilExpiry} days left
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <Badge variant="destructive" className="bg-red-500 hover:bg-red-600">Expired</Badge>
                         )}
                       </TableCell>
                       <TableCell>
@@ -415,19 +454,16 @@ const MemberList = () => {
                             <DropdownMenuContent className="w-56">
                               <DropdownMenuGroup>
                                 <DropdownMenuItem
-                                  onClick={() =>
-                                    handleChangeStatus(member.id, member.active)
-                                  }
+                                  onClick={() => handleChangeStatus(member.id)}
                                 >
                                   <div className="flex items-center gap-2">
-                                    {member.active ? (
+                                    {member.isActive ? (
                                       <XCircle className="h-4 w-4" />
                                     ) : (
                                       <CheckCircle className="h-4 w-4" />
                                     )}
                                     <span>
-                                      Set{" "}
-                                      {member.active ? "Inactive" : "Active"}
+                                      Set Login {member.isActive ? "Inactive" : "Active"}
                                     </span>
                                   </div>
                                 </DropdownMenuItem>

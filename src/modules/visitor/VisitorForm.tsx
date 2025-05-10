@@ -192,9 +192,9 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
 
   // Get logged in user data
   const [loggedInUser, setLoggedInUser] = useState<any>(null);
-  
+
   useEffect(() => {
-    const userStr = localStorage.getItem('user');
+    const userStr = localStorage.getItem("user");
     if (userStr) {
       try {
         const userData = JSON.parse(userStr);
@@ -204,7 +204,7 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
       }
     }
   }, []);
-  
+
   // Fetch meeting details
   const { data: meetingData } = useQuery({
     queryKey: ["chaptermeeting", meetingId],
@@ -214,7 +214,7 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
       console.log("Meeting Data Loaded:", data);
       console.log("Meeting Chapter ID:", data.chapterId);
       console.log("Meeting Chapter Name:", data.chapter?.name);
-    }
+    },
   });
 
   // Fetch all members for the invited by dropdown
@@ -228,34 +228,42 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
     queryKey: ["chapters"],
     queryFn: () => get(`/chapters`),
   });
-  
+
   // Filter out the meeting's chapter from available chapters for cross-chapter selection
   const filteredChapters = React.useMemo(() => {
     if (!chaptersData?.chapters || !meetingData) {
-      console.log("Missing data for filtering:", { 
-        hasChaptersData: !!chaptersData?.chapters, 
-        hasMeetingData: !!meetingData 
+      console.log("Missing data for filtering:", {
+        hasChaptersData: !!chaptersData?.chapters,
+        hasMeetingData: !!meetingData,
       });
       return [];
     }
-    
+
     // Explicitly exclude the chapter that the meeting belongs to
     console.log("Meeting Chapter ID:", meetingData.chapterId);
     console.log("Meeting Chapter:", meetingData.chapter);
     console.log("All Chapters:", chaptersData.chapters);
-    console.log("All Chapter IDs:", chaptersData.chapters.map(c => c.id));
-    
+    console.log(
+      "All Chapter IDs:",
+      chaptersData.chapters.map((c) => c.id)
+    );
+
     // Convert IDs to numbers for proper comparison
     const meetingChapterId = Number(meetingData.chapterId);
-    
+
     const filtered = chaptersData.chapters.filter((chapter: any) => {
       const chapterId = Number(chapter.id);
-      console.log(`Comparing chapter ${chapter.name} (ID: ${chapterId}) with meeting chapter ID: ${meetingChapterId}`);
+      console.log(
+        `Comparing chapter ${chapter.name} (ID: ${chapterId}) with meeting chapter ID: ${meetingChapterId}`
+      );
       return chapterId !== meetingChapterId;
     });
-    
+
     console.log("Filtered Chapters:", filtered);
-    console.log("Filtered Chapter IDs:", filtered.map(c => c.id));
+    console.log(
+      "Filtered Chapter IDs:",
+      filtered.map((c) => c.id)
+    );
     return filtered;
   }, [chaptersData, meetingData]);
 
@@ -277,12 +285,14 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
       // Format the data before setting form values
       const formattedData = {
         ...visitorData,
-        dateOfBirth: visitorData.dateOfBirth ? new Date(visitorData.dateOfBirth) : null,
+        dateOfBirth: visitorData.dateOfBirth
+          ? new Date(visitorData.dateOfBirth)
+          : null,
         meetingId: visitorData.meetingId,
         chapterId: visitorData.chapterId,
         invitedById: visitorData.invitedById,
       };
-      
+
       form.reset(formattedData);
     } else if (!isEditing && meetingData && !form.formState.isDirty) {
       // For new visitors, pre-populate the meeting's chapter
@@ -321,18 +331,18 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
   // Form submission
   const onSubmit = (data: FormData) => {
     setIsLoading(true);
-    
+
     // Ensure meetingId is set from URL params
     if (meetingId && !data.meetingId) {
       data.meetingId = parseInt(meetingId);
     }
-    
+
     // For non-cross-chapter visitors, set the chapter to the meeting's chapter
     if (!data.isCrossChapter && meetingData) {
       data.chapter = meetingData.chapter?.name || "";
       data.chapterId = meetingData.chapterId;
     }
-    
+
     try {
       if (isEditing) {
         updateMutation.mutate(data);
@@ -418,26 +428,32 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                             onCheckedChange={(checked) => {
                               field.onChange(checked);
                               if (checked) {
-                                                // Clear fields not needed for cross-chapter
-                                                form.setValue("name", "");
-                                                form.setValue("email", "");
-                                                form.setValue("gender", "");
-                                                form.setValue("dateOfBirth", null);
-                                                form.setValue("mobile1", "");
-                                                form.setValue("mobile2", "");
-                                                form.setValue("category", "");
-                                                form.setValue("businessDetails", "");
-                                                form.setValue("addressLine1", "");
-                                                form.setValue("addressLine2", "");
-                                                form.setValue("city", "");
-                                                form.setValue("pincode", "");
-                                                form.setValue("status", "");
-                                              } else {
-                                                // Clear chapter ID when switching back and set to meeting's chapter
-                                                form.setValue("chapterId", meetingData?.chapterId || null);
-                                                form.setValue("chapter", meetingData?.chapter?.name || "");
-                                                form.setValue("invitedById", null);
-                                              }
+                                // Clear fields not needed for cross-chapter
+                                form.setValue("name", "");
+                                form.setValue("email", "");
+                                form.setValue("gender", "");
+                                form.setValue("dateOfBirth", null);
+                                form.setValue("mobile1", "");
+                                form.setValue("mobile2", "");
+                                form.setValue("category", "");
+                                form.setValue("businessDetails", "");
+                                form.setValue("addressLine1", "");
+                                form.setValue("addressLine2", "");
+                                form.setValue("city", "");
+                                form.setValue("pincode", "");
+                                form.setValue("status", "");
+                              } else {
+                                // Clear chapter ID when switching back and set to meeting's chapter
+                                form.setValue(
+                                  "chapterId",
+                                  meetingData?.chapterId || null
+                                );
+                                form.setValue(
+                                  "chapter",
+                                  meetingData?.chapter?.name || ""
+                                );
+                                form.setValue("invitedById", null);
+                              }
                             }}
                           />
                         </FormControl>
@@ -470,7 +486,9 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                               <SelectContent>
                                 {filteredChapters.length > 0 ? (
                                   filteredChapters.map((chapter: any) => {
-                                    console.log(`Rendering chapter option: ${chapter.name} (ID: ${chapter.id})`);
+                                    console.log(
+                                      `Rendering chapter option: ${chapter.name} (ID: ${chapter.id})`
+                                    );
                                     return (
                                       <SelectItem
                                         key={chapter.id}
@@ -548,8 +566,8 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                           <FormItem>
                             <FormLabel>Chapter</FormLabel>
                             <FormControl>
-                              <Input 
-                                placeholder="Chapter name" 
+                              <Input
+                                placeholder="Chapter name"
                                 value={meetingData?.chapter?.name || ""}
                                 disabled
                               />
