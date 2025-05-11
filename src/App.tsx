@@ -46,6 +46,7 @@ import VisitorForm from "./modules/visitor/VisitorForm";
 import EditAttendance from "./modules/attendance/EditAttendance";
 import AddRequirement from "./modules/requirement/AddRequirement";
 import ViewRequirementList from "./modules/requirement/ViewRequirementList";
+import MemberReport from "./modules/report/MemberReport";
 
 import { Toaster } from "sonner";
 import "./App.css";
@@ -357,6 +358,14 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <ViewRequirementList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/memberreports"
+              element={
+                <ProtectedRoute>
+                  <MemberReport />
                 </ProtectedRoute>
               }
             />

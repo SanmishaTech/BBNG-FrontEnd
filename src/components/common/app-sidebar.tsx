@@ -110,6 +110,15 @@ const initialData = {
             { title: "View Requirement", url: "/viewrequirements" },
           ],
         },
+        {
+          title: "Reports",
+          url: "#",
+          icon: PieChart,
+          isActive: false,
+          items: [
+            { title: "Member Report", url: "/memberreports" },
+          ],
+        },
       ],
     },
     admin: {
