@@ -118,6 +118,7 @@ const initialData = {
           items: [
             { title: "Member Report", url: "/memberreports" },
             { title: "Transaction Report", url: "/transactionreports" },
+            { title: "Membership Report", url: "/membershipreports" },
           ],
         },
       ],
