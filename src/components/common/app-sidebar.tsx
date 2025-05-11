@@ -117,6 +117,7 @@ const initialData = {
           isActive: false,
           items: [
             { title: "Member Report", url: "/memberreports" },
+            { title: "Transaction Report", url: "/transactionreports" },
           ],
         },
       ],

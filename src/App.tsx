@@ -47,6 +47,7 @@ import EditAttendance from "./modules/attendance/EditAttendance";
 import AddRequirement from "./modules/requirement/AddRequirement";
 import ViewRequirementList from "./modules/requirement/ViewRequirementList";
 import MemberReport from "./modules/report/MemberReport";
+import TransactionReport from "./modules/report/TransactionReport";
 
 import { Toaster } from "sonner";
 import "./App.css";
@@ -366,6 +367,14 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <MemberReport />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/transactionreports"
+              element={
+                <ProtectedRoute>
+                  <TransactionReport />
                 </ProtectedRoute>
               }
             />
