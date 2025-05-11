@@ -50,9 +50,18 @@ interface LoginResponse {
   token: string;
   accesstoken: string;
   user: {
-    id: string;
+    id: number;
+    name: string;
     email: string;
-    // ... other user fields
+    role: string;
+    active: boolean;
+    lastLogin: string;
+    member?: {
+      id: number;
+      memberName: string;
+      // Other member fields as needed
+    };
+    isMember: boolean;
   };
 }
 
@@ -125,6 +134,12 @@ const Login = () => {
       localStorage.setItem("authToken", data.token);
       localStorage.setItem("refreshToken", data.accesstoken);
       localStorage.setItem("user", JSON.stringify(data.user));
+      
+      // Store memberId from the nested structure if it exists
+      if (data.user.member && data.user.member.id) {
+        localStorage.setItem("memberId", data.user.member.id.toString());
+      }
+      
       // queryClient.invalidateQueries(...) // Consider invalidating relevant queries
       navigate("/users");
       toast.success("Login successful!");

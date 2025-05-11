@@ -99,7 +99,18 @@ const initialData = {
           icon: BookOpen,
         },
       ],
-      navMain: [], // Adding empty navMain array
+      navMain: [
+        {
+          title: "Requirements",
+          url: "#",
+          icon: BookOpen,
+          isActive: false,
+          items: [
+            { title: "Add Requirement", url: "/requirements" },
+            { title: "View Requirement", url: "/viewrequirements" },
+          ],
+        },
+      ],
     },
     admin: {
       projects: [],
@@ -119,6 +130,7 @@ const initialData = {
             { title: "Staff", url: "/staff" },
           ],
         },
+       
       ],
     },
   },
