@@ -455,7 +455,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
               />
             </div>
           )}
-          
+
           {/* Basic Details */}
           <Card className="mb-6 shadow-none border-0">
             <CardHeader>
