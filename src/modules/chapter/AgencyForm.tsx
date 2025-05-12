@@ -516,6 +516,7 @@ export default function ChapterForm({ mode }: { mode: "create" | "edit" }) {
                             field.onChange(value);
                           }}
                           value={field.value ?? ""}
+                          disabled
                         />
                       </FormControl>
                       <FormMessage />
@@ -568,6 +569,7 @@ export default function ChapterForm({ mode }: { mode: "create" | "edit" }) {
                             field.onChange(value);
                           }}
                           value={field.value ?? ""}
+                          disabled
                         />
                       </FormControl>
                       <FormMessage />

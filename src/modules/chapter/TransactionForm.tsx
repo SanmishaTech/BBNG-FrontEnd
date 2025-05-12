@@ -85,8 +85,8 @@ export default function TransactionForm({ mode }: { mode: "create" | "edit" }) {
     resolver: zodResolver(transactionSchema),
     defaultValues: {
       date: new Date(),
-      accountType: "cash",
       transactionType: "credit",
+      accountType: "cash", // Set default to "cash" to match schema
       amount: 0,
       transactionHead: "",
       narration: "",
@@ -167,6 +167,7 @@ export default function TransactionForm({ mode }: { mode: "create" | "edit" }) {
       reset({
         ...transaction,
         date: new Date(transaction.date),
+        accountType: transaction.accountType,
         amount: Number(transaction.amount),
         gstRate: transaction.gstRate ? Number(transaction.gstRate) : undefined,
         gstAmount: transaction.gstAmount
@@ -260,7 +261,7 @@ export default function TransactionForm({ mode }: { mode: "create" | "edit" }) {
           <FormLabel>Account Type</FormLabel>
           <Select
             onValueChange={field.onChange}
-            defaultValue={field.value}
+            value={field.value}
           >
             <FormControl>
               <SelectTrigger className="w-[350px]">
