@@ -8,6 +8,16 @@ const api = axios.create({
   },
 });
 
+// Helper function to ensure URLs are prefixed with '/api'
+const ensureApiPrefix = (url: string): string => {
+  // If URL already starts with '/api', return as is
+  if (url.startsWith('/api')) {
+    return url;
+  }
+  // Otherwise, add the '/api' prefix
+  return `/api${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
 // Helper function to extract the most meaningful error message
 const extractErrorMessage = (error: any): string => {
   // Check different common locations for error messages
@@ -55,7 +65,7 @@ export const get = async (url: string, params?: any, config?: any) => {
       ...config,
     };
 
-    const response = await api.get(url, finalConfig);
+    const response = await api.get(ensureApiPrefix(url), finalConfig);
 
     if (config?.responseType === "blob") {
       return response;
@@ -76,7 +86,7 @@ export const get = async (url: string, params?: any, config?: any) => {
 
 export const post = async (url: string, data: any, params?: any) => {
   try {
-    const response = await api.post(url, data);
+    const response = await api.post(ensureApiPrefix(url), data);
     if (params?.responseType === "blob") {
       return response;
     }
@@ -96,7 +106,7 @@ export const post = async (url: string, data: any, params?: any) => {
 
 export const put = async (url: string, data: any) => {
   try {
-    const response = await api.put(url, data);
+    const response = await api.put(ensureApiPrefix(url), data);
     return response.data;
   } catch (error: any) {
     console.error('PUT request error details:', error.response?.data);
@@ -112,7 +122,7 @@ export const put = async (url: string, data: any) => {
 
 export const patch = async (url: string, data: any) => {
   try {
-    const response = await api.patch(url, data);
+    const response = await api.patch(ensureApiPrefix(url), data);
     return response.data;
   } catch (error: any) {
     console.error('PATCH request error details:', error.response?.data);
@@ -128,7 +138,7 @@ export const patch = async (url: string, data: any) => {
 
 export const del = async (url: string) => {
   try {
-    const response = await api.delete(url);
+    const response = await api.delete(ensureApiPrefix(url));
     return response.data;
   } catch (error: any) {
     console.error('DELETE request error details:', error.response?.data);
@@ -162,7 +172,7 @@ export const postupload = async (
       return config;
     });
 
-    const response = await uploadInstance.post(url, formData, config);
+    const response = await uploadInstance.post(ensureApiPrefix(url), formData, config);
     return response.data;
   } catch (error: any) {
     console.error('POST UPLOAD request error details:', error.response?.data);
@@ -196,7 +206,7 @@ export const putupload = async (
       return config;
     });
 
-    const response = await uploadInstance.put(url, formData, config);
+    const response = await uploadInstance.put(ensureApiPrefix(url), formData, config);
     return response.data;
   } catch (error: any) {
     console.error('PUT UPLOAD request error details:', error.response?.data);
