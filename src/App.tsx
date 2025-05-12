@@ -45,8 +45,7 @@ import {
   GivenReferences,
   ReceivedReferences
 } from "./modules/reference";
-import ReferencesDashboard from "./modules/reference/ReferencesDashboard";
-import ReferenceRouter from "./modules/reference/ReferenceRouter";
+ import ReferenceRouter from "./modules/reference/ReferenceRouter";
 import Chaptermeeting from "./modules/chaptermeeting/ChapterMeetingList";
 import ChapterMeetingCreate from "./modules/chaptermeeting/CreateChapterMeeting";
 import ChapterMeetingEdit from "./modules/chaptermeeting/EditChapterMeeting";
@@ -374,14 +373,7 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
-            <Route
-               path="/references"
-              element={
-                <ProtectedRoute>
-                  <ReferenceList />
-                </ProtectedRoute>
-              }
-            />
+            
             <Route
                path="/viewrequirements"
               element={
