@@ -37,20 +37,33 @@ import EditMembership from "./modules/membership/EditMembership";
 import TransactionList from "./modules/chapter/TransactionList";
 import CreateTransaction from "./modules/chapter/CreateTransaction";
 import EditTransaction from "./modules/chapter/EditTransaction";
-
+import { 
+  ReferenceList, 
+  ReferenceForm,
+  ReferenceDetail,
+  MemberReferences,
+  GivenReferences,
+  ReceivedReferences
+} from "./modules/reference";
+import ReferencesDashboard from "./modules/reference/ReferencesDashboard";
+import ReferenceRouter from "./modules/reference/ReferenceRouter";
 import Chaptermeeting from "./modules/chaptermeeting/ChapterMeetingList";
 import ChapterMeetingCreate from "./modules/chaptermeeting/CreateChapterMeeting";
 import ChapterMeetingEdit from "./modules/chaptermeeting/EditChapterMeeting";
 import VisitorList from "./modules/visitor/VisitorList";
 import VisitorForm from "./modules/visitor/VisitorForm";
 import EditAttendance from "./modules/attendance/EditAttendance";
-import AddRequirement from "./modules/requirement/AddRequirement";
+ import AddRequirement from "./modules/requirement/AddRequirement";
 import ViewRequirementList from "./modules/requirement/ViewRequirementList";
 import MemberReport from "./modules/report/MemberReport";
 import TransactionReport from "./modules/report/TransactionReport";
 import MembershipReport from "./modules/report/MembershipReport";
 
-import { Toaster } from "sonner";
+ import ChapterVisitorList from "./modules/visitor/ChapterVisitorList";
+import { OneToOneList, OneToOneForm } from "./modules/oneToOne";
+import MemberSearch from "./modules/member/MemberSearch";
+import FacebookProfile from "./modules/Facebookprofile/Index";
+ import { Toaster } from "sonner";
 import "./App.css";
 
 // MembershipList wrapper component to handle showing all memberships
@@ -64,6 +77,12 @@ const MemberMembershipList = () => {
   const memberIdNumber = memberId ? parseInt(memberId) : undefined;
 
   return <MembershipList memberId={memberIdNumber} />;
+};
+
+// Member profile wrapper component
+const MemberProfileWrapper = () => {
+  const { id } = useParams<{ id: string }>();
+  return <FacebookProfile memberId={id} />;
 };
 
 const App = () => {
@@ -348,43 +367,127 @@ const App = () => {
               }
             />
             <Route
-              path="/requirements"
+               path="/requirements"
               element={
                 <ProtectedRoute>
                   <AddRequirement />
-                </ProtectedRoute>
+               path="/references"
+              element={
+                <ProtectedRoute>
+                  <ReferenceList />
+                 </ProtectedRoute>
               }
             />
             <Route
-              path="/viewrequirements"
+               path="/viewrequirements"
               element={
                 <ProtectedRoute>
                   <ViewRequirementList />
-                </ProtectedRoute>
+               path="/dashboard/references"
+              element={
+                <ProtectedRoute>
+                  <ReferenceRouter />
+                 </ProtectedRoute>
               }
             />
             <Route
-              path="/memberreports"
+               path="/memberreports"
               element={
                 <ProtectedRoute>
                   <MemberReport />
-                </ProtectedRoute>
+               path="/dashboard/references/given"
+              element={
+                <ProtectedRoute>
+                  <GivenReferences />
+                 </ProtectedRoute>
               }
             />
             <Route
-              path="/transactionreports"
+               path="/transactionreports"
               element={
                 <ProtectedRoute>
                   <TransactionReport />
+               path="/dashboard/references/received"
+              element={
+                <ProtectedRoute>
+                  <ReceivedReferences />
+                 </ProtectedRoute>
+              }
+            />
+            <Route
+               path="/membershipreports"
+              element={
+                <ProtectedRoute>
+                  <MembershipReport />
+               path="/references/create"
+              element={
+                <ProtectedRoute>
+                  <ReferenceForm />
                 </ProtectedRoute>
               }
             />
             <Route
-              path="/membershipreports"
+              path="/references/:id"
               element={
                 <ProtectedRoute>
-                  <MembershipReport />
+                  <ReferenceDetail />
                 </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/chapter-visitors"
+              element={
+                <ProtectedRoute>
+                  <ChapterVisitorList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/references/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <ReferenceForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/members/:memberId/references"
+              element={
+                <ProtectedRoute>
+                  <MemberReferences />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/one-to-ones"
+              element={
+                <ProtectedRoute>
+                  <OneToOneList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/one-to-ones/create"
+              element={
+                <ProtectedRoute>
+                  <OneToOneForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/member/search"
+              element={
+                <ProtectedRoute>
+                  <MemberSearch />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/member/profile/:id"
+              element={
+                <ProtectedRoute>
+                  <MemberProfileWrapper />
+                 </ProtectedRoute>
               }
             />
           </Route>

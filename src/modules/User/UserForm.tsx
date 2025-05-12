@@ -69,9 +69,9 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
     const fetchRoles = async () => {
       try {
         setIsLoadingRoles(true);
-        const rolesData = await get("/roles");
-        const formattedRoles = Object.values(rolesData.roles); // Use only role values
-        setRoles(formattedRoles);
+        // const rolesData = await get("/roles");
+        // const formattedRoles = Object.values(rolesData.roles); // Use only role values
+        // setRoles(formattedRoles);
       } catch (error: any) {
         toast.error("Failed to fetch roles");
       } finally {
