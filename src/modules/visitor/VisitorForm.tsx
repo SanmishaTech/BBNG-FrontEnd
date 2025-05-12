@@ -280,6 +280,23 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
     enabled: isEditing && !!visitorId,
   });
 
+  // Add an effect to watch for changes to invitedById
+  useEffect(() => {
+    // Watch the invitedById field
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'invitedById' && value.invitedById) {
+        console.log("invitedById changed:", value.invitedById, typeof value.invitedById);
+        
+        // Ensure it's a number to guarantee consistency
+        if (typeof value.invitedById === 'string') {
+          form.setValue('invitedById', parseInt(value.invitedById));
+        }
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form]);
+
   useEffect(() => {
     if (isEditing && visitorData) {
       // Format the data before setting form values
@@ -293,7 +310,17 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
         invitedById: visitorData.invitedById,
       };
 
+      console.log("Setting visitor data:", formattedData);
+      console.log("invitedById type:", typeof formattedData.invitedById);
+      console.log("invitedById value:", formattedData.invitedById);
+      
       form.reset(formattedData);
+      
+      // Log form value after reset
+      setTimeout(() => {
+        console.log("Form values after reset:", form.getValues());
+        console.log("invitedById in form:", form.getValues().invitedById);
+      }, 100);
     } else if (!isEditing && meetingData && !form.formState.isDirty) {
       // For new visitors, pre-populate the meeting's chapter
       form.setValue("chapter", meetingData.chapter?.name || "");
@@ -509,38 +536,55 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                           </FormItem>
                         )}
                       />
-
+              
                       <FormField
                         control={form.control}
                         name="invitedById"
-                        render={({ field }) => (
+                        render={({ field }) => {
+                          console.log("Cross-chapter invitedById field:", field.value, typeof field.value);
+                          
+                          // Find selected member
+                          const selectedMember = membersData?.members?.find(
+                            (m: any) => m.id === field.value || m.id.toString() === field.value?.toString()
+                          );
+                          console.log("Selected member:", selectedMember);
+                          
+                          return (
                           <FormItem>
                             <FormLabel>Invited By</FormLabel>
                             <Select
-                              onValueChange={(value) =>
-                                field.onChange(parseInt(value))
-                              }
+                              onValueChange={(value) => {
+                                console.log("Selected value:", value, typeof value);
+                                field.onChange(parseInt(value));
+                              }}
                               value={field.value?.toString() || ""}
+                              defaultValue={field.value?.toString() || ""}
                             >
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Select member" />
+                                  <SelectValue placeholder="Select member">
+                                    {selectedMember?.memberName || "Select member"}
+                                  </SelectValue>
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {membersData?.members?.map((member: any) => (
+                                {membersData?.members?.map((member: any) => {
+                                  console.log("Member option:", member.id, member.memberName);
+                                  return (
                                   <SelectItem
                                     key={member.id}
                                     value={member.id.toString()}
                                   >
                                     {member.memberName}
                                   </SelectItem>
-                                ))}
+                                  );
+                                })}
                               </SelectContent>
                             </Select>
                             <FormMessage />
                           </FormItem>
-                        )}
+                          );
+                        }}
                       />
                     </>
                   ) : (
@@ -580,34 +624,51 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                       <FormField
                         control={form.control}
                         name="invitedById"
-                        render={({ field }) => (
+                        render={({ field }) => {
+                          console.log("Regular invitedById field:", field.value, typeof field.value);
+                          
+                          // Find selected member
+                          const selectedMember = membersData?.members?.find(
+                            (m: any) => m.id === field.value || m.id.toString() === field.value?.toString()
+                          );
+                          console.log("Selected member:", selectedMember);
+                          
+                          return (
                           <FormItem>
                             <FormLabel>Invited By</FormLabel>
                             <Select
-                              onValueChange={(value) =>
-                                field.onChange(parseInt(value))
-                              }
+                              onValueChange={(value) => {
+                                console.log("Selected value:", value, typeof value);
+                                field.onChange(parseInt(value));
+                              }}
                               value={field.value?.toString() || ""}
+                              defaultValue={field.value?.toString() || ""}
                             >
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Select member" />
+                                  <SelectValue placeholder="Select member">
+                                    {selectedMember?.memberName || "Select member"}
+                                  </SelectValue>
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {membersData?.members?.map((member: any) => (
+                                {membersData?.members?.map((member: any) => {
+                                  console.log("Member option:", member.id, member.memberName);
+                                  return (
                                   <SelectItem
                                     key={member.id}
                                     value={member.id.toString()}
                                   >
                                     {member.memberName}
                                   </SelectItem>
-                                ))}
+                                  );
+                                })}
                               </SelectContent>
                             </Select>
                             <FormMessage />
                           </FormItem>
-                        )}
+                          );
+                        }}
                       />
 
                       <FormField

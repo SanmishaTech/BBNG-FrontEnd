@@ -100,16 +100,16 @@ const initialData = {
           url: "/chaptermeetings",
           icon: BookOpen,
         },
-        {
-          name: "References",
-          url: "/references",
-          icon: FileText,
-        },
-        {
-          name: "My References",
-          url: "/dashboard/references",
-          icon: FileText,
-        },
+        // {
+        //   name: "References",
+        //   url: "/references",
+        //   icon: FileText,
+        // },
+        // {
+        //   name: "My References",
+        //   url: "/dashboard/references",
+        //   icon: FileText,
+        // },
         {
           name: "Chapter Visitors",
           url: "/chapter-visitors",
