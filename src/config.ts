@@ -11,6 +11,7 @@ const getBackendUrl = () => {
     
     // Otherwise, derive from current hostname
     const hostname = window.location.hostname;
+    console.log(hostname)
     // If deployed to IP address or domain, use that
     if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
       return `http://${hostname}`;
