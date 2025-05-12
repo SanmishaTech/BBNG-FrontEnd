@@ -307,20 +307,38 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
           : null,
         meetingId: visitorData.meetingId,
         chapterId: visitorData.chapterId,
-        invitedById: visitorData.invitedById,
+        // Ensure invitedById is a proper number or null
+        invitedById: visitorData.invitedById !== undefined && 
+                     visitorData.invitedById !== null && 
+                     !isNaN(Number(visitorData.invitedById))
+          ? Number(visitorData.invitedById)
+          : null,
+        isCrossChapter: !!visitorData.isCrossChapter,
       };
 
       console.log("Setting visitor data:", formattedData);
       console.log("invitedById type:", typeof formattedData.invitedById);
       console.log("invitedById value:", formattedData.invitedById);
       
+      // Reset the form with the formatted data
       form.reset(formattedData);
+      
+      // If this is a cross-chapter visitor, ensure invitedById is set correctly after reset
+      if (formattedData.isCrossChapter) {
+        setTimeout(() => {
+          // Only set the value if it's a valid number
+          if (formattedData.invitedById !== null && !isNaN(formattedData.invitedById)) {
+            form.setValue('invitedById', formattedData.invitedById);
+            console.log("Form values after explicit setValue:", form.getValues());
+          }
+        }, 100);
+      }
       
       // Log form value after reset
       setTimeout(() => {
         console.log("Form values after reset:", form.getValues());
-        console.log("invitedById in form:", form.getValues().invitedById);
-      }, 100);
+        console.log("invitedById in form:", form.getValues()?.invitedByMember?.id);
+      }, 200);
     } else if (!isEditing && meetingData && !form.formState.isDirty) {
       // For new visitors, pre-populate the meeting's chapter
       form.setValue("chapter", meetingData.chapter?.name || "");
@@ -543,11 +561,21 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                         render={({ field }) => {
                           console.log("Cross-chapter invitedById field:", field.value, typeof field.value);
                           
+                          // Ensure field.value is properly normalized for comparison
+                          let normalizedFieldValue = null;
+                          if (field.value !== null && field.value !== undefined) {
+                            const parsedValue = Number(field.value);
+                            normalizedFieldValue = !isNaN(parsedValue) ? parsedValue : null;
+                          }
+                          
                           // Find selected member
                           const selectedMember = membersData?.members?.find(
-                            (m: any) => m.id === field.value || m.id.toString() === field.value?.toString()
+                            (m: any) => normalizedFieldValue !== null && (
+                              Number(m.id) === normalizedFieldValue
+                            )
                           );
                           console.log("Selected member:", selectedMember);
+                          console.log("Selected member ID:", selectedMember?.id);
                           
                           return (
                           <FormItem>
@@ -557,14 +585,11 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                                 console.log("Selected value:", value, typeof value);
                                 field.onChange(parseInt(value));
                               }}
-                              value={field.value?.toString() || ""}
-                              defaultValue={field.value?.toString() || ""}
+                              value={normalizedFieldValue !== null ? normalizedFieldValue.toString() : ""}
                             >
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Select member">
-                                    {selectedMember?.memberName || "Select member"}
-                                  </SelectValue>
+                                  <SelectValue placeholder="Select member" />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
