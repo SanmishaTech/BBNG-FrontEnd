@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,38 +12,16 @@ import { post } from "@/services/apiService";
 import { appName, allowRegistration } from "@/config";
 import { LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
-import { ZodError, ZodIssue } from "zod";
-import { handleApiValidationErrors } from "@/lib/Handlevalidation";
 
-//
-// 1. Define the shape of what your backend is returning
-//
-interface BackendErrorResponse {
-  errors: Array<{
+// Type for API error response with field validation errors
+interface ApiErrorResponse {
+  errors?: Array<{
     path: Array<string | number>;
     message: string;
   }>;
-}
-
-//
-// 2. Convert each backend error into a ZodIssue
-//
-function mapBackendErrorToIssue(err: BackendErrorResponse): ZodIssue[] {
-  console.log(err);
-  return err.error.map(({ path, message }) => ({
-    // you can choose a more specific code if you like,
-    // but "custom" is fine for server‐side messages
-    code: "custom" as const,
-    path,
-    message,
-  }));
-}
-function getZodIssuesFromBackend(err: BackendErrorResponse): ZodIssue[] {
-  return mapBackendErrorToIssue(err);
-}
-function throwAsZodError(err: BackendErrorResponse): never {
-  const issues = mapBackendErrorToIssue(err);
-  throw new ZodError(issues);
+  status?: number;
+  data?: any;
+  message?: string;
 }
 // Define expected API response structure for SUCCESS
 interface LoginResponse {
@@ -54,29 +32,6 @@ interface LoginResponse {
     email: string;
     // ... other user fields
   };
-}
-
-// Define structure for individual field validation errors from API
-interface FieldValidationError {
-  path: string[]; // Expecting path like ["email"] or ["password"]
-  message: string;
-}
-
-// Define the structure of the API error response BODY for VALIDATION errors (status 400)
-interface ApiValidationErrorResponse {
-  status: number;
-  error: FieldValidationError[];
-  message: string; // General message like "Request failed" or "Validation Error"
-}
-
-// Define a more general API error structure for other errors (e.g., 401, 500)
-// This depends on how your apiService formats errors. We assume it might throw
-// an object with a 'message' property for non-validation errors.
-interface ApiGeneralError extends Error {
-  // Can still extend Error
-  message: string;
-  status?: number; // Optional status if available
-  // Include other potential properties your apiService might add
 }
 
 type LoginFormInputs = z.infer<typeof loginSchema>;
@@ -90,7 +45,6 @@ const loginSchema = z.object({
 const Login = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   // Get setError from useForm
   const {
@@ -114,7 +68,7 @@ const Login = () => {
 
   const loginMutation = useMutation<
     LoginResponse,
-    unknown, // Use unknown for error type, as we'll check its structure
+    any, // Changed to 'any' to access enhanced error properties
     LoginFormInputs
   >({
     mutationFn: async (loginData: LoginFormInputs) => {
@@ -129,10 +83,41 @@ const Login = () => {
       navigate("/users");
       toast.success("Login successful!");
     },
-    onError: (error: unknown) => {
-      toast.error(error.message || "An error occurred during login.");
-      // console.log(error);
-      // throwAsZodError(error);
+    onError: (error: ApiErrorResponse) => {
+      // Handle field-specific validation errors (map to form fields)
+      const handleValidationErrors = () => {
+        // Check if we have field-specific errors to map to the form
+        if (error.errors && Array.isArray(error.errors)) {
+          error.errors.forEach((fieldError) => {
+            // Only process if we have a path and message
+            if (fieldError.path && fieldError.message && Array.isArray(fieldError.path)) {
+              // Get the field name (last item in the path array or the first item if single-level)
+              const fieldName = fieldError.path[fieldError.path.length - 1] || fieldError.path[0];
+              
+              // Set the error on the specific field if it matches our form fields
+              if (typeof fieldName === 'string' && (fieldName === 'email' || fieldName === 'password')) {
+                setError(fieldName as keyof LoginFormInputs, {
+                  type: 'server',
+                  message: fieldError.message
+                });
+              }
+            }
+          });
+          return true; // We handled field-specific errors
+        }
+        return false; // No field-specific errors to handle
+      };
+      
+      // First try to handle field-specific validation errors
+      const hadFieldErrors = handleValidationErrors();
+      
+      // If we didn't have field-specific errors OR we want to show both field and general errors
+      if (!hadFieldErrors || error.status === 401) {
+        // Use our improved error message from apiService
+        toast.error(error.message || "An error occurred during login.");
+      }
+      
+      // Log detailed error information for debugging
       console.error("Login error details:", error);
     },
   });

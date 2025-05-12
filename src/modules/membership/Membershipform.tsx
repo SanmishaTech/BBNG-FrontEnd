@@ -330,36 +330,28 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Update onSubmit function to include calculated tax values
-  const onSubmit = async (values: MembershipFormInputs) => {
-    try {
-      setIsSubmitting(true);
-      
-      // Add calculated tax values before saving
-      const formData = {
-        ...values,
-        // Add calculated tax amounts
-        cgstAmount: cgstAmount,
-        sgstAmount: sgstAmount,
-        igstAmount: igstAmount,
-        totalTax: totalTax,
-        totalAmount: totalAmount,
-      };
+  const onSubmit: SubmitHandler<MembershipFormInputs> = (values) => {
+    // Add calculated tax values before saving
+    const formData = {
+      ...values,
+      // Add calculated tax amounts
+      cgstAmount: cgstAmount,
+      sgstAmount: sgstAmount,
+      igstAmount: igstAmount,
+      totalTax: totalTax,
+      totalAmount: totalAmount,
+    };
 
-      let response;
-      if (mode === "edit" && id) {
-        response = await put(`/memberships/${id}`, formData);
-        toast.success("Membership updated successfully!");
-      } else {
-        response = await post("/memberships", formData);
-        toast.success("Membership created successfully!");
-      }
-
-      navigate("/memberships");
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      toast.error("Failed to save membership. Please try again.");
-    } finally {
-      setIsSubmitting(false);
+    setIsSubmitting(true);
+    
+    if (mode === "edit" && id) {
+      updateMutation.mutate(formData, {
+        onSettled: () => setIsSubmitting(false)
+      });
+    } else {
+      createMutation.mutate(formData, {
+        onSettled: () => setIsSubmitting(false)
+      });
     }
   };
 
@@ -615,9 +607,9 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                                 <CommandInput placeholder="Search packages..." />
                                 <CommandEmpty>No package found.</CommandEmpty>
                                 <CommandGroup>
-                                  {packages.map((pkg: any) => (
+                                  {packages.map((pkg: any, index: number) => (
                                     <CommandItem
-                                      key={pkg.id}
+                                      key={index}
                                       value={pkg.packageName}
                                       onSelect={() => {
                                         form.setValue("packageId", pkg.id);
@@ -1045,4 +1037,4 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
       </Form>
     </div>
   );
-} 
+}

@@ -202,40 +202,58 @@ export default function MemberForm({ mode }: MemberFormProps) {
     queryFn: () => get("/chapters").then((r) => r.chapters),
   });
 
+  // Check if we have visitor data in localStorage to pre-fill the form
+  const visitorData = useMemo(() => {
+    if (mode === "create") {
+      try {
+        const savedData = localStorage.getItem("visitorToMember");
+        if (savedData) {
+          const parsedData = JSON.parse(savedData);
+          // Clear the localStorage after retrieving the data
+          localStorage.removeItem("visitorToMember");
+          return parsedData;
+        }
+      } catch (error) {
+        console.error("Error parsing visitor data:", error);
+      }
+    }
+    return null;
+  }, [mode]);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(memberSchema),
     defaultValues: {
-      memberName: "",
-      chapterId: undefined,
-      category: "",
+      memberName: visitorData?.memberName || "",
+      chapterId: visitorData?.chapterId || undefined,
+      category: visitorData?.category || "",
       businessCategory: "",
-      gender: "",
+      gender: visitorData?.gender || "",
       dob: new Date(), // Consider undefined and let Zod handle required or user pick
-      mobile1: "",
-      mobile2: null,
+      mobile1: visitorData?.mobile1 || "",
+      mobile2: visitorData?.mobile2 || null,
       gstNo: "",
       organizationName: "",
       businessTagline: "",
-      organizationMobileNo: "",
+      organizationMobileNo: visitorData?.mobile1 || "", // Use mobile1 as organization mobile
       organizationLandlineNo: "",
       organizationEmail: "",
-      orgAddressLine1: "",
-      orgAddressLine2: "",
-      orgLocation: "",
-      orgPincode: "",
+      orgAddressLine1: visitorData?.addressLine1 || "",
+      orgAddressLine2: visitorData?.addressLine2 || "",
+      orgLocation: visitorData?.location || "",
+      orgPincode: visitorData?.pincode || "",
       organizationWebsite: "",
       organizationDescription: "",
-      addressLine1: "",
-      location: "",
-      addressLine2: "",
-      pincode: "",
+      addressLine1: visitorData?.addressLine1 || "",
+      location: visitorData?.location || "",
+      addressLine2: visitorData?.addressLine2 || "",
+      pincode: visitorData?.pincode || "",
       specificAsk: "",
       specificGive: "",
       clients: "",
       profilePicture1: undefined,
       profilePicture2: undefined,
       profilePicture3: undefined,
-      email: "",
+      email: visitorData?.email || "",
       ...(mode === "create" ? { password: "", verifyPassword: "" } : {}),
     } as FormValues,
   });

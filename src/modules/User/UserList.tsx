@@ -103,14 +103,14 @@ const UserList = () => {
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        const rolesData = await get("/roles");
-        const formattedRoles: Option[] = Object.entries(rolesData.roles).map(
-          ([key, value]) => ({
-            label: formatRoleName(value),
-            value: value,
-          })
-        );
-        setAvailableRoles(formattedRoles);
+        // const rolesData = await get("/roles");
+        // const formattedRoles: Option[] = Object.entries(rolesData.roles).map(
+        //   ([key, value]) => ({
+        //     label: formatRoleName(value),
+        //     value: value,
+        //   })
+        // );
+        // setAvailableRoles(formattedRoles);
       } catch (error: any) {
         toast.error("Failed to fetch roles");
       }
