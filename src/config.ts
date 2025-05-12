@@ -18,7 +18,7 @@ const getBackendUrl = () => {
     }
   }
   // Default for development
-  return "http://15.207.30.113";
+  return "http://localhost:3000";
 };
 
 export const backendUrl = getBackendUrl();
