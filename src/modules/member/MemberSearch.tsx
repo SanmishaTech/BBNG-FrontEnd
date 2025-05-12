@@ -35,7 +35,7 @@ const MemberSearch = () => {
     setLoading(true);
     try {
       // Fetch real member data from API with the correct endpoint
-      const response = await apiService.get('/members/search');
+      const response = await apiService.get('/api/members/search');
       
       // Transform API data to match our MemberData type
       const memberData: MemberData[] = response.members.map((member: any) => ({

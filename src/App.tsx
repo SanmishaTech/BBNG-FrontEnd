@@ -371,11 +371,15 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <AddRequirement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
                path="/references"
               element={
                 <ProtectedRoute>
                   <ReferenceList />
-                 </ProtectedRoute>
+                </ProtectedRoute>
               }
             />
             <Route
@@ -383,11 +387,15 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <ViewRequirementList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
                path="/dashboard/references"
               element={
                 <ProtectedRoute>
                   <ReferenceRouter />
-                 </ProtectedRoute>
+                </ProtectedRoute>
               }
             />
             <Route
@@ -395,31 +403,43 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <MemberReport />
+                </ProtectedRoute>
+              }
+            />
+            <Route
                path="/dashboard/references/given"
               element={
                 <ProtectedRoute>
                   <GivenReferences />
-                 </ProtectedRoute>
+                </ProtectedRoute>
               }
             />
             <Route
-               path="/transactionreports"
+              path="/transactionreports"
               element={
                 <ProtectedRoute>
                   <TransactionReport />
-               path="/dashboard/references/received"
-              element={
-                <ProtectedRoute>
-                  <ReceivedReferences />
-                 </ProtectedRoute>
+                </ProtectedRoute>
               }
             />
             <Route
-               path="/membershipreports"
+              path="/dashboard/references/received"
+              element={
+                <ProtectedRoute>
+                  <ReceivedReferences />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/membershipreports"
               element={
                 <ProtectedRoute>
                   <MembershipReport />
-               path="/references/create"
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/references/create"
               element={
                 <ProtectedRoute>
                   <ReferenceForm />
@@ -487,7 +507,7 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <MemberProfileWrapper />
-                 </ProtectedRoute>
+                </ProtectedRoute>
               }
             />
           </Route>
