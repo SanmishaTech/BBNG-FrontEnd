@@ -179,7 +179,7 @@ const ReferenceDetail = () => {
   return (
     <div className="container mx-auto py-6">
       <div className="mb-6">
-        <Button variant="outline" onClick={() => navigate("/references")}>
+        <Button variant="outline" onClick={() => navigate("/dashboard/references/received")}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to References
         </Button>
       </div>
