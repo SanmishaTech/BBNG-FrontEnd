@@ -103,12 +103,11 @@ const GivenReferences = () => {
     
     setLoading(true);
     try {
-      const response = await get("/references", {
-        giverId: currentMemberId,
-        self: false,
+      const response = await get("/references/given", {
         page: currentPage,
         limit: 6,
         search: searchTerm,
+        self: false,
         status: statusFilter === "all" ? undefined : statusFilter || undefined,
         fromDate: fromDate || undefined,
         toDate: toDate || undefined,

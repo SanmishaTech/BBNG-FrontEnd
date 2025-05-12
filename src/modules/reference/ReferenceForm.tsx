@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { get, post, put } from "@/services/apiService";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -42,23 +44,37 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-interface FormData {
-  date: Date;
-  noOfReferences?: number;
-  chapterId: number;
-  memberId: number;
-  urgency?: string;
-  self: boolean;
-  nameOfReferral: string;
-  mobile1: string;
-  mobile2?: string;
-  email?: string;
-  remarks?: string;
-  addressLine1?: string;
-  location?: string;
-  addressLine2?: string;
-  pincode?: string;
-}
+// Define Zod schema for form validation
+const referenceSchema = z.object({
+  date: z.date({
+    required_error: "Date is required",
+  }),
+  noOfReferences: z.number().optional().nullable(),
+  chapterId: z.number({
+    required_error: "Chapter is required",
+  }).min(1, "Please select a chapter"),
+  memberId: z.number({
+    required_error: "Member is required",
+  }).min(1, "Please select a member"),
+  urgency: z.string().optional(),
+  self: z.boolean(),
+  nameOfReferral: z.string({
+    required_error: "Name of referral is required",
+  }).min(1, "Name of referral is required"),
+  mobile1: z.string({
+    required_error: "Primary mobile number is required",
+  }).min(10, "Mobile number must be at least 10 digits"),
+  mobile2: z.string().optional(),
+  email: z.string().email("Invalid email format").optional().or(z.literal('')),
+  remarks: z.string().optional(),
+  addressLine1: z.string().optional(),
+  location: z.string().optional(),
+  addressLine2: z.string().optional(),
+  pincode: z.string().optional(),
+});
+
+// Infer the type from the schema
+type FormData = z.infer<typeof referenceSchema>;
 
 interface Chapter {
   id: number;
@@ -86,12 +102,13 @@ const ReferenceForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEditMode = !!id;
-  
+
   const [loading, setLoading] = useState(false);
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
 
   const form = useForm<FormData>({
+    resolver: zodResolver(referenceSchema),
     defaultValues: {
       date: new Date(),
       noOfReferences: undefined,
@@ -136,9 +153,8 @@ const ReferenceForm = () => {
       const loadReference = async () => {
         setLoading(true);
         try {
-          const response = await get(`/references/${id}`);
-          const reference = response.reference;
-          
+          const reference = await get(`/references/${id}`);
+
           form.reset({
             date: new Date(reference.date),
             noOfReferences: reference.noOfReferences,
@@ -172,11 +188,31 @@ const ReferenceForm = () => {
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
-      // Format date to ISO string
+      // Format data to match backend expectations
+      // Check the backend schema requirements in referenceController.js
       const formattedData = {
-        ...data,
-        date: data.date.toISOString(),
+        // Backend expects date as string
+        date: data.date instanceof Date ? data.date.toISOString() : new Date().toISOString(),
+        // Convert numbers to string where needed
+        noOfReferences: data.noOfReferences !== undefined && data.noOfReferences !== null ? data.noOfReferences.toString() : undefined,
+        // Keep as numbers for these fields
+        chapterId: data.chapterId,
+        memberId: data.memberId,
+        // Other fields with proper defaults
+        urgency: data.urgency || undefined,
+        self: data.self,
+        nameOfReferral: data.nameOfReferral,
+        mobile1: data.mobile1,
+        mobile2: data.mobile2 || undefined,
+        email: data.email || undefined,
+        remarks: data.remarks || undefined,
+        addressLine1: data.addressLine1 || undefined,
+        addressLine2: data.addressLine2 || undefined,
+        location: data.location || undefined,
+        pincode: data.pincode || undefined,
       };
+
+      console.log('Submitting data:', formattedData);
 
       if (isEditMode) {
         await put(`/references/${id}`, formattedData);
@@ -563,7 +599,7 @@ const ReferenceForm = () => {
                   <Button 
                     type="button" 
                     variant="outline" 
-                    onClick={() => navigate("/references")}
+                    onClick={() => navigate("/dashboard/references/given")}
                   >
                     Cancel
                   </Button>
