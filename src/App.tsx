@@ -53,11 +53,17 @@ import ChapterMeetingEdit from "./modules/chaptermeeting/EditChapterMeeting";
 import VisitorList from "./modules/visitor/VisitorList";
 import VisitorForm from "./modules/visitor/VisitorForm";
 import EditAttendance from "./modules/attendance/EditAttendance";
-import ChapterVisitorList from "./modules/visitor/ChapterVisitorList";
+ import AddRequirement from "./modules/requirement/AddRequirement";
+import ViewRequirementList from "./modules/requirement/ViewRequirementList";
+import MemberReport from "./modules/report/MemberReport";
+import TransactionReport from "./modules/report/TransactionReport";
+import MembershipReport from "./modules/report/MembershipReport";
+
+ import ChapterVisitorList from "./modules/visitor/ChapterVisitorList";
 import { OneToOneList, OneToOneForm } from "./modules/oneToOne";
 import MemberSearch from "./modules/member/MemberSearch";
 import FacebookProfile from "./modules/Facebookprofile/Index";
-import { Toaster } from "sonner";
+ import { Toaster } from "sonner";
 import "./App.css";
 
 // MembershipList wrapper component to handle showing all memberships
@@ -361,39 +367,59 @@ const App = () => {
               }
             />
             <Route
-              path="/references"
+               path="/requirements"
+              element={
+                <ProtectedRoute>
+                  <AddRequirement />
+               path="/references"
               element={
                 <ProtectedRoute>
                   <ReferenceList />
-                </ProtectedRoute>
+                 </ProtectedRoute>
               }
             />
             <Route
-              path="/dashboard/references"
+               path="/viewrequirements"
+              element={
+                <ProtectedRoute>
+                  <ViewRequirementList />
+               path="/dashboard/references"
               element={
                 <ProtectedRoute>
                   <ReferenceRouter />
-                </ProtectedRoute>
+                 </ProtectedRoute>
               }
             />
             <Route
-              path="/dashboard/references/given"
+               path="/memberreports"
+              element={
+                <ProtectedRoute>
+                  <MemberReport />
+               path="/dashboard/references/given"
               element={
                 <ProtectedRoute>
                   <GivenReferences />
-                </ProtectedRoute>
+                 </ProtectedRoute>
               }
             />
             <Route
-              path="/dashboard/references/received"
+               path="/transactionreports"
+              element={
+                <ProtectedRoute>
+                  <TransactionReport />
+               path="/dashboard/references/received"
               element={
                 <ProtectedRoute>
                   <ReceivedReferences />
-                </ProtectedRoute>
+                 </ProtectedRoute>
               }
             />
             <Route
-              path="/references/create"
+               path="/membershipreports"
+              element={
+                <ProtectedRoute>
+                  <MembershipReport />
+               path="/references/create"
               element={
                 <ProtectedRoute>
                   <ReferenceForm />
@@ -461,7 +487,7 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <MemberProfileWrapper />
-                </ProtectedRoute>
+                 </ProtectedRoute>
               }
             />
           </Route>

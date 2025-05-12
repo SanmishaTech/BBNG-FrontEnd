@@ -116,7 +116,29 @@ const initialData = {
           icon: UserRound,
         },
       ],
-      navMain: [], // Adding empty navMain array
+      navMain: [
+        {
+          title: "Requirements",
+          url: "#",
+          icon: BookOpen,
+          isActive: false,
+          items: [
+            { title: "Add Requirement", url: "/requirements" },
+            { title: "View Requirement", url: "/viewrequirements" },
+          ],
+        },
+        {
+          title: "Reports",
+          url: "#",
+          icon: PieChart,
+          isActive: false,
+          items: [
+            { title: "Member Report", url: "/memberreports" },
+            { title: "Transaction Report", url: "/transactionreports" },
+            { title: "Membership Report", url: "/membershipreports" },
+          ],
+        },
+      ],
     },
     admin: {
       projects: [],
@@ -136,6 +158,7 @@ const initialData = {
             { title: "Staff", url: "/staff" },
           ],
         },
+       
       ],
     },
   },
