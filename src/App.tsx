@@ -46,7 +46,7 @@ import {
   GivenReferences,
   ReceivedReferences,
 } from "./modules/reference";
- import ReferenceRouter from "./modules/reference/ReferenceRouter";
+import ReferenceRouter from "./modules/reference/ReferenceRouter";
 import Chaptermeeting from "./modules/chaptermeeting/ChapterMeetingList";
 import ChapterMeetingCreate from "./modules/chaptermeeting/CreateChapterMeeting";
 import ChapterMeetingEdit from "./modules/chaptermeeting/EditChapterMeeting";
@@ -91,6 +91,11 @@ const App = () => {
   useEffect(() => {
     document.title = appName; // Set the document title
   }, []);
+
+  const localstorageData = localStorage.getItem("user");
+  const userData = localstorageData ? JSON.parse(localstorageData) : null;
+  const userRole = userData ? userData.role : null;
+  const userId = userData ? userData.id : null;
 
   return (
     <>
@@ -384,7 +389,7 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
- 
+
             <Route
               path="/viewrequirements"
               element={

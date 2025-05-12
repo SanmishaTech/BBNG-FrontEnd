@@ -47,11 +47,6 @@ const initialData = {
           icon: UsersRound, 
         },
         {
-          name: "Manage Users",
-          url: "/users",
-          icon: UsersRound,
-        },
-        {
           name: "Zones",
           url: "/zones",
           icon: UsersRound,
@@ -66,11 +61,7 @@ const initialData = {
           url: "/categories",
           icon: UsersRound,
         },
-        {
-          name: "Site Settings",
-          url: "/site",
-          icon: Settings2,
-        },
+
         {
           name: "Training",
           url: "/trainings",
@@ -82,57 +73,23 @@ const initialData = {
           icon: MessageCircle,
         },
         {
-          name: "Chapters",
-          url: "/chapters",
-          icon: UsersRound,
-        },
-        {
-          name: "Members",
-          url: "/members",
-          icon: PieChart,
-        },
-        {
-          name: "Packages",
-          url: "/packages",
-          icon: UsersRound,
-        },
-        {
-          name: "Membership",
-          url: "/memberships",
-          icon: UsersRound,
-        },
-        {
           name: "Chapter Meetings",
           url: "/chaptermeetings",
-          icon: BookOpen,
+          icon: UsersRound,
         },
-        // {
-        //   name: "References",
-        //   url: "/references",
-        //   icon: FileText,
-        // },
-        // {
-        //   name: "My References",
-        //   url: "/dashboard/references",
-        //   icon: FileText,
-        // },
+
         {
           name: "Chapter Visitors",
           url: "/chapter-visitors",
-          icon: UserRound,
+          icon: UsersRound,
+        },
+        {
+          name: "Requirements",
+          url: "/requirements",
+          icon: BookOpen,
         },
       ],
       navMain: [
-        {
-          title: "Requirements",
-          url: "#",
-          icon: BookOpen,
-          isActive: false,
-          items: [
-            { title: "Add Requirement", url: "/requirements" },
-            { title: "View Requirement", url: "/viewrequirements" },
-          ],
-        },
         {
           title: "Reports",
           url: "#",
@@ -156,15 +113,64 @@ const initialData = {
           icon: SquareTerminal,
           isActive: false,
           items: [
-            { title: "Country", url: "/countries" },
-            { title: "State", url: "./states" },
-            { title: "City", url: "/cities" },
-            { title: "Sector", url: "/sectors" },
-            { title: "Branches", url: "/branches" },
-            { title: "Staff", url: "/staff" },
+            // {
+            //   title: "Manage Users",
+            //   url: "/users",
+            //   icon: UsersRound,
+            // },
+            {
+              title: "Manage Chapters",
+              url: "/chapters",
+              icon: UsersRound,
+            },
+            {
+              title: "Manage Members",
+              url: "/members",
+              icon: UsersRound,
+            },
+            {
+              title: "Manage Packages",
+              url: "/packages",
+              icon: UsersRound,
+            },
+            {
+              title: "Manage Memberships",
+              url: "/memberships",
+              icon: UsersRound,
+            },
+            {
+              title: "Manage Locations",
+              url: "/location",
+              icon: UsersRound,
+            },
+            {
+              title: "Manage Categories",
+              url: "/categories",
+              icon: UsersRound,
+            },
+            {
+              title: "Manage Zones",
+              url: "/zones",
+              icon: UsersRound,
+            },
+
+            {
+              title: "Manage Trainings",
+              url: "/trainings",
+              icon: UsersRound,
+            },
+            {
+              title: "Manage Messages",
+              url: "/messages",
+              icon: UsersRound,
+            },
+            // {
+            //   title: "Manage Site Settings",
+            //   url: "/site",
+            //   icon: UsersRound,
+            // },
           ],
         },
-       
       ],
     },
   },

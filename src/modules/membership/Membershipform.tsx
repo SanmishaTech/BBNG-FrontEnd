@@ -649,6 +649,7 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                           <FormControl>
                             <Input
                               type="number"
+                              disabled
                               min={0}
                               step="0.01"
                               placeholder="Basic fees"
@@ -665,73 +666,7 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                     />
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3 mt-4">
-                    {/* CGST Rate */}
-                    <FormField
-                      control={form.control}
-                      name="cgstRate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>CGST(%)</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="CGST"
-                              {...field}
-                              value={field.value || ''}
-                              readOnly
-                              className={!field.value ? "bg-gray-100" : ""}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* SGST Rate */}
-                    <FormField
-                      control={form.control}
-                      name="sgstRate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>SGST(%)</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="SGST"
-                              {...field}
-                              value={field.value || ''}
-                              readOnly
-                              className={!field.value ? "bg-gray-100" : ""}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* IGST Rate */}
-                    <FormField
-                      control={form.control}
-                      name="igstRate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>IGST(%)</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="IGST"
-                              {...field}
-                              value={field.value || ''}
-                              readOnly
-                              className={!field.value ? "bg-gray-100" : ""}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+             
 
                   {/* Preview Section */}
                   <div className="mt-4 p-4 bg-gray-50 rounded-md border">
@@ -990,26 +925,7 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                     )}
                     
                     {/* Active Status */}
-                    <FormField
-                      control={form.control}
-                      name="active"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>Active</FormLabel>
-                            <p className="text-sm text-muted-foreground">
-                              Enable to make this membership active
-                            </p>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
+                   
                   </div>
                 </CardContent>
               </Card>
