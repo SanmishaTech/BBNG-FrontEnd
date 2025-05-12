@@ -40,6 +40,12 @@ const initialData = {
   roles: {
     super_admin: {
       projects: [
+
+        {
+          name: "Dashboard",
+          url: "/dashboard",
+          icon: UsersRound, 
+        },
         {
           name: "Manage Users",
           url: "/users",
