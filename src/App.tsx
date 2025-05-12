@@ -59,7 +59,7 @@ import ViewRequirementList from "./modules/requirement/ViewRequirementList";
 import MemberReport from "./modules/report/MemberReport";
 import TransactionReport from "./modules/report/TransactionReport";
 import MembershipReport from "./modules/report/MembershipReport";
-
+import Dashboard from "./modules/Dashboard/dashboard";
  import ChapterVisitorList from "./modules/visitor/ChapterVisitorList";
 import { OneToOneList, OneToOneForm } from "./modules/oneToOne";
 import MemberSearch from "./modules/member/MemberSearch";
@@ -103,6 +103,14 @@ const App = () => {
             <Route path="/reset-password/:token" element={<ResetPassword />} />
           </Route>
           <Route element={<MainLayout />}>
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/users"
               element={
