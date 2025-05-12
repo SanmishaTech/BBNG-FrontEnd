@@ -15,6 +15,8 @@ import {
   SquareTerminal,
   MessageCircle,
   Icon,
+  FileText,
+  UserRound,
 } from "lucide-react";
 
 import { NavMain } from "@/components/common/nav-main";
@@ -97,6 +99,21 @@ const initialData = {
           name: "Chapter Meetings",
           url: "/chaptermeetings",
           icon: BookOpen,
+        },
+        {
+          name: "References",
+          url: "/references",
+          icon: FileText,
+        },
+        {
+          name: "My References",
+          url: "/dashboard/references",
+          icon: FileText,
+        },
+        {
+          name: "Chapter Visitors",
+          url: "/chapter-visitors",
+          icon: UserRound,
         },
       ],
       navMain: [], // Adding empty navMain array
