@@ -227,14 +227,14 @@ const Login = () => {
         </Button>
 
         {/* Registration Link */}
-        {allowRegistration && (
+        {/* {allowRegistration && (
           <div className="text-center text-sm">
             Don't have an account?{" "}
             <a href="/register" className="underline underline-offset-4">
               Register
             </a>
           </div>
-        )}
+        )} */}
       </div>
     </form>
   );
