@@ -111,14 +111,14 @@ export default function TransactionForm({ mode }: { mode: "create" | "edit" }) {
   // Fetch transaction data if in edit mode
   const { data: transaction, isLoading: loadingTransaction } = useQuery({
     queryKey: ["transaction", id],
-    queryFn: () => get(`/api/transactionRoutes/transactions/${id}`),
+    queryFn: () => get(`/transactionRoutes/transactions/${id}`),
     enabled: mode === "edit" && !!id,
   });
 
   // Create mutation
   const createMutation = useMutation({
     mutationFn: (data: TransactionFormInputs) => {
-      return post(`/api/transactionRoutes/chapters/${chapterId}/transactions`, data);
+      return post(`/transactionRoutes/chapters/${chapterId}/transactions`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions", chapterId] });
@@ -141,7 +141,7 @@ export default function TransactionForm({ mode }: { mode: "create" | "edit" }) {
   // Update mutation
   const updateMutation = useMutation({
     mutationFn: (data: TransactionFormInputs) => {
-      return put(`/api/transactionRoutes/transactions/${id}`, data);
+      return put(`/transactionRoutes/transactions/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions", chapterId] });

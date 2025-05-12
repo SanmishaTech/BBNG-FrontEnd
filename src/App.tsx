@@ -37,13 +37,13 @@ import EditMembership from "./modules/membership/EditMembership";
 import TransactionList from "./modules/chapter/TransactionList";
 import CreateTransaction from "./modules/chapter/CreateTransaction";
 import EditTransaction from "./modules/chapter/EditTransaction";
-import { 
-  ReferenceList, 
+import {
+  ReferenceList,
   ReferenceForm,
   ReferenceDetail,
   MemberReferences,
   GivenReferences,
-  ReceivedReferences
+  ReceivedReferences,
 } from "./modules/reference";
  import ReferenceRouter from "./modules/reference/ReferenceRouter";
 import Chaptermeeting from "./modules/chaptermeeting/ChapterMeetingList";
@@ -52,17 +52,17 @@ import ChapterMeetingEdit from "./modules/chaptermeeting/EditChapterMeeting";
 import VisitorList from "./modules/visitor/VisitorList";
 import VisitorForm from "./modules/visitor/VisitorForm";
 import EditAttendance from "./modules/attendance/EditAttendance";
- import AddRequirement from "./modules/requirement/AddRequirement";
+import AddRequirement from "./modules/requirement/AddRequirement";
 import ViewRequirementList from "./modules/requirement/ViewRequirementList";
 import MemberReport from "./modules/report/MemberReport";
 import TransactionReport from "./modules/report/TransactionReport";
 import MembershipReport from "./modules/report/MembershipReport";
 
- import ChapterVisitorList from "./modules/visitor/ChapterVisitorList";
+import ChapterVisitorList from "./modules/visitor/ChapterVisitorList";
 import { OneToOneList, OneToOneForm } from "./modules/oneToOne";
 import MemberSearch from "./modules/member/MemberSearch";
 import FacebookProfile from "./modules/Facebookprofile/Index";
- import { Toaster } from "sonner";
+import { Toaster } from "sonner";
 import "./App.css";
 
 // MembershipList wrapper component to handle showing all memberships
@@ -366,16 +366,16 @@ const App = () => {
               }
             />
             <Route
-               path="/requirements"
+              path="/requirements"
               element={
                 <ProtectedRoute>
                   <AddRequirement />
                 </ProtectedRoute>
               }
             />
-            
+ 
             <Route
-               path="/viewrequirements"
+              path="/viewrequirements"
               element={
                 <ProtectedRoute>
                   <ViewRequirementList />
@@ -383,7 +383,7 @@ const App = () => {
               }
             />
             <Route
-               path="/dashboard/references"
+              path="/dashboard/references"
               element={
                 <ProtectedRoute>
                   <ReferenceRouter />
@@ -391,7 +391,7 @@ const App = () => {
               }
             />
             <Route
-               path="/memberreports"
+              path="/memberreports"
               element={
                 <ProtectedRoute>
                   <MemberReport />
@@ -399,7 +399,7 @@ const App = () => {
               }
             />
             <Route
-               path="/dashboard/references/given"
+              path="/dashboard/references/given"
               element={
                 <ProtectedRoute>
                   <GivenReferences />
