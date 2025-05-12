@@ -46,8 +46,7 @@ const formSchema = z
     // Fields required for cross-chapter visitors
     chapterId: z.number().int("Chapter ID is required").nullable().optional(),
     invitedById: z
-      .number()
-      .int("Invited by member ID is required")
+      .any()
       .nullable()
       .optional(),
 
@@ -280,17 +279,13 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
     enabled: isEditing && !!visitorId,
   });
 
-  // Add an effect to watch for changes to invitedById
+  // Add an effect to debug invitedById changes
   useEffect(() => {
     // Watch the invitedById field
     const subscription = form.watch((value, { name }) => {
-      if (name === 'invitedById' && value.invitedById) {
+      if (name === 'invitedById') {
+        console.log("Form values:", value)
         console.log("invitedById changed:", value.invitedById, typeof value.invitedById);
-        
-        // Ensure it's a number to guarantee consistency
-        if (typeof value.invitedById === 'string') {
-          form.setValue('invitedById', parseInt(value.invitedById));
-        }
       }
     });
     
@@ -299,6 +294,17 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
 
   useEffect(() => {
     if (isEditing && visitorData) {
+      // Debug what members are available
+      if (membersData?.members) {
+        console.log("Available members:", membersData.members.map((m: any) => ({ id: m.id, name: m.memberName })));
+        
+        // Check if the member corresponding to invitedById exists
+        const memberId = visitorData.invitedById;
+        const member = membersData.members.find((m: any) => String(m.id) === String(memberId));
+        console.log("[DEBUG] Looking for member with ID:", memberId);
+        console.log("[DEBUG] Found member?", member ? `Yes - ${member.memberName}` : "No");
+      }
+      
       // Format the data before setting form values
       const formattedData = {
         ...visitorData,
@@ -307,44 +313,35 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
           : null,
         meetingId: visitorData.meetingId,
         chapterId: visitorData.chapterId,
-        // Ensure invitedById is a proper number or null
-        invitedById: visitorData.invitedById !== undefined && 
-                     visitorData.invitedById !== null && 
-                     !isNaN(Number(visitorData.invitedById))
-          ? Number(visitorData.invitedById)
-          : null,
+        invitedById: String(visitorData.invitedById || ""),
         isCrossChapter: !!visitorData.isCrossChapter,
       };
 
-      console.log("Setting visitor data:", formattedData);
-      console.log("invitedById type:", typeof formattedData.invitedById);
-      console.log("invitedById value:", formattedData.invitedById);
+      console.log("[DEBUG] Setting visitor data:", formattedData);
+      console.log("[DEBUG] invitedById (raw):", visitorData.invitedById, typeof visitorData.invitedById);
+      console.log("[DEBUG] invitedById (formatted):", formattedData.invitedById, typeof formattedData.invitedById);
+      console.log("[DEBUG] invitedByMember:", visitorData.invitedByMember);
       
       // Reset the form with the formatted data
       form.reset(formattedData);
       
-      // If this is a cross-chapter visitor, ensure invitedById is set correctly after reset
-      if (formattedData.isCrossChapter) {
-        setTimeout(() => {
-          // Only set the value if it's a valid number
-          if (formattedData.invitedById !== null && !isNaN(formattedData.invitedById)) {
-            form.setValue('invitedById', formattedData.invitedById);
-            console.log("Form values after explicit setValue:", form.getValues());
-          }
-        }, 100);
-      }
-      
-      // Log form value after reset
+      // Force the invitedById to the correct string value, giving time for the form to initialize
       setTimeout(() => {
-        console.log("Form values after reset:", form.getValues());
-        console.log("invitedById in form:", form.getValues()?.invitedByMember?.id);
-      }, 200);
+        const idString = String(visitorData.invitedById || "");
+        console.log("[DEBUG] Setting invitedById to:", idString);
+        form.setValue('invitedById', idString, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+        console.log("[DEBUG] Form values after explicit setValue:", form.getValues());
+        
+        // Verify the form values were set properly
+        const currentValue = form.getValues().invitedById;
+        console.log("[DEBUG] Current invitedById value:", currentValue, typeof currentValue);
+      }, 100);
     } else if (!isEditing && meetingData && !form.formState.isDirty) {
       // For new visitors, pre-populate the meeting's chapter
       form.setValue("chapter", meetingData.chapter?.name || "");
       form.setValue("chapterId", meetingData.chapterId);
     }
-  }, [visitorData, meetingData, form, isEditing]);
+  }, [visitorData, meetingData, form, isEditing, membersData?.members]);
 
   // Create visitor mutation
   const createMutation = useMutation({
@@ -376,23 +373,35 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
   // Form submission
   const onSubmit = (data: FormData) => {
     setIsLoading(true);
+    
+    // Create a copy of the data for submission
+    const submissionData = {...data};
 
     // Ensure meetingId is set from URL params
-    if (meetingId && !data.meetingId) {
-      data.meetingId = parseInt(meetingId);
+    if (meetingId && !submissionData.meetingId) {
+      submissionData.meetingId = parseInt(meetingId);
+    }
+    
+    // Convert invitedById to a number if it's a string and not empty
+    if (submissionData.invitedById && typeof submissionData.invitedById === 'string') {
+      submissionData.invitedById = parseInt(submissionData.invitedById);
     }
 
     // For non-cross-chapter visitors, set the chapter to the meeting's chapter
-    if (!data.isCrossChapter && meetingData) {
-      data.chapter = meetingData.chapter?.name || "";
-      data.chapterId = meetingData.chapterId;
+    if (!submissionData.isCrossChapter && meetingData) {
+      submissionData.chapter = meetingData.chapter?.name || "";
+      submissionData.chapterId = meetingData.chapterId;
     }
+    
+    console.log("Submitting data:", submissionData);
 
     try {
       if (isEditing) {
-        updateMutation.mutate(data);
+        console.log("[DEBUG] Updating visitor with data:", submissionData);
+        updateMutation.mutate(submissionData);
       } else {
-        createMutation.mutate(data);
+        console.log("[DEBUG] Creating visitor with data:", submissionData);
+        createMutation.mutate(submissionData);
       }
     } catch (error) {
       console.error("Submission error:", error);
@@ -547,67 +556,57 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                                   <SelectItem value="no-chapters" disabled>
                                     No other chapters available
                                   </SelectItem>
-                                )}
+                                )}  
                               </SelectContent>
                             </Select>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-              
+                      
                       <FormField
                         control={form.control}
                         name="invitedById"
                         render={({ field }) => {
-                          console.log("Cross-chapter invitedById field:", field.value, typeof field.value);
-                          
-                          // Ensure field.value is properly normalized for comparison
-                          let normalizedFieldValue = null;
-                          if (field.value !== null && field.value !== undefined) {
-                            const parsedValue = Number(field.value);
-                            normalizedFieldValue = !isNaN(parsedValue) ? parsedValue : null;
-                          }
-                          
-                          // Find selected member
-                          const selectedMember = membersData?.members?.find(
-                            (m: any) => normalizedFieldValue !== null && (
-                              Number(m.id) === normalizedFieldValue
-                            )
-                          );
-                          console.log("Selected member:", selectedMember);
-                          console.log("Selected member ID:", selectedMember?.id);
-                          
+                          // This useEffect will run when the field.value changes and log it
+                          React.useEffect(() => {
+                            console.log("[DEBUG] invitedById field value changed:", field.value, typeof field.value);
+                          }, [field.value]);
+
                           return (
-                          <FormItem>
-                            <FormLabel>Invited By</FormLabel>
-                            <Select
-                              onValueChange={(value) => {
-                                console.log("Selected value:", value, typeof value);
-                                field.onChange(parseInt(value));
-                              }}
-                              value={normalizedFieldValue !== null ? normalizedFieldValue.toString() : ""}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select member" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {membersData?.members?.map((member: any) => {
-                                  console.log("Member option:", member.id, member.memberName);
-                                  return (
-                                  <SelectItem
-                                    key={member.id}
-                                    value={member.id.toString()}
-                                  >
-                                    {member.memberName}
-                                  </SelectItem>
-                                  );
-                                })}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
+                            <FormItem>
+                              <FormLabel>Invited By</FormLabel>
+                              <Select
+                                onValueChange={(value) => {
+                                  console.log("[DEBUG] Selected invitedById value:", value, typeof value);
+                                  field.onChange(value);
+                                }}
+                                // IMPORTANT - String conversion to ensure the value matches option format
+                                value={field.value !== undefined && field.value !== null ? String(field.value) : ""}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select member" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {membersData?.members?.map((member: any) => {
+                                    // Debug output for each option to verify the types match
+                                    const optionValue = member.id.toString();
+                                    const isSelected = optionValue === (field.value ? String(field.value) : "");
+                                    if (isSelected) {
+                                      console.log("[DEBUG] Found matching option:", optionValue, member.memberName);
+                                    }
+                                    return (
+                                      <SelectItem key={member.id} value={optionValue}>
+                                        {member.memberName}
+                                      </SelectItem>
+                                    );
+                                  })}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
                           );
                         }}
                       />
