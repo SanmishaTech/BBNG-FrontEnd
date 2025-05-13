@@ -91,7 +91,6 @@ const membershipSchema = z.object({
   memberId: z.number({
     required_error: "Member is required",
   }),
-  invoiceNumber: z.string().min(1, "Invoice number is required"),
   invoiceDate: z.date({
     required_error: "Invoice date is required",
   }),
@@ -165,7 +164,6 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
     resolver: zodResolver(membershipSchema),
     defaultValues: {
       memberId: undefined,
-      invoiceNumber: "",
       invoiceDate: new Date(),
       packageId: undefined,
       basicFees: 0,
@@ -507,25 +505,7 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                   <CardTitle>Invoice & Package Details</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {/* Invoice Number */}
-                    <FormField
-                      control={form.control}
-                      name="invoiceNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Invoice Number</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Invoice number"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
+                  <div className="grid gap-4 md:grid-cols-3">
                     {/* Invoice Date */}
                     <FormField
                       control={form.control}
@@ -534,13 +514,13 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                         <FormItem className="flex flex-col">
                           <FormLabel>Invoice Date</FormLabel>
                           <DatetimePicker
-                        value={field.value}
-                        onChange={field.onChange}
-                        format={[
-                          ["days", "months", "years"],
-                          
-                        ]}
-                        />
+                            value={field.value}
+                            className="w-full"
+                            onChange={field.onChange}
+                            format={[
+                              ["days", "months", "years"],
+                             ]}
+                          />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -640,8 +620,6 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                     />
                   </div>
 
-             
-
                   {/* Preview Section */}
                   <div className="mt-4 p-4 bg-gray-50 rounded-md border">
                     <h3 className="text-md font-medium mb-2">Preview</h3>
@@ -723,14 +701,13 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                         <FormItem className="flex flex-col">
                           <FormLabel>Payment Date</FormLabel>
                           <DatetimePicker
-                        value={field.value}
-                        className="w-full"
-                        onChange={field.onChange}
-                        format={[
-                          ["days", "months", "years"],
-                          
-                        ]}
-                      />
+                            value={field.value}
+                            className="w-full"  
+                            onChange={field.onChange}
+                            format={[
+                              ["days", "months", "years"],
+                             ]}
+                          />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -739,8 +716,9 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
  
                     {/* Conditional Payment Method Fields */}
                     {paymentMode === "cheque" && (
-                      <div className="space-y-4 p-4 border rounded-md">
-                        <h3 className="text-sm font-medium">Cheque Details</h3>
+                      <div className="p-4 border rounded-md space-y-3">
+                        <h3 className="text-lg  font-medium">Cheque Details</h3>
+                      <div className="grid grid-cols-3 gap-4 ">
                         
                         {/* Cheque Number */}
                         <FormField
@@ -768,40 +746,14 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Cheque Date</FormLabel>
-                              <Popover
-                                open={chequeDateOpen}
-                                onOpenChange={setChequeDateOpen}
-                              >
-                                <PopoverTrigger asChild>
-                                  <FormControl>
-                                    <Button
-                                      variant={"outline"}
-                                      className={cn(
-                                        "w-full pl-3 text-left font-normal",
-                                        !field.value && "text-muted-foreground"
-                                      )}
-                                    >
-                                      {field.value ? (
-                                        format(field.value, "PPP")
-                                      ) : (
-                                        <span>Select date</span>
-                                      )}
-                                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                    </Button>
-                                  </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                  <Calendar
-                                    mode="single"
-                                    selected={field.value || undefined}
-                                    onSelect={(date) => {
-                                      field.onChange(date);
-                                      setChequeDateOpen(false);
-                                    }}
-                                    initialFocus
-                                  />
-                                </PopoverContent>
-                              </Popover>
+                              <DatetimePicker
+                            value={field.value}
+                            className="w-full"
+                            onChange={field.onChange}
+                            format={[
+                              ["days", "months", "years"],
+                             ]}
+                          />
                               <FormMessage />
                             </FormItem>
                           )}
@@ -825,6 +777,7 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                             </FormItem>
                           )}
                         />
+                      </div>
                       </div>
                     )}
                     
