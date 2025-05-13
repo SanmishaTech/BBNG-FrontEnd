@@ -1,16 +1,33 @@
 import { Button } from "@/components/ui/button";
 import { Camera, Edit, MoreHorizontal, Plus } from "lucide-react";
 import { MemberData } from "@/types/member";
+import { useState } from "react";
 
 interface ProfileHeaderProps {
   memberData: MemberData | null;
 }
 
 const ProfileHeader = ({ memberData }: ProfileHeaderProps) => {
+  // State to track image loading errors
+  const [imageError, setImageError] = useState({
+    profile: false,
+    cover: false
+  });
+
   // Default values if no member data is provided
   const name = memberData?.name || "Member Name";
-  const coverPhoto = memberData?.coverPhoto || "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200";
-  const profilePicture = memberData?.profilePicture || "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&w=150&h=150";
+  const defaultCover = "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200";
+  const defaultProfile = "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&w=150&h=150";
+  
+  // Use profile picture as cover photo fallback if cover photo fails to load
+  const coverPhoto = !imageError.cover 
+    ? (memberData?.coverPhoto || defaultCover)
+    : (memberData?.profilePicture || defaultProfile);
+    
+  // Use cover photo as profile picture fallback if profile picture fails to load
+  const profilePicture = !imageError.profile 
+    ? (memberData?.profilePicture || defaultProfile)
+    : (memberData?.coverPhoto || defaultCover);
   
   return (
     <div className="w-full">
@@ -20,6 +37,7 @@ const ProfileHeader = ({ memberData }: ProfileHeaderProps) => {
           src={coverPhoto}
           alt="Cover"
           className="w-full h-full object-cover"
+          onError={() => setImageError(prev => ({ ...prev, cover: true }))}
         />
         <div className="absolute bottom-4 right-4 flex gap-2">
           <Button variant="secondary" size="sm" className="bg-white">
@@ -37,6 +55,7 @@ const ProfileHeader = ({ memberData }: ProfileHeaderProps) => {
               src={profilePicture}
               alt="Profile"
               className="w-full h-full object-cover"
+              onError={() => setImageError(prev => ({ ...prev, profile: true }))}
             />
           </div>
           <div className="absolute bottom-3 right-3 bg-gray-200 rounded-full p-2 border-2 border-white">

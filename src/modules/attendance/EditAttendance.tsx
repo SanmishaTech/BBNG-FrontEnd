@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -43,18 +43,20 @@ const EditAttendance = () => {
     queryKey: ["meetingAttendance", meetingId],
     queryFn: () => get(`/meeting-attendance?meetingId=${meetingId}`),
     enabled: !!meetingId,
-    onSuccess: (data) => {
-      // Initialize the attendance map from the API response
-      const initialMap: Record<number, boolean> = {};
+    
+  });
+  useEffect(()=>{ 
+    console.log("data", data)
+    const initialMap: Record<number, boolean> = {};
       console.log("API response data:", data);
-      data.memberAttendance.forEach((item: any) => {
+      data?.memberAttendance?.forEach((item: any) => {
         console.log(`Setting initial attendance for member ${item.member.id} (${item.member.memberName}): ${item.isPresent}`);
         initialMap[item.member.id] = item.isPresent;
+        console.log(initialMap)
       });
       console.log("Initial attendance map:", initialMap);
       setAttendanceMap(initialMap);
-    },
-  });
+  },[data])
 
   const meeting = data?.meeting;
   const memberAttendance = data?.memberAttendance || [];
@@ -343,6 +345,7 @@ const EditAttendance = () => {
                               <X size={16} />
                               <span className="ml-1">Absent</span>
                             </Button>
+                            {console.log(attendanceMap[item.member.id])}
                             <span className="ml-3 text-sm text-gray-500">
                               {`Current state: ${attendanceMap[item.member.id] ? 'Present' : 'Absent'}`}
                             </span>

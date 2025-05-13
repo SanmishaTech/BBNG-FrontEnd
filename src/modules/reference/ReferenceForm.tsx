@@ -159,7 +159,7 @@ const ReferenceForm = () => {
             date: new Date(reference.date),
             noOfReferences: reference.noOfReferences,
             chapterId: reference.chapterId,
-            memberId: reference.memberId,
+            memberId: reference.receiverId,
             urgency: reference.urgency || '',
             self: reference.self,
             nameOfReferral: reference.nameOfReferral,
@@ -175,7 +175,7 @@ const ReferenceForm = () => {
         } catch (error) {
           console.error("Error loading reference:", error);
           toast.error("Failed to load reference");
-          navigate("/references");
+          navigate("/dashboard/references/given");
         } finally {
           setLoading(false);
         }
@@ -184,6 +184,8 @@ const ReferenceForm = () => {
       loadReference();
     }
   }, [isEditMode, id, form, navigate]);
+
+
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
@@ -221,7 +223,7 @@ const ReferenceForm = () => {
         await post("/references", formattedData);
         toast.success("Reference created successfully");
       }
-      navigate("/references");
+      navigate("/dashboard/references/given");
     } catch (error) {
       console.error("Error saving reference:", error);
       toast.error(isEditMode ? "Failed to update reference" : "Failed to create reference");
@@ -253,9 +255,46 @@ const ReferenceForm = () => {
     }
   };
 
+  // Auto-fill form with current user's details from localStorage
+  const autoFillCurrentUserDetails = () => {
+    try {
+      // Get current user data from localStorage
+      const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+      const memberDetails = currentUser.member;
+      
+      if (!memberDetails) {
+        toast.error("User information not found in localStorage");
+        return;
+      }
+      
+      // Auto-fill form fields using current user's details
+      form.setValue("nameOfReferral", memberDetails.memberName || '');
+      form.setValue("email", memberDetails.email || '');
+      form.setValue("mobile1", memberDetails.mobile1 || '');
+      form.setValue("mobile2", memberDetails.mobile2 || '');
+      form.setValue("addressLine1", memberDetails.addressLine1 || '');
+      form.setValue("addressLine2", memberDetails.addressLine2 || '');
+      form.setValue("location", memberDetails.location || '');
+      form.setValue("pincode", memberDetails.pincode || '');
+      
+      toast.success("Self referral details loaded");
+    } catch (error) {
+      console.error("Error loading user details from localStorage:", error);
+      toast.error("Failed to load your details for self-referral");
+    }
+  };
+
+  // Get current user ID to filter from members list
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const currentMemberId = currentUser?.member?.id;
+  
+  // Filter out current user from members list
+  console.log("members being stored")
+  const filteredMembers = members.filter(member => member.id !== currentMemberId );
+
   return (
-    <div className="container mx-auto py-6">
-      <Card>
+    <div className="container mx-auto py-6 ml-2 mr-2 justify-center items-center flex">
+      <Card className="max-w-[95%] w-full">
         <CardHeader>
           <CardTitle>{isEditMode ? "Edit Reference" : "Add New Reference"}</CardTitle>
           <CardDescription>
@@ -371,8 +410,7 @@ const ReferenceForm = () => {
                         <Select
                           onValueChange={(value) => {
                             field.onChange(parseInt(value));
-                            // Fetch member details for autofill when member is selected
-                            fetchMemberDetails(parseInt(value));
+                            // Auto-filling member data is disabled as per requirements
                           }}
                           value={field.value ? field.value.toString() : undefined}
                         >
@@ -382,7 +420,7 @@ const ReferenceForm = () => {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {members.map((member) => (
+                            {filteredMembers.map((member) => (
                               <SelectItem key={member.id} value={member.id.toString()}>
                                 {member.memberName}
                               </SelectItem>
@@ -430,7 +468,23 @@ const ReferenceForm = () => {
                         <FormControl>
                           <Checkbox
                             checked={field.value}
-                            onCheckedChange={field.onChange}
+                            onCheckedChange={(checked) => {
+                              field.onChange(checked);
+                              // Auto-fill form with current user's details when checkbox is checked
+                              if (checked) {
+                                autoFillCurrentUserDetails();
+                              }
+                              if(!checked){
+                                form.setValue("nameOfReferral",  '');
+                                form.setValue("email", '');
+                                form.setValue("mobile1", "")
+                                form.setValue("mobile2",  '');
+                                form.setValue("addressLine1",  '');
+                                form.setValue("addressLine2",   '');
+                                form.setValue("location",  '');
+                                form.setValue("pincode",  '');
+                              }
+                            }}
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">

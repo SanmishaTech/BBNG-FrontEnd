@@ -21,6 +21,8 @@ import {
 import { NavMain } from "@/components/common/nav-main";
 import { NavProjects } from "@/components/common/nav-projects";
 import { NavUser } from "@/components/common/nav-user";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 // import { TeamSwitcher } from "@/components/common/team-switcher"
 import {
   Sidebar,
@@ -257,18 +259,42 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         {/* <TeamSwitcher teams={data.teams} /> */}
-        <SidebarMenu>
+        <SidebarMenu className="flex  ">
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href="/dashboard">
+             <div className="flex items-center gap-2  justify-between">
+             <a
+              className="flex items-center gap-2"
+              >
                 <ArrowUpCircleIcon className="h-5 w-5" />
                 <span className="text-base font-semibold">{appName}</span>
               </a>
+              <a
+              className="flex items-center gap-2"
+              href="/member/search">
+                <Search className="h-5 w-5 mr-2" />
+               </a>
+              
+             </div>
             </SidebarMenuButton>
+            
           </SidebarMenuItem>
+          {/* <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              className="data-[slot=sidebar-menu-button]:!p-1 bg-white"
+            >
+              <a href="/dashboard">
+                <Search className="h-5 w-5 " />
+                <Input placeholder="Search" className="border-0 " />
+               </a>
+              
+            </SidebarMenuButton>
+            
+          </SidebarMenuItem> */}
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>

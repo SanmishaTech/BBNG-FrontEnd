@@ -1,4 +1,5 @@
 import { MemberData } from "@/types/member";
+import { useEffect, useState } from "react";
 
 interface MemberCardProps {
   member: MemberData;
@@ -6,14 +7,27 @@ interface MemberCardProps {
 }
 
 const MemberCard = ({ member, onViewProfile }: MemberCardProps) => {
+  const [imageError, setImageError] = useState({
+    profile: false,
+    cover: false
+  });
+
+  // Reset error state if member changes
+  useEffect(() => {
+    setImageError({
+      profile: false,
+      cover: false
+    });
+  }, [member.id]);
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <div className="relative h-32 bg-gradient-to-r from-blue-500 to-purple-500">
-        {member.coverPhoto && (
+        {member.coverPhoto && !imageError.cover && (
           <img 
             src={member.coverPhoto} 
             alt="" 
             className="w-full h-full object-cover"
+            onError={() => setImageError(prev => ({ ...prev, cover: true }))}
           />
         )}
       </div>
@@ -21,9 +35,10 @@ const MemberCard = ({ member, onViewProfile }: MemberCardProps) => {
       <div className="flex justify-center">
         <div className="relative w-20 h-20 -mt-10 rounded-full border-4 border-white overflow-hidden">
           <img 
-            src={member.profilePicture} 
+            src={imageError.profile && member.coverPhoto ? member.coverPhoto : member.profilePicture} 
             alt={member.name} 
             className="w-full h-full object-cover"
+            onError={() => setImageError(prev => ({ ...prev, profile: true }))}
           />
         </div>
       </div>

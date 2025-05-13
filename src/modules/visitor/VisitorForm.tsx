@@ -338,6 +338,7 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
       });
 
       console.log("[DEBUG] Setting visitor data:", formattedData);
+      console.log("[DEBUG] Chapter ID:", formattedData.chapterId, typeof formattedData.chapterId);
       console.log(
         "[DEBUG] invitedById (raw):",
         visitorData.invitedById,
@@ -349,12 +350,14 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
         typeof formattedData.invitedById
       );
       console.log("[DEBUG] invitedByMember:", visitorData.invitedByMember);
+      console.log("[DEBUG] homeChapter:", visitorData.homeChapter);
 
       // Reset the form with the formatted data
       form.reset(formattedData);
 
-      // Force the invitedById to the correct string value, giving time for the form to initialize
+      // Set form values after a small delay to ensure the form is properly initialized
       setTimeout(() => {
+        // Force the invitedById to the correct string value
         const idString = String(visitorData.invitedById || "");
         console.log("[DEBUG] Setting invitedById to:", idString);
         form.setValue("invitedById", idString, {
@@ -362,6 +365,18 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
           shouldDirty: true,
           shouldTouch: true,
         });
+        
+        // Force the chapterId to the correct value if it's a cross-chapter visitor
+        if (formattedData.isCrossChapter && formattedData.chapterId) {
+          const chapterIdString = String(formattedData.chapterId);
+          console.log("[DEBUG] Setting chapterId to:", chapterIdString);
+          form.setValue("chapterId", Number(chapterIdString), {
+            shouldValidate: true,
+            shouldDirty: true,
+            shouldTouch: true,
+          });
+        }
+        
         console.log(
           "[DEBUG] Form values after explicit setValue:",
           form.getValues()
@@ -369,10 +384,16 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
 
         // Verify the form values were set properly
         const currentValue = form.getValues().invitedById;
+        const currentChapterId = form.getValues().chapterId;
         console.log(
           "[DEBUG] Current invitedById value:",
           currentValue,
           typeof currentValue
+        );
+        console.log(
+          "[DEBUG] Current chapterId value:",
+          currentChapterId,
+          typeof currentChapterId
         );
       }, 100);
     } else if (!isEditing && meetingData && !form.formState.isDirty) {
@@ -565,45 +586,59 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                       <FormField
                         control={form.control}
                         name="chapterId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>From Chapter</FormLabel>
-                            <Select
-                              onValueChange={(value) =>
-                                field.onChange(parseInt(value))
-                              }
-                              value={field.value?.toString() || ""}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select home chapter" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {filteredChapters.length > 0 ? (
-                                  filteredChapters.map((chapter: any) => {
-                                    console.log(
-                                      `Rendering chapter option: ${chapter.name} (ID: ${chapter.id})`
-                                    );
-                                    return (
-                                      <SelectItem
-                                        key={chapter.id}
-                                        value={chapter.id.toString()}
-                                      >
-                                        {chapter.name}
-                                      </SelectItem>
-                                    );
-                                  })
-                                ) : (
-                                  <SelectItem value="no-chapters" disabled>
-                                    No other chapters available
-                                  </SelectItem>
-                                )}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                        render={({ field }) => {
+                          // Debug the field value
+                          console.log("[DEBUG] chapterId field value:", field.value, typeof field.value);
+                          
+                          // Find the selected chapter
+                          const selectedChapter = chaptersData?.chapters?.find(
+                            (c: any) => Number(c.id) === Number(field.value)
+                          );
+                          console.log("[DEBUG] Selected chapter:", selectedChapter);
+                          
+                          return (
+                            <FormItem>
+                              <FormLabel>From Chapter</FormLabel>
+                              <Select
+                                onValueChange={(value) => {
+                                  console.log("[DEBUG] Selected chapter value:", value, typeof value);
+                                  field.onChange(parseInt(value));
+                                }}
+                                value={field.value ? String(field.value) : ""}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select home chapter">
+                                      {selectedChapter?.name || "Select home chapter"}
+                                    </SelectValue>
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {filteredChapters.length > 0 ? (
+                                    filteredChapters.map((chapter: any) => {
+                                      console.log(
+                                        `Rendering chapter option: ${chapter.name} (ID: ${chapter.id})`
+                                      );
+                                      return (
+                                        <SelectItem
+                                          key={chapter.id}
+                                          value={chapter.id.toString()}
+                                        >
+                                          {chapter.name}
+                                        </SelectItem>
+                                      );
+                                    })
+                                  ) : (
+                                    <SelectItem value="no-chapters" disabled>
+                                      No other chapters available
+                                    </SelectItem>
+                                  )}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          );
+                        }}
                       />
 
                       <FormField
