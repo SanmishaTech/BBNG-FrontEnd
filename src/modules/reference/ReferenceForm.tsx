@@ -289,8 +289,7 @@ const ReferenceForm = () => {
   const currentMemberId = currentUser?.member?.id;
   
   // Filter out current user from members list
-  console.log("members being stored")
-  const filteredMembers = members.filter(member => member.id !== currentMemberId );
+  const filteredMembers = members.filter(member => member.id !== currentMemberId);
 
   return (
     <div className="container mx-auto py-6 ml-2 mr-2 justify-center items-center flex">
@@ -473,16 +472,6 @@ const ReferenceForm = () => {
                               // Auto-fill form with current user's details when checkbox is checked
                               if (checked) {
                                 autoFillCurrentUserDetails();
-                              }
-                              if(!checked){
-                                form.setValue("nameOfReferral",  '');
-                                form.setValue("email", '');
-                                form.setValue("mobile1", "")
-                                form.setValue("mobile2",  '');
-                                form.setValue("addressLine1",  '');
-                                form.setValue("addressLine2",   '');
-                                form.setValue("location",  '');
-                                form.setValue("pincode",  '');
                               }
                             }}
                           />

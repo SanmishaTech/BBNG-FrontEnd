@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { get, patch } from "@/services/apiService";
 import { format } from "date-fns";
 import { 
@@ -69,6 +69,7 @@ interface Reference {
 }
 
 const ReceivedReferences = () => {
+  const navigate = useNavigate();
   const [references, setReferences] = useState<Reference[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -208,7 +209,7 @@ const ReceivedReferences = () => {
       <Card className="overflow-hidden h-full flex flex-col">
         <CardHeader className="pb-3">
           <div className="flex justify-between items-start">
-            <CardTitle className="text-xl font-semibold">{reference.giver?.memberName}</CardTitle>
+            <CardTitle className="text-xl font-semibold">{reference.nameOfReferral}</CardTitle>
             <Badge className={getStatusBadgeClass(reference.status)}>
               {reference.status}
             </Badge>
@@ -224,7 +225,7 @@ const ReceivedReferences = () => {
             <div className="bg-gray-50 p-2 rounded-md">
               <span className="text-sm font-medium">Reference from:</span>
               <div className="mt-1 text-sm font-semibold text-blue-600">
-                {reference.nameOfReferral || 'Unknown Giver'}
+                {reference.giver?.memberName || 'Unknown Giver'}
               </div>
             </div>
 
@@ -274,29 +275,50 @@ const ReceivedReferences = () => {
         
         <Separator />
         
-        <CardFooter className="pt-4 flex justify-between items-center">
+        <CardFooter className="pt-4 flex flex-col sm:flex-row justify-between items-center gap-3">
           <Link to={`/references/${reference.id}`}>
             <Button variant="outline" size="sm">
               View Details
             </Button>
           </Link>
           
-          <div>
-            <Select
-              onValueChange={(value) => handleUpdateStatus(reference.id, value)}
-              defaultValue={reference.status}
-            >
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Update Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="contacted">Contacted</SelectItem>
-                <SelectItem value="business done">Business Done</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {reference.status.toLowerCase() === "business done" || 
+           reference.status.toLowerCase() === "business-done" || 
+           reference.status.toLowerCase() === "businessdone" ? (
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              {/* <Badge className="bg-green-100 text-green-800 border-green-200 py-2 h-9 flex items-center justify-center">
+                <Check className="h-4 w-4 mr-1" />
+                Business Done
+              </Badge> */}
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                className="bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 whitespace-nowrap"
+                onClick={() => {
+                  navigate(`/references/${reference.id}/thank-you-slip`);
+                }}
+              >
+                Send Thank You Slip
+              </Button>
+            </div>
+          ) : (
+            <div>
+              <Select
+                onValueChange={(value) => handleUpdateStatus(reference.id, value)}
+                defaultValue={reference.status}
+              >
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Update Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="contacted">Contacted</SelectItem>
+                  <SelectItem value="business done">Business Done</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </CardFooter>
       </Card>
     );
