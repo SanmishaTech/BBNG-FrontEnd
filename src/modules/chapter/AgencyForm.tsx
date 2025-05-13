@@ -1,6 +1,7 @@
 // src/components/ChapterForm.tsx
 
 import { useEffect, useMemo } from "react";
+import ChapterRoleAssignment from "./ChapterRoleAssignment";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -602,6 +603,11 @@ export default function ChapterForm({ mode }: { mode: "create" | "edit" }) {
                 : "Update Chapter"}
             </Button>
           </CardFooter>
+          
+          {/* Only show chapter role assignment in edit mode and when we have a chapter ID */}
+          {mode === "edit" && id && (
+            <ChapterRoleAssignment chapterId={parseInt(id)} />
+          )}
         </form>
       </Form>
     </Card>

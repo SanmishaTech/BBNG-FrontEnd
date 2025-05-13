@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,13 +21,11 @@ import {
   Trash2,
   Search,
   PlusCircle,
-  Check,
-  X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import CustomPagination from "@/components/common/custom-pagination";
 import { Separator } from "@/components/ui/separator";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import {
   Dialog,
@@ -42,7 +40,8 @@ interface MembershipListProps {
   memberId?: number; // Optional member ID for filtering
 }
 
-const MembershipList: React.FC<MembershipListProps> = ({ memberId }) => {
+// Define the component as a regular named function
+function MembershipList({ memberId }: MembershipListProps) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
@@ -95,12 +94,14 @@ const MembershipList: React.FC<MembershipListProps> = ({ memberId }) => {
       }
       setShowConfirmation(false);
       setMembershipToDelete(null);
+      setIsDeleting(false); // Reset loading state
     },
     onError: (error: any) => {
       toast.error(
         error?.response?.data?.message || "Failed to delete membership"
       );
       console.error("Failed to delete membership:", error);
+      setIsDeleting(false); // Reset loading state even on error
     },
   });
 
@@ -401,4 +402,5 @@ const MembershipList: React.FC<MembershipListProps> = ({ memberId }) => {
   );
 };
 
+// Make sure this is properly exported
 export default MembershipList;
