@@ -64,7 +64,7 @@ const OneToOneForm = () => {
       setLoading(true);
       try {
         // Load members
-        const membersResponse = await get("/users/members");
+        const membersResponse = await get("/members");
         setMembers(membersResponse.members || []);
 
         // Load chapters

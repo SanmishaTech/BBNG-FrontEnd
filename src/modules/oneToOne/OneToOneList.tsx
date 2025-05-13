@@ -100,7 +100,7 @@ const OneToOneList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("accepted");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -238,14 +238,27 @@ const OneToOneList = () => {
           <div className="text-xs text-gray-500">
             {formatDate(oneToOne.createdAt)}
           </div>
-          {oneToOne.status === "accepted" && (
-            <Button 
-              size="sm" 
-              variant="outline"
-              onClick={() => handleUpdateStatus(oneToOne.id, "completed")}
-            >
-              <Check className="mr-2 h-3 w-3" /> Done
-            </Button>
+          {isReceived && oneToOne.status === "pending" ? (
+            <div className="flex gap-2">
+              <Button 
+                size="sm" 
+                variant="outline"
+                className="border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
+                onClick={() => handleUpdateStatus(oneToOne.id, "cancelled")}
+              >
+                <X className="mr-1 h-3 w-3" /> Reject
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline"
+                className="border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800"
+                onClick={() => handleUpdateStatus(oneToOne.id, "accepted")}
+              >
+                <Check className="mr-1 h-3 w-3" /> Accept
+              </Button>
+            </div>
+          ) : oneToOne.status === "accepted" && (
+            null
           )}
         </CardFooter>
       </Card>
@@ -267,13 +280,13 @@ const OneToOneList = () => {
               <SelectItem value="all">All Meetings</SelectItem>
               <SelectItem value="accepted">Accepted</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
+              {/* <SelectItem value="completed">Completed</SelectItem> */}
               <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
         </div>
         
-        <div className="relative flex-1">
+        {/* <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
@@ -282,7 +295,7 @@ const OneToOneList = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-        </div>
+        </div> */}
       </div>
     );
   };
