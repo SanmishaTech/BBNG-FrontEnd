@@ -97,6 +97,11 @@ const initialData = {
           url: "/viewrequirements",
           icon: BookOpen,
         },
+        {
+          name: "One-to-One Meetings",
+          url: "/one-to-ones",
+          icon: BookOpen,
+        },
       ],
       navMain: [
         {

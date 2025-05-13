@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { DatetimePicker } from "@/components/ui/datetime-picker";
 import {
   Card,
   CardContent,
@@ -55,18 +56,16 @@ const OneToOneForm = () => {
   });
   const [members, setMembers] = useState<Member[]>([]);
   const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [chapterMembers, setChapterMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMembers, setLoadingMembers] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Load members and chapters for the form
+  // Load chapters for the form
   useEffect(() => {
     const loadFormData = async () => {
       setLoading(true);
       try {
-        // Load members
-        const membersResponse = await get("/users/members");
-        setMembers(membersResponse.members || []);
-
         // Load chapters
         const chaptersResponse = await get("/chapters");
         setChapters(chaptersResponse.chapters || []);
@@ -81,11 +80,38 @@ const OneToOneForm = () => {
     loadFormData();
   }, []);
 
+  // Load members based on selected chapter
+  useEffect(() => {
+    if (!formData.chapterId) return;
+    
+    const loadChapterMembers = async () => {
+      setLoadingMembers(true);
+      try {
+        // Load members by chapter
+        const membersResponse = await get(`/members?chapterId=${formData.chapterId}`);
+        setChapterMembers(membersResponse.members || []);
+      } catch (error) {
+        console.error("Error loading chapter members:", error);
+        toast.error("Failed to load members for this chapter");
+      } finally {
+        setLoadingMembers(false);
+      }
+    };
+
+    loadChapterMembers();
+  }, [formData.chapterId]);
+
   const handleChange = (
     key: keyof OneToOneFormData,
     value: string
   ) => {
-    setFormData((prev) => ({ ...prev, [key]: value }));
+    setFormData((prev) => {
+      // If changing chapter, reset requestedId
+      if (key === "chapterId") {
+        return { ...prev, [key]: value, requestedId: "" };
+      }
+      return { ...prev, [key]: value };
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -135,48 +161,11 @@ const OneToOneForm = () => {
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-6 pt-6">
             <div className="grid grid-cols-1 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="member" className="text-base font-medium">
-                  Who would you like to meet with? <span className="text-red-500">*</span>
-                </Label>
-                <Select
-                  value={formData.requestedId}
-                  onValueChange={(value) => handleChange("requestedId", value)}
-                  required
-                >
-                  <SelectTrigger id="member" className="h-10">
-                    <SelectValue placeholder="Select a member" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Members</SelectLabel>
-                      {members.map((member) => (
-                        <SelectItem key={member.id} value={member.id.toString()}>
-                          {member.memberName} - {member.organizationName}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="date" className="text-base font-medium">
-                  Meeting Date <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="date"
-                  type="date"
-                  value={formData.date}
-                  onChange={(e) => handleChange("date", e.target.value)}
-                  className="h-10"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
+              <h1> Who would you like to meet with?</h1>
+              <div className="grid grid-cols-3 gap-6">
+            <div className="space-y-2">
                 <Label htmlFor="chapter" className="text-base font-medium">
-                  Chapter <span className="text-red-500">*</span>
+               Chapter  <span className="text-red-500">*</span>
                 </Label>
                 <Select
                   value={formData.chapterId}
@@ -198,6 +187,55 @@ const OneToOneForm = () => {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="member" className="text-base font-medium">
+                  Member <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={formData.requestedId}
+                  onValueChange={(value) => handleChange("requestedId", value)}
+                  required
+                  disabled={!formData.chapterId || loadingMembers}
+                >
+                  <SelectTrigger id="member" className="h-10">
+                    <SelectValue placeholder={loadingMembers ? "Loading members..." : formData.chapterId ? "Select a member" : "First select a chapter"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Members</SelectLabel>
+                      {loadingMembers ? (
+                        <SelectItem value="loading" disabled>Loading members...</SelectItem>
+                      ) : chapterMembers.length > 0 ? (
+                        chapterMembers.map((member) => (
+                          <SelectItem key={member.id} value={member.id.toString()}>
+                            {member.memberName} - {member.organizationName}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="none" disabled>No members found in this chapter</SelectItem>
+                      )}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+
+              <div className="space-y-2">
+                <Label htmlFor="date" className="text-base font-medium">
+                  Meeting Date <span className="text-red-500">*</span>
+                </Label>
+                <DatetimePicker
+                  value={formData.date ? new Date(formData.date) : new Date()}
+                  className="w-full"
+                  onChange={(date) => handleChange("date", format(date as Date, "yyyy-MM-dd"))}
+                  format={[
+                    ["months", "days", "years"]
+                  ]}
+                />
+              </div>
+              </div>
+
+             
 
               <div className="space-y-2">
                 <Label htmlFor="remarks" className="text-base font-medium">
