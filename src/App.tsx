@@ -60,6 +60,7 @@ import TransactionReport from "./modules/report/TransactionReport";
 import MembershipReport from "./modules/report/MembershipReport";
 import Dashboard from "./modules/Dashboard/dashboard";
  import ChapterVisitorList from "./modules/visitor/ChapterVisitorList";
+ import SubCategories from "./modules/subCategory/subCategoryList"
 
 
 import { OneToOneList, OneToOneForm } from "./modules/oneToOne";
@@ -154,6 +155,14 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <Categories />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/sub-categories"
+              element={
+                <ProtectedRoute>
+                  <SubCategories />
                 </ProtectedRoute>
               }
             />

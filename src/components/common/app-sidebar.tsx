@@ -60,6 +60,11 @@ const initialData = {
           url: "/categories",
           icon: UsersRound,
         },
+        {
+          name: "Sub-Categories",
+          url: "/sub-categories",
+          icon: UsersRound,
+        },
 
         {
           name: "Training",
@@ -155,6 +160,11 @@ const initialData = {
             {
               title: "Manage Categories",
               url: "/categories",
+              icon: UsersRound,
+            },
+            {
+              title: "Manage Sub-Categories",
+              url: "/sub-categories",
               icon: UsersRound,
             },
 
