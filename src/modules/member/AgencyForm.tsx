@@ -25,7 +25,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
@@ -39,8 +38,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import React from "react";
+import { DatetimePicker } from "@/components/ui/datetime-picker";
 
 interface Chapter {
   id: number;
@@ -66,7 +65,7 @@ type BaseMemberFormValues = {
   category: string;
   businessCategory: string;
   gender: string;
-  dob: Date;
+  dateOfBirth: Date;
   mobile1: string;
   mobile2: string | null;
   gstNo?: string;
@@ -117,7 +116,7 @@ const createMemberSchema = (mode: "create" | "edit") => {
       .string()
       .min(1, "Another business category is required"),
     gender: z.string().optional(),
-    dob: z.date({ required_error: "Date of birth is required" }),
+    dateOfBirth: z.date({ required_error: "Date of birth is required" }),
     mobile1: z.string().regex(/^[0-9]{10}$/, "Valid mobile number is required"),
     mobile2: z
       .string()
@@ -228,7 +227,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
       category: visitorData?.category || "",
       businessCategory: "",
       gender: visitorData?.gender || "",
-      dob: new Date(), // Consider undefined and let Zod handle required or user pick
+      dateOfBirth: new Date(), // Consider undefined and let Zod handle required or user pick
       mobile1: visitorData?.mobile1 || "",
       mobile2: visitorData?.mobile2 || null,
       gstNo: "",
@@ -303,7 +302,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
       reset({
         ...restApiData,
         chapterId: chapter?.id || apiData.chapterId,
-        dob: apiData.dob ? new Date(apiData.dob) : new Date(),
+        dateOfBirth: apiData.dateOfBirth ? new Date(apiData.dateOfBirth) : new Date(),
         // Form fields for new files should be undefined
         profilePicture1: undefined,
         profilePicture2: undefined,
@@ -584,38 +583,18 @@ export default function MemberForm({ mode }: MemberFormProps) {
               <div className="grid md:grid-cols-3 gap-4 md:gap-6">
                 <FormField
                   control={form.control}
-                  name="dob"
+                  name="dateOfBirth"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Date of Birth</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className="w-full pl-3 text-left font-normal justify-start" // Ensure text aligns left
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) =>
-                              date > new Date() || date < new Date("1900-01-01")
-                            }
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
+                      <DatetimePicker
+                        value={field.value}
+                        onChange={field.onChange}
+                        format={[
+                          ["days", "months", "years"],
+                          
+                        ]}
+                      />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -651,23 +630,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   )}
                 />
               </div>
-              <FormField
-                control={form.control}
-                name="gstNo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>GST Number (Optional)</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        value={field.value || ""}
-                        placeholder="Enter GST number"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+             
             </CardContent>
           </Card>
 
@@ -685,6 +648,23 @@ export default function MemberForm({ mode }: MemberFormProps) {
                     <FormLabel>Organization Name</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="Enter organization name" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="gstNo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>GST Number (Optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value || ""}
+                        placeholder="Enter GST number"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -743,7 +723,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="organizationEmail"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email (Optional)</FormLabel>
+                      <FormLabel>Email</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -821,13 +801,21 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="organizationWebsite"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Website (Optional)</FormLabel>
+                      <FormLabel>Website</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
                           value={field.value || ""}
-                          type="url"
-                          placeholder="https://example.com"
+                          type="text"
+                          placeholder="www.example.com / https://example.com"
+                          onChange={(e) => {
+                            let value = e.target.value;
+                            // Automatically add https:// if user enters www.
+                            if (value.startsWith('www.') && !value.startsWith('http')) {
+                              value = 'https://' + value;
+                            }
+                            field.onChange(value);
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -986,6 +974,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
           <Card className="mb-6 shadow-none border-0">
             <CardHeader>
               <CardTitle className="text-lg">Profile Pictures</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Compatible: JPEG, PNG | Max: 5MB | Recommended: 1000x1000px (1:1 ratio)
+              </p>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-3 gap-6">
@@ -1169,3 +1160,14 @@ export default function MemberForm({ mode }: MemberFormProps) {
     </Card>
   );
 }
+
+export const DatetimePickerExample = () => {
+  return (
+    <DatetimePicker
+      format={[
+        ["months", "days", "years"],
+        ["hours", "minutes", "am/pm"],
+      ]}
+    />
+  );
+};

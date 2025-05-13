@@ -211,6 +211,7 @@ export default function PackageForm({ mode }: { mode: "create" | "edit" }) {
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <CardContent className="space-y-4">
               {/* Package Name */}
+              <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="packageName"
@@ -233,17 +234,26 @@ export default function PackageForm({ mode }: { mode: "create" | "edit" }) {
                   <FormItem>
                     <FormLabel>Period (Months)</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        min={1}
-                        placeholder="Duration in months"
-                        {...field}
-                      />
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value?.toString() || "1"}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select period" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1</SelectItem>
+                          <SelectItem value="3">3</SelectItem>
+                          <SelectItem value="6">6</SelectItem>
+                          <SelectItem value="12">12</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              </div>
 
               {/* Is Venue Fee */}
               <FormField

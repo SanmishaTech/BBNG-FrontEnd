@@ -61,14 +61,13 @@ const CreateCountry: React.FC<CreateCountryProps> = ({ isOpen, onClose }) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add</DialogTitle>
+          <DialogTitle>Add Zone</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           <div className="grid gap-2 relative">
-            <Label htmlFor="name">Country Name</Label>
             <Input
               id="name"
-              placeholder="Enter Country Name..."
+              placeholder="Enter Zone Name..."
               {...register("name")}
             />
             {errors.name && (

@@ -22,8 +22,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { createRequirement } from "@/services/requirementService";
 
 const requirementSchema = z.object({
-  heading: z.string().min(1, "Heading is required"),
-  requirement: z.string().min(1, "Requirement is required"),
+  heading: z.string().min(1, "Heading is required").max(100, "Heading must be 100 characters or less"),
+  requirement: z.string().min(1, "Requirement is required").max(513, "Requirement must be 513 characters or less"),
 });
 
 type RequirementFormValues = z.infer<typeof requirementSchema>;
@@ -77,7 +77,7 @@ const AddRequirement: React.FC = () => {
                   <FormItem>
                     <FormLabel>Heading</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter heading" {...field} />
+                      <Input placeholder="Enter heading" maxLength={100} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -91,7 +91,7 @@ const AddRequirement: React.FC = () => {
                   <FormItem>
                     <FormLabel>Requirement</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Enter requirement" {...field} />
+                      <Textarea placeholder="Enter requirement" maxLength={513} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

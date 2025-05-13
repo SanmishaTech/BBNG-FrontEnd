@@ -87,6 +87,11 @@ const initialData = {
           url: "/requirements",
           icon: BookOpen,
         },
+        {
+          name: "View Requirements",
+          url: "/viewrequirements",
+          icon: BookOpen,
+        },
       ],
       navMain: [
         {
@@ -118,23 +123,8 @@ const initialData = {
             //   icon: UsersRound,
             // },
             {
-              title: "Manage Chapters",
-              url: "/chapters",
-              icon: UsersRound,
-            },
-            {
-              title: "Manage Members",
-              url: "/members",
-              icon: UsersRound,
-            },
-            {
-              title: "Manage Packages",
-              url: "/packages",
-              icon: UsersRound,
-            },
-            {
-              title: "Manage Memberships",
-              url: "/memberships",
+              title: "Manage Zones",
+              url: "/zones",
               icon: UsersRound,
             },
             {
@@ -143,13 +133,28 @@ const initialData = {
               icon: UsersRound,
             },
             {
-              title: "Manage Categories",
-              url: "/categories",
+              title: "Manage Chapters",
+              url: "/chapters",
               icon: UsersRound,
             },
             {
-              title: "Manage Zones",
-              url: "/zones",
+              title: "Manage Packages",
+              url: "/packages",
+              icon: UsersRound,
+            },
+            {
+              title: "Manage Members",
+              url: "/members",
+              icon: UsersRound,
+            },
+            {
+              title: "Manage Memberships",
+              url: "/memberships",
+              icon: UsersRound,
+            },
+            {
+              title: "Manage Categories",
+              url: "/categories",
               icon: UsersRound,
             },
 

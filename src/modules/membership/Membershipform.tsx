@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -41,6 +41,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
+import { DatetimePicker } from "@/components/ui/datetime-picker";
 import { format } from "date-fns";
 import {
   Card,
@@ -113,7 +114,9 @@ const membershipSchema = z.object({
     (val) => (val === "" ? null : Number(val)),
     z.number().min(0, "IGST rate cannot be negative").nullable().optional()
   ),
-  paymentDate: z.date().nullable().optional(),
+  paymentDate: z.date({
+    required_error: "Payment date is required",
+  }),
   paymentMode: z.string().nullable().optional(),
   
   // Cheque details
@@ -169,7 +172,7 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
       cgstRate: null,
       sgstRate: null,
       igstRate: null,
-      paymentDate: null,
+      paymentDate: new Date(),
       paymentMode: null,
       chequeNumber: null,
       chequeDate: null,
@@ -299,10 +302,7 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
     onSuccess: () => {
       toast.success("Membership created successfully");
       queryClient.invalidateQueries({ queryKey: ["memberships"] });
-      if (selectedMemberId) {
-        queryClient.invalidateQueries({ queryKey: ["memberships", selectedMemberId] });
-      }
-      navigate(selectedMemberId ? `/members/${selectedMemberId}` : "/memberships");
+      navigate("/memberships");
     },
     onError: (error: any) => {
       toast.error(error?.response?.data?.message || "Failed to create membership");
@@ -315,10 +315,7 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
     onSuccess: () => {
       toast.success("Membership updated successfully");
       queryClient.invalidateQueries({ queryKey: ["memberships"] });
-      if (selectedMemberId) {
-        queryClient.invalidateQueries({ queryKey: ["memberships", selectedMemberId] });
-      }
-      navigate(selectedMemberId ? `/members/${selectedMemberId}` : "/memberships");
+      navigate("/memberships");
     },
     onError: (error: any) => {
       toast.error(error?.response?.data?.message || "Failed to update membership");
@@ -536,37 +533,14 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
                           <FormLabel>Invoice Date</FormLabel>
-                          <Popover open={invoiceDateOpen} onOpenChange={setInvoiceDateOpen}>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant={"outline"}
-                                  className={cn(
-                                    "w-full pl-3 text-left font-normal",
-                                    !field.value && "text-muted-foreground"
-                                  )}
-                                >
-                                  {field.value ? (
-                                    format(field.value, "PPP")
-                                  ) : (
-                                    <span>Select date</span>
-                                  )}
-                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={(date) => {
-                                  field.onChange(date);
-                                  setInvoiceDateOpen(false);
-                                }}
-                                initialFocus
-                              />
-                            </PopoverContent>
-                          </Popover>
+                          <DatetimePicker
+                        value={field.value}
+                        onChange={field.onChange}
+                        format={[
+                          ["days", "months", "years"],
+                          
+                        ]}
+                        />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -705,13 +679,14 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
               </Card>
 
               {/* Payment Details Card */}
-              <Card>
+               <Card>
                 <CardHeader>
                   <CardTitle>Payment Details</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     {/* Payment Mode */}
+                    <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="paymentMode"
@@ -723,7 +698,7 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                             value={field.value || ""}
                           >
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Select payment mode" />
                               </SelectTrigger>
                             </FormControl>
@@ -747,42 +722,21 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
                           <FormLabel>Payment Date</FormLabel>
-                          <Popover open={paymentDateOpen} onOpenChange={setPaymentDateOpen}>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant={"outline"}
-                                  className={cn(
-                                    "w-full pl-3 text-left font-normal",
-                                    !field.value && "text-muted-foreground"
-                                  )}
-                                >
-                                  {field.value ? (
-                                    format(field.value, "PPP")
-                                  ) : (
-                                    <span>Select date</span>
-                                  )}
-                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={field.value || undefined}
-                                onSelect={(date) => {
-                                  field.onChange(date);
-                                  setPaymentDateOpen(false);
-                                }}
-                                initialFocus
-                              />
-                            </PopoverContent>
-                          </Popover>
+                          <DatetimePicker
+                        value={field.value}
+                        className="w-full"
+                        onChange={field.onChange}
+                        format={[
+                          ["days", "months", "years"],
+                          
+                        ]}
+                      />
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-
+                    </div>
+ 
                     {/* Conditional Payment Method Fields */}
                     {paymentMode === "cheque" && (
                       <div className="space-y-4 p-4 border rounded-md">

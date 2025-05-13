@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import Validate from "@/lib/Handlevalidation";
+import { DatetimePicker } from "@/components/ui/datetime-picker";
 import {
   Select,
   SelectContent,
@@ -381,29 +382,14 @@ export default function ChapterForm({ mode }: { mode: "create" | "edit" }) {
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Formation Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className="w-full pl-3 text-left font-normal"
-                            >
-                              {field.value
-                                ? format(field.value, "PPP")
-                                : "Pick a date"}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
+                      <DatetimePicker
+                        value={field.value}
+                        onChange={field.onChange}
+                        format={[
+                          ["days", "months", "years"],
+                          
+                        ]}
+                      />
                       <FormMessage />
                     </FormItem>
                   )}

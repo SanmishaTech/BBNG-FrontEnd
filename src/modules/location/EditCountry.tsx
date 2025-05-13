@@ -223,14 +223,14 @@ const EditLocation = ({ locationId, isOpen, onClose }: EditLocationProps) => {
           </div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            <div className="grid gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="relative">
-                <Label htmlFor="zoneId">Zone</Label>
+                <Label className="mb-2" htmlFor="zoneId">Zone</Label>
                 <Select
                   defaultValue={locationData?.zoneId?.toString()}
                   onValueChange={(value) => setValue("zoneId", value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a zone" />
                   </SelectTrigger>
                   <SelectContent>
@@ -249,7 +249,7 @@ const EditLocation = ({ locationId, isOpen, onClose }: EditLocationProps) => {
               </div>
 
               <div className="relative">
-                <Label htmlFor="location">Location Name</Label>
+                <Label className="mb-2" htmlFor="location">Location Name</Label>
                 <Input
                   id="location"
                   placeholder="Enter location name"
