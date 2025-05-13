@@ -56,6 +56,8 @@ interface Reference {
   noOfReferences?: number;
   chapterId: number;
   memberId: number;
+  giverId?: number;
+  receiverId?: number;
   urgency?: string;
   self: boolean;
   nameOfReferral: string;
@@ -72,6 +74,16 @@ interface Reference {
   updatedAt: string;
   statusHistory?: StatusHistory[];
   member?: {
+    id: number;
+    memberName: string;
+    email: string;
+  };
+  giver?: {
+    id: number;
+    memberName: string;
+    email: string;
+  };
+  receiver?: {
     id: number;
     memberName: string;
     email: string;
@@ -94,14 +106,32 @@ const ReferenceDetail = () => {
     date: format(new Date(), "yyyy-MM-dd"),
     comment: ""
   });
+  
+  // Get current member ID from localStorage
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const currentMemberId = currentUser.member?.id;
+  
+  // Check if current user is the receiver of this reference (allowed to update status)
+  const [isReceiver, setIsReceiver] = useState(false);
 
   // Load reference details
   useEffect(() => {
     const loadReference = async () => {
       setLoading(true);
       try {
-        const response = await get(`/references/${id}`);
-        setReference(response.reference);
+        const reference = await get(`/references/${id}`);
+        // Check if statusHistory exists, if not initialize it as empty array
+        if (!reference.statusHistory) {
+          reference.statusHistory = [];
+        }
+        setReference(reference);
+        
+        // Check if current user is the receiver of this reference
+        if (currentMemberId && reference.receiverId === currentMemberId) {
+          setIsReceiver(true);
+        } else {
+          setIsReceiver(false);
+        }
       } catch (error) {
         console.error("Error loading reference:", error);
         toast.error("Failed to load reference details");
@@ -116,6 +146,11 @@ const ReferenceDetail = () => {
 
   // Open status update dialog
   const openStatusUpdateDialog = () => {
+    if (!isReceiver) {
+      toast.info("Only the reference receiver can update the status");
+      return;
+    }
+    
     if (reference) {
       setStatusUpdateData({
         status: reference.status,
@@ -133,11 +168,27 @@ const ReferenceDetail = () => {
     setStatusUpdating(true);
     try {
       const response = await patch(`/references/${id}/status`, statusUpdateData);
+      
+      // Create a new status history entry if the API doesn't return one
+      const newStatusHistory = response.statusHistory || [...(reference.statusHistory || [])];
+      
+      // If the API doesn't return updated status history, manually add an entry
+      if (!response.statusHistory) {
+        newStatusHistory.push({
+          id: Date.now(), // Temporary ID
+          date: statusUpdateData.date,
+          status: statusUpdateData.status,
+          comment: statusUpdateData.comment,
+          createdAt: new Date().toISOString()
+        });
+      }
+      
       setReference(prev => prev ? { 
         ...prev, 
-        status: response.reference.status,
-        statusHistory: response.statusHistory
+        status: response.status || statusUpdateData.status,
+        statusHistory: newStatusHistory
       } : null);
+      
       toast.success(`Reference status updated to ${statusUpdateData.status}`);
       setStatusDialogOpen(false);
     } catch (error) {
@@ -177,9 +228,9 @@ const ReferenceDetail = () => {
   };
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="container mx-auto px-6 py-8">
       <div className="mb-6">
-        <Button variant="outline" onClick={() => navigate("/dashboard/references/received")}>
+        <Button variant="outline" onClick={() => navigate("/references")}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to References
         </Button>
       </div>
@@ -197,6 +248,11 @@ const ReferenceDetail = () => {
                   <CardTitle className="text-2xl">Reference: {reference.nameOfReferral}</CardTitle>
                   <CardDescription>
                     Created on {format(new Date(reference.createdAt), "MMMM dd, yyyy")}
+                    {reference.giver && reference.receiver && (
+                      <div className="mt-1 font-medium">
+                        <span className="text-blue-600">{reference.giver.memberName}</span> → <span className="text-green-600">{reference.receiver.memberName}</span>
+                      </div>
+                    )}
                   </CardDescription>
                 </div>
                 <Link to={`/references/${id}/edit`}>
@@ -215,9 +271,13 @@ const ReferenceDetail = () => {
                   >
                     {reference.status.charAt(0).toUpperCase() + reference.status.slice(1)}
                   </Badge>
-                  <Button onClick={openStatusUpdateDialog} variant="outline" size="sm">
-                    <History className="mr-2 h-4 w-4" /> Update Status
-                  </Button>
+                  {isReceiver ? (
+                    <Button onClick={openStatusUpdateDialog} variant="outline" size="sm">
+                      <History className="mr-2 h-4 w-4" /> Update Status
+                    </Button>
+                  ) : (
+                    <div className="text-sm text-gray-500 italic">Status updates managed by receiver</div>
+                  )}
                 </div>
               </div>
 
@@ -238,8 +298,12 @@ const ReferenceDetail = () => {
                       <dd className="font-medium">{reference.chapter?.name || "N/A"}</dd>
                     </div>
                     <div>
-                      <dt className="text-sm text-gray-600">Member</dt>
-                      <dd className="font-medium">{reference.member?.memberName || "N/A"}</dd>
+                      <dt className="text-sm text-gray-600">Reference Giver</dt>
+                      <dd className="font-medium text-blue-600">{reference.giver?.memberName || reference.member?.memberName || "N/A"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm text-gray-600">Reference Receiver</dt>
+                      <dd className="font-medium text-green-600">{reference.receiver?.memberName || (reference.self ? reference.member?.memberName : "N/A")}</dd>
                     </div>
                     <div>
                       <dt className="text-sm text-gray-600">No. of References</dt>
@@ -347,6 +411,15 @@ const ReferenceDetail = () => {
                 <Button variant="outline" onClick={() => navigate("/references")}>
                   Back
                 </Button>
+                {isReceiver ? (
+                <Button 
+                  variant="outline" 
+                  onClick={openStatusUpdateDialog} 
+                  className="bg-blue-50 hover:bg-blue-100 border-blue-200"
+                >
+                  <History className="mr-2 h-4 w-4" /> Update Status
+                </Button>
+              ) : null}
                 <Link to={`/references/${id}/edit`}>
                   <Button>Edit Reference</Button>
                 </Link>
@@ -357,8 +430,8 @@ const ReferenceDetail = () => {
           {/* Status History Card */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl">Reference Track</CardTitle>
-              <CardDescription>History of status updates for this reference</CardDescription>
+              <CardTitle className="text-xl">Reference Status History</CardTitle>
+              <CardDescription>Tracking changes in status for this reference</CardDescription>
             </CardHeader>
             <CardContent>
               {reference.statusHistory && reference.statusHistory.length > 0 ? (
@@ -367,22 +440,28 @@ const ReferenceDetail = () => {
                     <TableRow>
                       <TableHead>No.</TableHead>
                       <TableHead>Date</TableHead>
-                      <TableHead>Comment</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Comment</TableHead>
+                      <TableHead>Timestamp</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {reference.statusHistory.map((history, index) => (
-                      <TableRow key={history.id}>
-                        <TableCell>{index + 1}</TableCell>
-                        <TableCell>{format(new Date(history.date), "dd/MM/yyyy")}</TableCell>
-                        <TableCell>{history.comment || '-'}</TableCell>
-                        <TableCell>
-                          <Badge className={getStatusBadgeClass(history.status)}>
-                            {history.status.charAt(0).toUpperCase() + history.status.slice(1)}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
+                    {reference.statusHistory
+                      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                      .map((history, index) => (
+                        <TableRow key={history.id}>
+                          <TableCell>{index + 1}</TableCell>
+                          <TableCell>{format(new Date(history.date), "dd/MM/yyyy")}</TableCell>
+                          <TableCell>
+                            <Badge className={getStatusBadgeClass(history.status)}>
+                              {history.status.charAt(0).toUpperCase() + history.status.slice(1)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{history.comment || '-'}</TableCell>
+                          <TableCell className="text-xs text-gray-500">
+                            {format(new Date(history.createdAt), "dd/MM/yyyy HH:mm")}
+                          </TableCell>
+                        </TableRow>
                     ))}
                   </TableBody>
                 </Table>
@@ -431,7 +510,7 @@ const ReferenceDetail = () => {
                 <SelectContent>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="contacted">Contacted</SelectItem>
-                  <SelectItem value="converted">Converted</SelectItem>
+                  <SelectItem value="business done">Business Done</SelectItem>
                   <SelectItem value="rejected">Rejected</SelectItem>
                 </SelectContent>
               </Select>

@@ -9,6 +9,7 @@ import { MemberData } from "@/types/member";
 import * as apiService from "@/services/apiService";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { getBestMemberPhoto } from "@/utils/photoUtils";
 
 const Index = ({ memberId }: { memberId?: string }) => {
   const navigate = useNavigate();
@@ -30,24 +31,27 @@ const Index = ({ memberId }: { memberId?: string }) => {
       // Fetch real member data from API
       const response = await apiService.get(`/members/${id}`);
       
-      if (!response || !response.member) {
+      // Check if response has needed member data directly
+      if (!response || !response.id) {
         setNotFound(true);
         setMemberData(null);
         return;
       }
       
-      const member = response.member;
+      const member = response;
       
       // Transform API data to match our MemberData type
+      // Use the best available photo for profile picture
       const memberData: MemberData = {
         id: member.id.toString(),
         name: member.memberName,
-        profilePicture: member.profilePicture1 
-          ? `${import.meta.env.VITE_BACKEND_URL}/uploads/members/${member.profilePicture1}`
-          : "https://via.placeholder.com/100",
+        profilePicture: getBestMemberPhoto(member, "https://via.placeholder.com/100"),
+        // For cover photo, prefer the second picture but fall back to any available if needed
         coverPhoto: member.profilePicture2
           ? `${import.meta.env.VITE_BACKEND_URL}/uploads/members/${member.profilePicture2}`
-          : "https://images.unsplash.com/photo-1614850523459-c2f4c699c6b2?auto=format&fit=crop&w=1470&h=400",
+          : (member.profilePicture1 || member.profilePicture3) 
+            ? getBestMemberPhoto(member, "https://images.unsplash.com/photo-1614850523459-c2f4c699c6b2?auto=format&fit=crop&w=1470&h=400")
+            : "https://images.unsplash.com/photo-1614850523459-c2f4c699c6b2?auto=format&fit=crop&w=1470&h=400",
         email: member.email,
         phone: member.mobile1,
         designation: member.businessCategory || '',
@@ -112,7 +116,10 @@ const Index = ({ memberId }: { memberId?: string }) => {
             id: ref.id,
             user: {
               name: ref.fromMemberName || ref.toMemberName,
-              avatar: "https://via.placeholder.com/100",
+              // Try to get avatar from the referenced member if available
+              avatar: ref.fromMember?.profilePicture1 || ref.toMember?.profilePicture1
+                ? getBestMemberPhoto(ref.fromMember || ref.toMember, "https://via.placeholder.com/100")
+                : "https://via.placeholder.com/100",
             },
             time: new Date(ref.createdAt).toLocaleDateString(),
             content: ref.testimonial || "Provided a reference",

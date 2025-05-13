@@ -70,7 +70,19 @@ interface Reference {
   addressLine2?: string;
   location?: string;
   pincode?: string;
+  giverId?: number;
+  receiverId?: number;
   member?: {
+    id: number;
+    memberName: string;
+    email: string;
+  };
+  giver?: {
+    id: number;
+    memberName: string;
+    email: string;
+  };
+  receiver?: {
     id: number;
     memberName: string;
     email: string;
@@ -80,6 +92,13 @@ interface Reference {
     name: string;
   };
   createdAt: string;
+  statusHistory?: Array<{
+    id: number;
+    date: string;
+    status: string;
+    comment?: string;
+    createdAt: string;
+  }>;
 }
 
 const GivenReferences = () => {
@@ -113,7 +132,16 @@ const GivenReferences = () => {
         toDate: toDate || undefined,
       });
       
-      setReferences(response.references);
+      // Make sure we have all the needed properties
+      const processedReferences = response.references.map((ref: Reference) => {
+        return {
+          ...ref,
+          statusHistory: ref.statusHistory || [],
+          giver: ref.giver || ref.member, // Fallback to member if giver is not provided
+        };
+      });
+      
+      setReferences(processedReferences);
       setTotalPages(response.totalPages);
     } catch (error) {
       console.error("Error loading given references:", error);
@@ -138,15 +166,10 @@ const GivenReferences = () => {
     }
   };
 
+  // Note: Reference givers CANNOT update status
+  // This function is now disabled and will show a message to the user
   const handleUpdateStatus = async (id: number, newStatus: string) => {
-    try {
-      await patch(`/references/${id}/status`, { status: newStatus });
-      toast.success(`Reference status updated to ${newStatus}`);
-      loadGivenReferences();
-    } catch (error) {
-      console.error("Error updating reference status:", error);
-      toast.error("Failed to update reference status");
-    }
+    toast.info("Only the reference receiver can update the status");
   };
 
   const getStatusBadgeClass = (status: string) => {
@@ -158,13 +181,30 @@ const GivenReferences = () => {
       case "business done":
       case "business-done":
       case "businessdone":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "converted":
+      case "business done": // Legacy support for existing data
         return "bg-green-100 text-green-800 border-green-200";
       case "rejected":
         return "bg-red-100 text-red-800 border-red-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+  
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "pending":
+        return "#f59e0b"; // Yellow
+      case "contacted":
+        return "#3b82f6"; // Blue
+      case "business done":
+      case "business-done":
+      case "businessdone":
+      case "converted": // Legacy support for existing data
+        return "#3b82f6"; // Blue
+      case "rejected":
+        return "#ef4444"; // Red
+      default:
+        return "#6b7280"; // Gray
     }
   };
 
@@ -201,77 +241,88 @@ const GivenReferences = () => {
               {reference.status}
             </Badge>
           </div>
-          <CardDescription className="text-muted-foreground flex items-center gap-1 mt-1">
-            <Calendar className="h-3 w-3" />
-            {formatDate(reference.date)}
-          </CardDescription>
         </CardHeader>
         <CardContent className="flex-grow">
           <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <div className="font-medium text-sm">Contact:</div>
-              <div className="text-sm">{reference.mobile1}</div>
+            {/* Reference flow (who it was given to) */}
+            <div className="bg-gray-50 p-2 rounded-md">
+              <span className="text-sm font-medium">Reference to:</span>
+              <div className="mt-1 text-sm font-semibold text-blue-600">
+                {reference.receiver?.memberName || 'Unknown Receiver'}
+              </div>
             </div>
-            
-            {reference.email && (
-              <div className="flex justify-between items-center">
-                <div className="font-medium text-sm">Email:</div>
-                <div className="text-sm truncate max-w-[180px]">{reference.email}</div>
+
+            <div>
+              <span className="text-sm font-medium">Contact:</span> 
+              <div className="mt-1 text-sm">
+                {reference.mobile1}
+                {reference.email && <div className="text-xs text-gray-500">{reference.email}</div>}
               </div>
-            )}
-            
-            {reference.chapter && (
-              <div className="flex justify-between items-center">
-                <div className="font-medium text-sm">Chapter:</div>
-                <div className="text-sm">{reference.chapter.name}</div>
-              </div>
-            )}
-            
+            </div>
+
             {reference.urgency && (
-              <div className="flex justify-between items-center">
-                <div className="font-medium text-sm">Urgency:</div>
-                <Badge variant="outline" className={getUrgencyBadgeClass(reference.urgency)}>
-                  {reference.urgency}
-                </Badge>
+              <div>
+                <span className="text-sm font-medium">Urgency:</span>
+                <div className="mt-1">
+                  <Badge className={getUrgencyBadgeClass(reference.urgency)}>
+                    {reference.urgency.charAt(0).toUpperCase() + reference.urgency.slice(1)}
+                  </Badge>
+                </div>
               </div>
             )}
-            
+
             {reference.remarks && (
-              <div className="mt-3">
-                <div className="font-medium text-sm mb-1">Remarks:</div>
-                <div className="text-sm text-muted-foreground line-clamp-3">{reference.remarks}</div>
+              <div>
+                <span className="text-sm font-medium">Remarks:</span>
+                <p className="mt-1 text-sm text-gray-600 line-clamp-2">
+                  {reference.remarks}
+                </p>
+              </div>
+            )}
+
+            {/* Show the last status update (if any) */}
+            {reference.statusHistory && reference.statusHistory.length > 0 && (
+              <div>
+                <span className="text-sm font-medium">Last update:</span>
+                <div className="mt-1 text-sm text-gray-600">
+                  {formatDate(reference.statusHistory[0].date)}: 
+                  <span className="font-medium">{reference.statusHistory[0].status}</span>
+                  {reference.statusHistory[0].comment && (
+                    <div className="text-xs italic mt-1">"{reference.statusHistory[0].comment}"</div>
+                  )}
+                </div>
               </div>
             )}
           </div>
         </CardContent>
+        
         <Separator />
-        <CardFooter className="flex justify-between p-4">
-          <div className="flex space-x-2">
-            <Link to={`/references/${reference.id}`}>
-              <Button variant="outline" size="sm">
-                View
-              </Button>
-            </Link>
+        
+        <CardFooter className="pt-4 flex justify-between items-center">
+          <Link to={`/references/${reference.id}`}>
+            <Button variant="outline" size="sm">
+              View Details
+            </Button>
+          </Link>
+          
+          <div className="flex gap-2">
             <Link to={`/references/${reference.id}/edit`}>
-              <Button variant="outline" size="sm">
-                <Pencil className="h-4 w-4 mr-1" />
-                Edit
+              <Button variant="ghost" size="sm" className="text-blue-500">
+                <Pencil className="h-4 w-4" />
               </Button>
             </Link>
-          </div>
-          <div className="flex space-x-2">
+            
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm" className="text-red-500 hover:text-red-600">
-                  <Trash className="h-4 w-4 mr-1" />
-                  Delete
+                <Button variant="ghost" size="sm" className="text-red-500">
+                  <Trash className="h-4 w-4" />
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogTitle>Delete Reference</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will permanently delete this reference.
+                    Are you sure you want to delete this reference? This action cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -315,7 +366,7 @@ const GivenReferences = () => {
             <SelectItem value="all">All Statuses</SelectItem>
             <SelectItem value="pending">Pending</SelectItem>
             <SelectItem value="contacted">Contacted</SelectItem>
-            <SelectItem value="converted">Converted</SelectItem>
+            <SelectItem value="business done">Business Done</SelectItem>
             <SelectItem value="rejected">Rejected</SelectItem>
           </SelectContent>
         </Select>
@@ -344,18 +395,19 @@ const GivenReferences = () => {
   );
 
   return (
-    <div className="container px-4 py-6 max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">References Given</h1>
-        <div className="flex gap-4">
+    <div className="container px-6 py-8 max-w-7xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight mb-2">References Given</h1>
+        <p className="text-gray-500">References you have provided to other members.</p>
+        <div className="flex gap-4 mt-4">
           <Link to="/dashboard/references/received">
-            <Button variant="outline">
+            <Button variant="outline" className="shadow-sm">
               <ArrowLeftRight className="h-4 w-4 mr-2" />
               View Received
             </Button>
           </Link>
           <Link to="/references/create">
-            <Button>
+            <Button className="shadow-sm">
               <Plus className="h-4 w-4 mr-2" />
               Add Reference
             </Button>

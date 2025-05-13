@@ -5,6 +5,7 @@ import MemberCard from "@/components/common/MemberCard";
 import { useNavigate } from "react-router-dom";
 import * as apiService from "@/services/apiService";
 import { toast } from "sonner";
+import { getBestMemberPhoto } from "@/utils/photoUtils";
 
 const MemberSearch = () => {
   const navigate = useNavigate();
@@ -38,23 +39,30 @@ const MemberSearch = () => {
       const response = await apiService.get('/members/search');
       
       // Transform API data to match our MemberData type
-      const memberData: MemberData[] = response.members.map((member: any) => ({
-        id: member.id.toString(),
-        name: member.memberName,
-        profilePicture: member.profilePicture1 
-          ? `${import.meta.env.VITE_BACKEND_URL}/uploads/members/${member.profilePicture1}`
-          : "https://via.placeholder.com/100",
-        coverPhoto: member.profilePicture2
+      const memberData: MemberData[] = response.members.map((member: any) => {
+        // Get the best available profile picture using our utility function
+        const profilePicture = getBestMemberPhoto(member);
+        
+        // For cover photo, still use the second picture if available
+        // If not, fall back to the best available photo (which might be the same as profilePicture)
+        const coverPhoto = member.profilePicture2
           ? `${import.meta.env.VITE_BACKEND_URL}/uploads/members/${member.profilePicture2}`
-          : undefined,
-        email: member.email,
-        phone: member.mobile1,
-        designation: member.businessCategory || '',
-        department: member.category || '',
-        joinDate: new Date(member.createdAt).toLocaleDateString(),
-        skills: member.specificGive ? member.specificGive.split(',').map((s: string) => s.trim()) : [],
-        lastActive: member.user?.lastLogin ? new Date(member.user.lastLogin).toLocaleDateString() : 'Never'
-      }));
+          : (member.profilePicture1 || member.profilePicture3) ? profilePicture : undefined;
+          
+        return {
+          id: member.id.toString(),
+          name: member.memberName,
+          profilePicture,
+          coverPhoto,
+          email: member.email,
+          phone: member.mobile1,
+          designation: member.businessCategory || '',
+          department: member.category || '',
+          joinDate: new Date(member.createdAt).toLocaleDateString(),
+          skills: member.specificGive ? member.specificGive.split(',').map((s: string) => s.trim()) : [],
+          lastActive: member.user?.lastLogin ? new Date(member.user.lastLogin).toLocaleDateString() : 'Never'
+        };
+      });
       
       setMembers(memberData);
       setFilteredMembers(memberData);

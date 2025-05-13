@@ -45,6 +45,7 @@ import {
   MemberReferences,
   GivenReferences,
   ReceivedReferences,
+  ThankYouSlipForm,
 } from "./modules/reference";
 import ReferenceRouter from "./modules/reference/ReferenceRouter";
 import Chaptermeeting from "./modules/chaptermeeting/ChapterMeetingList";
@@ -484,6 +485,14 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <ReferenceForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/references/:referenceId/thank-you-slip"
+              element={
+                <ProtectedRoute>
+                  <ThankYouSlipForm />
                 </ProtectedRoute>
               }
             />

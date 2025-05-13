@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { get, patch } from "@/services/apiService";
 import { format } from "date-fns";
 import { 
@@ -69,6 +69,7 @@ interface Reference {
 }
 
 const ReceivedReferences = () => {
+  const navigate = useNavigate();
   const [references, setReferences] = useState<Reference[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -103,7 +104,16 @@ const ReceivedReferences = () => {
         toDate: toDate || undefined,
       });
       
-      setReferences(response.references || []);
+      // Process references and ensure all required properties
+      const processedReferences = (response.references || []).map((ref: Reference) => {
+        return {
+          ...ref,
+          statusHistory: ref.statusHistory || [],
+          receiver: ref.receiver || ref.member, // Fallback to member if receiver is not provided
+        };
+      });
+      
+      setReferences(processedReferences);
       setTotalPages(response.totalPages || 1);
     } catch (error) {
       console.error("Error loading received references:", error);
@@ -143,12 +153,31 @@ const ReceivedReferences = () => {
       case "business-done":
       case "businessdone":
         return "bg-blue-100 text-blue-800 border-blue-200";
-      case "converted":
-        return "bg-green-100 text-green-800 border-green-200";
+      case "converted": // Legacy support for existing data
+        return "bg-blue-100 text-blue-800 border-blue-200";
       case "rejected":
         return "bg-red-100 text-red-800 border-red-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+  
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "pending":
+        return "#f59e0b"; // Yellow
+      case "contacted":
+        return "#3b82f6"; // Blue
+      case "business done":
+      case "business-done":
+      case "businessdone":
+        return "#3b82f6"; // Blue
+      case "converted": // Legacy support for existing data
+        return "#3b82f6"; // Blue
+      case "rejected":
+        return "#ef4444"; // Red
+      default:
+        return "#6b7280"; // Gray
     }
   };
 
@@ -192,74 +221,104 @@ const ReceivedReferences = () => {
         </CardHeader>
         <CardContent className="flex-grow">
           <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <div className="font-medium text-sm">Contact:</div>
-              <div className="text-sm">{reference.mobile1}</div>
+            {/* Reference flow (who gave the reference) */}
+            <div className="bg-gray-50 p-2 rounded-md">
+              <span className="text-sm font-medium">Reference from:</span>
+              <div className="mt-1 text-sm font-semibold text-blue-600">
+                {reference.giver?.memberName || 'Unknown Giver'}
+              </div>
             </div>
-            
-            {reference.email && (
-              <div className="flex justify-between items-center">
-                <div className="font-medium text-sm">Email:</div>
-                <div className="text-sm truncate max-w-[180px]">{reference.email}</div>
+
+            <div>
+              <span className="text-sm font-medium">Contact:</span> 
+              <div className="mt-1 text-sm">
+                {reference.mobile1}
+                {reference.email && <div className="text-xs text-gray-500">{reference.email}</div>}
               </div>
-            )}
-            
-            {reference.giver && (
-              <div className="flex justify-between items-center">
-                <div className="font-medium text-sm">Referred By:</div>
-                <div className="text-sm">{reference.giver.memberName}</div>
-              </div>
-            )}
-            
-            {reference.chapter && (
-              <div className="flex justify-between items-center">
-                <div className="font-medium text-sm">Chapter:</div>
-                <div className="text-sm">{reference.chapter.name}</div>
-              </div>
-            )}
-            
+            </div>
+
             {reference.urgency && (
-              <div className="flex justify-between items-center">
-                <div className="font-medium text-sm">Urgency:</div>
-                <Badge variant="outline" className={getUrgencyBadgeClass(reference.urgency)}>
-                  {reference.urgency}
-                </Badge>
+              <div>
+                <span className="text-sm font-medium">Urgency:</span>
+                <div className="mt-1">
+                  <Badge className={getUrgencyBadgeClass(reference.urgency)}>
+                    {reference.urgency.charAt(0).toUpperCase() + reference.urgency.slice(1)}
+                  </Badge>
+                </div>
+              </div>
+            )}
+
+            {reference.remarks && (
+              <div>
+                <span className="text-sm font-medium">Remarks:</span>
+                <p className="mt-1 text-sm text-gray-600 line-clamp-2">
+                  {reference.remarks}
+                </p>
               </div>
             )}
             
-            {reference.remarks && (
-              <div className="mt-3">
-                <div className="font-medium text-sm mb-1">Remarks:</div>
-                <div className="text-sm text-muted-foreground line-clamp-3">{reference.remarks}</div>
+            {/* Show the last status update (if any) */}
+            {reference.statusHistory && reference.statusHistory.length > 0 && (
+              <div>
+                <span className="text-sm font-medium">Last update:</span>
+                <div className="mt-1 text-sm text-gray-600">
+                  {formatDate(reference.statusHistory[0].date)}: 
+                  <span className="font-medium">{reference.statusHistory[0].status}</span>
+                  {reference.statusHistory[0].comment && (
+                    <div className="text-xs italic mt-1">"{reference.statusHistory[0].comment}"</div>
+                  )}
+                </div>
               </div>
             )}
           </div>
         </CardContent>
+        
         <Separator />
-        <CardFooter className="flex justify-between p-4">
-          <div className="flex space-x-2">
-            <Link to={`/references/${reference.id}`}>
-              <Button variant="outline" size="sm">
-                View
+        
+        <CardFooter className="pt-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+          <Link to={`/references/${reference.id}`}>
+            <Button variant="outline" size="sm">
+              View Details
+            </Button>
+          </Link>
+          
+          {reference.status.toLowerCase() === "business done" || 
+           reference.status.toLowerCase() === "business-done" || 
+           reference.status.toLowerCase() === "businessdone" ? (
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              {/* <Badge className="bg-green-100 text-green-800 border-green-200 py-2 h-9 flex items-center justify-center">
+                <Check className="h-4 w-4 mr-1" />
+                Business Done
+              </Badge> */}
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                className="bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 whitespace-nowrap"
+                onClick={() => {
+                  navigate(`/references/${reference.id}/thank-you-slip`);
+                }}
+              >
+                Send Thank You Slip
               </Button>
-            </Link>
-          </div>
-          <div className="flex space-x-2">
-            <Select
-              defaultValue={reference.status}
-              onValueChange={(value) => handleUpdateStatus(reference.id, value)}
-            >
-              <SelectTrigger className="w-[140px] h-9">
-                <SelectValue placeholder="Update status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="contacted">Contacted</SelectItem>
-                <SelectItem value="converted">Converted</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            </div>
+          ) : (
+            <div>
+              <Select
+                onValueChange={(value) => handleUpdateStatus(reference.id, value)}
+                defaultValue={reference.status}
+              >
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Update Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="contacted">Contacted</SelectItem>
+                  <SelectItem value="business done">Business Done</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </CardFooter>
       </Card>
     );
@@ -310,12 +369,13 @@ const ReceivedReferences = () => {
   );
 
   return (
-    <div className="container px-4 py-6 max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">References Received</h1>
-        <div className="flex gap-4">
+    <div className="container px-6 py-8 max-w-7xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight mb-2">References Received</h1>
+        <p className="text-gray-500">References you have received from other members. You can update their status.</p>
+        <div className="flex gap-4 mt-4">
           <Link to="/dashboard/references/given">
-            <Button variant="outline">
+            <Button variant="outline" className="shadow-sm">
               <ArrowLeftRight className="h-4 w-4 mr-2" />
               View Given
             </Button>

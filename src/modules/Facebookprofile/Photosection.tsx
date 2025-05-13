@@ -1,5 +1,5 @@
-import { File } from "lucide-react";
 import { MemberData } from "@/types/member";
+import { getAllMemberPhotos } from "@/utils/photoUtils";
 
 interface PhotosectionProps {
   memberData: MemberData | null;
@@ -7,7 +7,7 @@ interface PhotosectionProps {
 
 const Photosection = ({ memberData }: PhotosectionProps) => {
   // Mockup project images if real images not available
-  const projectImages = [
+  const defaultImages = [
     'https://images.unsplash.com/photo-1573495804683-641188f1674d?auto=format&fit=crop&w=100&h=100', // Project
     'https://images.unsplash.com/photo-1629429407756-446d68689c2e?auto=format&fit=crop&w=100&h=100', // Coding
     'https://images.unsplash.com/photo-1553877522-43269d4ea984?auto=format&fit=crop&w=100&h=100', // Office
@@ -15,10 +15,20 @@ const Photosection = ({ memberData }: PhotosectionProps) => {
     'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=100&h=100', // Presentation
     'https://images.unsplash.com/photo-1607827448387-a6850027de60?auto=format&fit=crop&w=100&h=100', // Document
   ];
+  
+  // Get all the member's available photos using our utility function
+  const memberPhotos = memberData ? getAllMemberPhotos({
+    profilePicture1: memberData.profilePicture ? memberData.profilePicture.split('/').pop() : null,
+    profilePicture2: memberData.coverPhoto ? memberData.coverPhoto.split('/').pop() : null,
+    profilePicture3: null
+  }) : [];
+  
+  // Use member photos if available, otherwise use default images
+  const photoImages = memberPhotos.length > 0 ? memberPhotos : defaultImages;
 
-  // If member has projects, use a visual of projects, otherwise use default photos
+  // If member has projects, use a visual of projects, otherwise use member photos
   const projects = memberData?.projects || [];
-  const hasProjects = projects.length > 0;
+  const hasProjects = projects.length > 0 && memberPhotos.length === 0;
   
   return (
     <div className="bg-white rounded-lg shadow p-4 mb-4">
@@ -33,7 +43,7 @@ const Photosection = ({ memberData }: PhotosectionProps) => {
             <div key={index} className="flex items-start space-x-3">
               <div className="relative w-12 h-12 flex-shrink-0">
                 <img 
-                  src={projectImages[index % projectImages.length]}
+                  src={defaultImages[index % defaultImages.length]}
                   alt={project.name}
                   className="rounded-md w-full h-full object-cover"
                 />
@@ -54,12 +64,18 @@ const Photosection = ({ memberData }: PhotosectionProps) => {
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-1">
-          {projectImages.slice(0, 6).map((url, index) => (
+          {photoImages.slice(0, 6).map((url, index) => (
             <div key={index} className="relative aspect-square">
               <img 
                 src={url}
                 alt={`Photo ${index}`}
                 className="rounded-md w-full h-full object-cover"
+                onError={(e) => {
+                  // If member photo fails to load, replace with a default image
+                  const target = e.target as HTMLImageElement;
+                  target.onerror = null; // Prevent infinite error loop
+                  target.src = defaultImages[index % defaultImages.length];
+                }}
               />
             </div>
           ))}
