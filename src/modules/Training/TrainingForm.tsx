@@ -12,7 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { post, put, get } from "@/services/apiService";
 import Validate from "@/lib/Handlevalidation";
-import { DateTimePicker } from "@/components/ui/date-time-picker";
+ import { DatetimePicker } from "@/components/ui/datetime-picker";
 
 // Define interfaces for API responses
 interface TrainingData {
@@ -194,10 +194,13 @@ const TrainingForm = ({
             name="trainingDate"
             control={control}
             render={({ field }) => (
-              <DateTimePicker
-                value={field.value}
-                onChange={field.onChange}
-                disabled={isFormLoading}
+              <DatetimePicker
+              value={field.value}
+              onChange={field.onChange}
+              format={[
+                ["days", "months", "years"],
+                
+              ]}
               />
             )}
           />
