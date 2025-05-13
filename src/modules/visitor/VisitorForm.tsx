@@ -45,10 +45,7 @@ const formSchema = z
 
     // Fields required for cross-chapter visitors
     chapterId: z.number().int("Chapter ID is required").nullable().optional(),
-    invitedById: z
-      .any()
-      .nullable()
-      .optional(),
+    invitedById: z.any().nullable().optional(),
 
     // Fields required for non-cross-chapter visitors
     name: z.string().optional(),
@@ -283,12 +280,16 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
   useEffect(() => {
     // Watch the invitedById field
     const subscription = form.watch((value, { name }) => {
-      if (name === 'invitedById') {
-        console.log("Form values:", value)
-        console.log("invitedById changed:", value.invitedById, typeof value.invitedById);
+      if (name === "invitedById") {
+        console.log("Form values:", value);
+        console.log(
+          "invitedById changed:",
+          value.invitedById,
+          typeof value.invitedById
+        );
       }
     });
-    
+
     return () => subscription.unsubscribe();
   }, [form]);
 
@@ -296,15 +297,26 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
     if (isEditing && visitorData) {
       // Debug what members are available
       if (membersData?.members) {
-        console.log("Available members:", membersData.members.map((m: any) => ({ id: m.id, name: m.memberName })));
-        
+        console.log(
+          "Available members:",
+          membersData.members.map((m: any) => ({
+            id: m.id,
+            name: m.memberName,
+          }))
+        );
+
         // Check if the member corresponding to invitedById exists
         const memberId = visitorData.invitedById;
-        const member = membersData.members.find((m: any) => String(m.id) === String(memberId));
+        const member = membersData.members.find(
+          (m: any) => String(m.id) === String(memberId)
+        );
         console.log("[DEBUG] Looking for member with ID:", memberId);
-        console.log("[DEBUG] Found member?", member ? `Yes - ${member.memberName}` : "No");
+        console.log(
+          "[DEBUG] Found member?",
+          member ? `Yes - ${member.memberName}` : "No"
+        );
       }
-      
+
       // Format the data before setting form values
       const formattedData = {
         ...visitorData,
@@ -312,29 +324,56 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
           ? new Date(visitorData.dateOfBirth)
           : null,
         meetingId: visitorData.meetingId,
+        // Make sure gender and category are explicitly set as strings 
+        gender: visitorData.gender || "",
+        category: visitorData.category || "",
         chapterId: visitorData.chapterId,
         invitedById: String(visitorData.invitedById || ""),
         isCrossChapter: !!visitorData.isCrossChapter,
       };
+      
+      console.log("[DEBUG] Gender and Category:", {
+        gender: visitorData.gender,
+        category: visitorData.category
+      });
 
       console.log("[DEBUG] Setting visitor data:", formattedData);
-      console.log("[DEBUG] invitedById (raw):", visitorData.invitedById, typeof visitorData.invitedById);
-      console.log("[DEBUG] invitedById (formatted):", formattedData.invitedById, typeof formattedData.invitedById);
+      console.log(
+        "[DEBUG] invitedById (raw):",
+        visitorData.invitedById,
+        typeof visitorData.invitedById
+      );
+      console.log(
+        "[DEBUG] invitedById (formatted):",
+        formattedData.invitedById,
+        typeof formattedData.invitedById
+      );
       console.log("[DEBUG] invitedByMember:", visitorData.invitedByMember);
-      
+
       // Reset the form with the formatted data
       form.reset(formattedData);
-      
+
       // Force the invitedById to the correct string value, giving time for the form to initialize
       setTimeout(() => {
         const idString = String(visitorData.invitedById || "");
         console.log("[DEBUG] Setting invitedById to:", idString);
-        form.setValue('invitedById', idString, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
-        console.log("[DEBUG] Form values after explicit setValue:", form.getValues());
-        
+        form.setValue("invitedById", idString, {
+          shouldValidate: true,
+          shouldDirty: true,
+          shouldTouch: true,
+        });
+        console.log(
+          "[DEBUG] Form values after explicit setValue:",
+          form.getValues()
+        );
+
         // Verify the form values were set properly
         const currentValue = form.getValues().invitedById;
-        console.log("[DEBUG] Current invitedById value:", currentValue, typeof currentValue);
+        console.log(
+          "[DEBUG] Current invitedById value:",
+          currentValue,
+          typeof currentValue
+        );
       }, 100);
     } else if (!isEditing && meetingData && !form.formState.isDirty) {
       // For new visitors, pre-populate the meeting's chapter
@@ -373,17 +412,20 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
   // Form submission
   const onSubmit = (data: FormData) => {
     setIsLoading(true);
-    
+
     // Create a copy of the data for submission
-    const submissionData = {...data};
+    const submissionData = { ...data };
 
     // Ensure meetingId is set from URL params
     if (meetingId && !submissionData.meetingId) {
       submissionData.meetingId = parseInt(meetingId);
     }
-    
+
     // Convert invitedById to a number if it's a string and not empty
-    if (submissionData.invitedById && typeof submissionData.invitedById === 'string') {
+    if (
+      submissionData.invitedById &&
+      typeof submissionData.invitedById === "string"
+    ) {
       submissionData.invitedById = parseInt(submissionData.invitedById);
     }
 
@@ -392,7 +434,7 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
       submissionData.chapter = meetingData.chapter?.name || "";
       submissionData.chapterId = meetingData.chapterId;
     }
-    
+
     console.log("Submitting data:", submissionData);
 
     try {
@@ -556,33 +598,44 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                                   <SelectItem value="no-chapters" disabled>
                                     No other chapters available
                                   </SelectItem>
-                                )}  
+                                )}
                               </SelectContent>
                             </Select>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={form.control}
                         name="invitedById"
                         render={({ field }) => {
-                          // This useEffect will run when the field.value changes and log it
-                          React.useEffect(() => {
-                            console.log("[DEBUG] invitedById field value changed:", field.value, typeof field.value);
-                          }, [field.value]);
+                          // Log the field value directly instead of using useEffect
+                          console.log(
+                            "[DEBUG] invitedById field value:",
+                            field.value,
+                            typeof field.value
+                          );
 
                           return (
                             <FormItem>
                               <FormLabel>Invited By</FormLabel>
                               <Select
                                 onValueChange={(value) => {
-                                  console.log("[DEBUG] Selected invitedById value:", value, typeof value);
+                                  console.log(
+                                    "[DEBUG] Selected invitedById value:",
+                                    value,
+                                    typeof value
+                                  );
                                   field.onChange(value);
                                 }}
                                 // IMPORTANT - String conversion to ensure the value matches option format
-                                value={field.value !== undefined && field.value !== null ? String(field.value) : ""}
+                                value={
+                                  field.value !== undefined &&
+                                  field.value !== null
+                                    ? String(field.value)
+                                    : ""
+                                }
                               >
                                 <FormControl>
                                   <SelectTrigger>
@@ -593,12 +646,21 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                                   {membersData?.members?.map((member: any) => {
                                     // Debug output for each option to verify the types match
                                     const optionValue = member.id.toString();
-                                    const isSelected = optionValue === (field.value ? String(field.value) : "");
+                                    const isSelected =
+                                      optionValue ===
+                                      (field.value ? String(field.value) : "");
                                     if (isSelected) {
-                                      console.log("[DEBUG] Found matching option:", optionValue, member.memberName);
+                                      console.log(
+                                        "[DEBUG] Found matching option:",
+                                        optionValue,
+                                        member.memberName
+                                      );
                                     }
                                     return (
-                                      <SelectItem key={member.id} value={optionValue}>
+                                      <SelectItem
+                                        key={member.id}
+                                        value={optionValue}
+                                      >
                                         {member.memberName}
                                       </SelectItem>
                                     );
@@ -649,48 +711,63 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                         control={form.control}
                         name="invitedById"
                         render={({ field }) => {
-                          console.log("Regular invitedById field:", field.value, typeof field.value);
-                          
+                          console.log(
+                            "Regular invitedById field:",
+                            field.value,
+                            typeof field.value
+                          );
+
                           // Find selected member
                           const selectedMember = membersData?.members?.find(
-                            (m: any) => m.id === field.value || m.id.toString() === field.value?.toString()
+                            (m: any) =>
+                              m.id === field.value ||
+                              m.id.toString() === field.value?.toString()
                           );
                           console.log("Selected member:", selectedMember);
-                          
+
                           return (
-                          <FormItem>
-                            <FormLabel>Invited By</FormLabel>
-                            <Select
-                              onValueChange={(value) => {
-                                console.log("Selected value:", value, typeof value);
-                                field.onChange(parseInt(value));
-                              }}
-                              value={field.value?.toString() || ""}
-                              defaultValue={field.value?.toString() || ""}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select member">
-                                    {selectedMember?.memberName || "Select member"}
-                                  </SelectValue>
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {membersData?.members?.map((member: any) => {
-                                  console.log("Member option:", member.id, member.memberName);
-                                  return (
-                                  <SelectItem
-                                    key={member.id}
-                                    value={member.id.toString()}
-                                  >
-                                    {member.memberName}
-                                  </SelectItem>
+                            <FormItem>
+                              <FormLabel>Invited By</FormLabel>
+                              <Select
+                                onValueChange={(value) => {
+                                  console.log(
+                                    "Selected value:",
+                                    value,
+                                    typeof value
                                   );
-                                })}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
+                                  field.onChange(parseInt(value));
+                                }}
+                                value={field.value?.toString() || ""}
+                                defaultValue={field.value?.toString() || ""}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select member">
+                                      {selectedMember?.memberName ||
+                                        "Select member"}
+                                    </SelectValue>
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {membersData?.members?.map((member: any) => {
+                                    console.log(
+                                      "Member option:",
+                                      member.id,
+                                      member.memberName
+                                    );
+                                    return (
+                                      <SelectItem
+                                        key={member.id}
+                                        value={member.id.toString()}
+                                      >
+                                        {member.memberName}
+                                      </SelectItem>
+                                    );
+                                  })}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
                           );
                         }}
                       />
@@ -716,27 +793,36 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                       <FormField
                         control={form.control}
                         name="gender"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Gender</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              value={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select gender" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="Male">Male</SelectItem>
-                                <SelectItem value="Female">Female</SelectItem>
-                                <SelectItem value="Other">Other</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                        render={({ field }) => {
+                          // Debug the current value
+                          console.log('[DEBUG] Gender field value:', field.value, typeof field.value);
+                          
+                          return (
+                            <FormItem>
+                              <FormLabel>Gender</FormLabel>
+                              <Select
+                                onValueChange={(val) => {
+                                  console.log('[DEBUG] Setting gender to:', val);
+                                  field.onChange(val);
+                                }}
+                                value={field.value || undefined}
+                                defaultValue={visitorData?.gender}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select gender" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="Male">Male</SelectItem>
+                                  <SelectItem value="Female">Female</SelectItem>
+                                  <SelectItem value="Other">Other</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          );
+                        }}
                       />
 
                       <FormField
@@ -833,19 +919,27 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                     <FormField
                       control={form.control}
                       name="category"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Category</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select business category" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
+                      render={({ field }) => {
+                        // Debug the current value
+                        console.log('[DEBUG] Category field value:', field.value, typeof field.value);
+                        
+                        return (
+                          <FormItem>
+                            <FormLabel>Category</FormLabel>
+                            <Select
+                              onValueChange={(val) => {
+                                console.log('[DEBUG] Setting category to:', val);
+                                field.onChange(val);
+                              }}
+                              value={field.value || undefined}
+                              defaultValue={visitorData?.category}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select business category" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
                               {/* Show categories from API first */}
                               {categoriesData?.categories?.map(
                                 (category: any) => (
@@ -857,33 +951,29 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                                   </SelectItem>
                                 )
                               )}
-                              {/* Show sample categories if no API data */}
-                              {(!categoriesData?.categories ||
-                                categoriesData.categories.length === 0) &&
-                                [
-                                  "Electrical Contractor",
-                                  "Behavioural Training",
-                                  "Fashion Designer",
-                                  "Medical Device Distributor",
-                                  "Process Equipment Manufacturers",
-                                  "3D Modelling",
-                                  "Abacus and Vedic Maths",
-                                  "AC Servicing",
-                                  "Accounts Writing",
-                                  "Adventure Tourism",
-                                  "Advertising Agency",
-                                  "Agricultural Products And Consultancy",
-                                  "Agro Food Products",
-                                ].map((category) => (
-                                  <SelectItem key={category} value={category}>
-                                    {category}
-                                  </SelectItem>
-                                ))}
+                              {/* Show common business categories as fallback */}
+                              <SelectItem value="Financial Services">
+                                Financial Services
+                              </SelectItem>
+                              <SelectItem value="Real Estate">
+                                Real Estate
+                              </SelectItem>
+                              <SelectItem value="Healthcare">
+                                Healthcare
+                              </SelectItem>
+                              <SelectItem value="Technology">
+                                Technology
+                              </SelectItem>
+                              <SelectItem value="Education">
+                                Education
+                              </SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
                         </FormItem>
-                      )}
+                        );
+                      }}
                     />
 
                     <FormField
