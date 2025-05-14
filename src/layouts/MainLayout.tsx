@@ -7,7 +7,9 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { NotificationPopover } from "@/components/ui/notification-popover"
+
 import {
   SidebarInset,
   SidebarProvider,
@@ -16,7 +18,6 @@ import {
 import { Outlet, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Sun, Moon } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import * as React from "react";
 
 interface RouteConfig {
@@ -84,6 +85,10 @@ export default function MainLayout() {
     document.documentElement.classList.toggle("dark", isDarkMode);
   }, [isDarkMode]);
 
+  // Retrieve user data from localStorage
+  const storedUserData = localStorage.getItem("user");
+  const userData = storedUserData ? JSON.parse(storedUserData) : null;
+
   // Effect to listen for system preference changes
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -142,44 +147,29 @@ export default function MainLayout() {
       <AppSidebar />
       <SidebarInset>
         {/* Sticky Header */}
-        <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b bg-background shadow-sm transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4 w-full justify-between">
-            {/* Sidebar Trigger and Breadcrumb */}
-            <div className="flex items-center gap-2">
-              <SidebarTrigger className="-ml-1" />
-              <Separator orientation="vertical" className="mr-2 h-4" />
-              <Breadcrumb>
-                <BreadcrumbList>
-                  {getBreadcrumbs().map((crumb, index) => (
-                    <div key={crumb.path} className="flex items-center">
-                      <BreadcrumbItem className="hidden md:block">
-                        {crumb.isLast ? (
-                          <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-                        ) : (
-                          <BreadcrumbLink href={crumb.path}>
-                            {crumb.label}
-                          </BreadcrumbLink>
-                        )}
-                      </BreadcrumbItem>
-                      {!crumb.isLast && (
-                        <BreadcrumbSeparator className="hidden md:block" />
-                      )}
-                    </div>
-                  ))}
-                </BreadcrumbList>
-              </Breadcrumb>
+        <header className="bg-blue-900 sticky top-0 z-9 flex h-16 shrink-0 items-center border-b bg-background shadow-sm transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-13 -ml-[1px] -mt-0">
+          <div className="flex items-center justify-between w-full px-4">
+            <div className="flex items-center gap-4">
+              {/* Sidebar Trigger */}
+              <SidebarTrigger className="text-white -ml-1" />
+              
+              {/* Welcome Message */}
+              <h1 className="text-white">Welcome, {userData?.name}</h1>
             </div>
-
-            {/* Dark Mode Switcher */}
+            
+            {/* Dark Mode Switcher - On the right side */}
+            <div className="flex items-center gap-4">
+            <NotificationPopover/>
             <Button
               onClick={toggleDarkMode}
-              className="size-7 cursor-pointer"
+              className="text-white size-7 cursor-pointer"
               variant="ghost"
               size="icon"
               aria-label="Toggle Dark Mode"
             >
               {isDarkMode ? <Moon /> : <Sun />}
             </Button>
+            </div>
           </div>
         </header>
 

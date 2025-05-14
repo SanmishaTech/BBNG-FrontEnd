@@ -81,6 +81,12 @@ const MessageForm = ({
   const [isLoading, setIsLoading] = useState(false);
   const [currentAttachment, setCurrentAttachment] = useState<AttachmentInfo | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Get user data from localStorage
+  const userData = (() => {
+    const userStr = localStorage.getItem('user');
+    return userStr ? JSON.parse(userStr) : null;
+  })();
 
   const {
     register,
@@ -168,6 +174,21 @@ const MessageForm = ({
     // Handle attachment removal in edit mode
     if (mode === "edit" && data.removeAttachment) {
       formData.append("removeAttachment", "true");
+    }
+    
+    // Add chapterId from the user data if creating a message
+    if (mode === "create") {
+      // Check if user has member data with chapterId
+      const chapterId = userData?.member?.chapterId || null;
+      
+      // Add chapterId to form data (will be null if no chapterId exists)
+      if (chapterId !== null) {
+        formData.append("chapterId", chapterId.toString());
+        console.log("Adding chapterId to form data:", chapterId);
+      } else {
+        console.log("No chapterId found in user data, setting to null");
+        formData.append("chapterId", "null");
+      }
     }
 
     // Log form data entries for debugging
