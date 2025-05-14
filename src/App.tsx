@@ -16,6 +16,7 @@ import Register from "./modules/Auth/Register";
 import ForgotPassword from "./modules/Auth/ForgotPassword";
 import ResetPassword from "./modules/Auth/ResetPassword";
 import Zones from "./modules/zones/CountryList";
+import ZoneRoleEditor from "./modules/zones/ZoneRoleAssignment"; // Added import for ZoneRoleEditor
 import Categories from "./modules/Category/CategoryList";
 import ProtectedRoute from "./components/common/protected-route"; // Correct path
 import Location from "./modules/location/CountryList"; // Correct path
@@ -39,7 +40,6 @@ import TransactionList from "./modules/chapter/TransactionList";
 import CreateTransaction from "./modules/chapter/CreateTransaction";
 import EditTransaction from "./modules/chapter/EditTransaction";
 import {
-  ReferenceList,
   ReferenceForm,
   ReferenceDetail,
   MemberReferences,
@@ -47,6 +47,11 @@ import {
   ReceivedReferences,
   ThankYouSlipForm,
 } from "./modules/reference";
+import {
+  DirectThankYouSlipForm,
+  ThankYouSlipList,
+  ThankYouSlipDetail
+} from "./modules/thankYouSlip";
 import ReferenceRouter from "./modules/reference/ReferenceRouter";
 import Chaptermeeting from "./modules/chaptermeeting/ChapterMeetingList";
 import ChapterMeetingCreate from "./modules/chaptermeeting/CreateChapterMeeting";
@@ -94,11 +99,6 @@ const App = () => {
     document.title = appName; // Set the document title
   }, []);
 
-  const localstorageData = localStorage.getItem("user");
-  const userData = localstorageData ? JSON.parse(localstorageData) : null;
-  const userRole = userData ? userData.role : null;
-  const userId = userData ? userData.id : null;
-
   return (
     <>
       <Toaster richColors position="top-center" />
@@ -132,6 +132,15 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <Zones />
+                </ProtectedRoute>
+              }
+            />
+            {/* Added Route for ZoneRoleEditor */}
+            <Route
+              path="/manage-zone/:zoneId/roles"
+              element={
+                <ProtectedRoute>
+                  <ZoneRoleEditor />
                 </ProtectedRoute>
               }
             />
@@ -416,6 +425,33 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
+            
+            {/* Thank You Slip Routes */}
+            <Route
+              path="/dashboard/thankyou-slips"
+              element={
+                <ProtectedRoute>
+                  <ThankYouSlipList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/thankyou-slips/create"
+              element={
+                <ProtectedRoute>
+                  <DirectThankYouSlipForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/thankyou-slips/:id"
+              element={
+                <ProtectedRoute>
+                  <ThankYouSlipDetail />
+                </ProtectedRoute>
+              }
+            />
+            
             <Route
               path="/memberreports"
               element={

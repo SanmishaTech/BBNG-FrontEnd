@@ -17,6 +17,7 @@ const MembershipStatusAlert = ({
   expiryType, 
   daysUntilExpiry 
 }: MembershipStatusAlertProps) => {
+  console.log(isActive,expiryDate,daysUntilExpiry)
   if (isActive) {
     const isExpiringSoon = daysUntilExpiry !== undefined && daysUntilExpiry < 30;
     

@@ -87,9 +87,13 @@ export const getMemberRoles = async (memberId: number): Promise<ChapterRole[]> =
 };
 
 // Get all members (for dropdown selection)
-export const getMembers = async (search: string = ''): Promise<Member[]> => {
-  const response = await get(`/members?search=${search}`);
-      return response.members as Member[];
+export const getMembers = async (search: string = '', chapterId?: number): Promise<Member[]> => {
+  let url = `/members/search?search=${encodeURIComponent(search)}`;
+  if (chapterId !== undefined) {
+    url += `&chapterId=${chapterId}`;
+  }
+  const response = await get(url);
+  return response.members as Member[];
 };
 
 // Role types mapping
@@ -98,9 +102,8 @@ export const ROLE_TYPES = {
   secretary: 'Secretary',
   treasurer: 'Treasurer',
   guardian: 'Guardian',
-  districtCoordinator: 'District Co-ordinator',
-  regionalCoordinator: 'Regional Co-ordinator'
-};
+  developmentCoordinator: 'Development Co-ordinator',
+ };
 
 // Role type colors for visual distinction
 export const ROLE_COLORS = {
@@ -108,8 +111,7 @@ export const ROLE_COLORS = {
   secretary: 'bg-green-100 text-green-800',
   treasurer: 'bg-amber-100 text-amber-800',
   guardian: 'bg-purple-100 text-purple-800',
-  districtCoordinator: 'bg-rose-100 text-rose-800',
-  regionalCoordinator: 'bg-indigo-100 text-indigo-800',
-};
+  developmentCoordinator: 'bg-rose-100 text-rose-800',
+ };
 
 export type RoleType = keyof typeof ROLE_TYPES;

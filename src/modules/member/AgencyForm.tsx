@@ -444,11 +444,12 @@ export default function MemberForm({ mode }: MemberFormProps) {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           {/* Membership Status Alert - Only show when editing */}
+          {console.log(membershipStatus)}
           {mode === "edit" && membershipStatus && (
             <div className="mb-6">
               <MembershipStatusAlert
-                isActive={membershipStatus.isActive}
-                expiryDate={membershipStatus.expiryDate}
+                isActive={membershipStatus.active}
+                expiryDate={membershipStatus.earlierExpiryDate}
                 expiryType={membershipStatus.expiryType}
                 daysUntilExpiry={membershipStatus.daysUntilExpiry}
               />

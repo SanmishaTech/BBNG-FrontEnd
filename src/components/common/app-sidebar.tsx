@@ -90,6 +90,11 @@ const initialData = {
           icon: UsersRound,
         },
         {
+          name: "Thank You Slips",
+          url: "/dashboard/thankyou-slips",
+          icon: FileText,
+        },
+        {
           name: "Requirements",
           url: "/requirements",
           icon: BookOpen,

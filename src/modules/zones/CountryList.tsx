@@ -121,11 +121,11 @@ const ZoneList = () => {
   const deleteZoneMutation = useMutation({
     mutationFn: (id: number) => del(`/zones/${id}`),
     onSuccess: () => {
-      toast.success("Zone deleted successfully");
+      toast.success("Region deleted successfully");
       queryClient.invalidateQueries(["zones"]);
     },
     onError: () => {
-      toast.error("Failed to delete zone");
+      toast.error("Failed to delete region");
     },
   });
 
@@ -200,8 +200,7 @@ const ZoneList = () => {
   };
 
   const handleEdit = (zoneId: number) => {
-    setSelectedZoneId(zoneId);
-    setShowEditDialog(true);
+    navigate(`/manage-zone/${zoneId}/roles`);
   };
 
   const handleCreate = () => {
@@ -211,7 +210,7 @@ const ZoneList = () => {
   return (
     <div className="mt-2 p-4 sm:p-6">
       <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
-        Zone Management
+        Region Management
       </h1>
       <Card className="mx-auto mt-6 sm:mt-10">
         <CardContent>
@@ -220,7 +219,7 @@ const ZoneList = () => {
             {/* Search Input */}
             <div className="flex-grow">
               <Input
-                placeholder="Search zones..."
+                placeholder="Search Region..."
                 value={search}
                 onChange={handleSearchChange}
                 className="w-full"
@@ -249,7 +248,7 @@ const ZoneList = () => {
             </div>
           ) : isError ? (
             <div className="text-center text-red-500">
-              Failed to load zones.
+              Failed to load Regions.
             </div>
           ) : zones.length > 0 ? (
             <div className="overflow-x-auto">
@@ -261,7 +260,7 @@ const ZoneList = () => {
                       className="cursor-pointer"
                     >
                       <div className="flex items-center">
-                        <span>Zone Name</span>
+                        <span>Region Name</span>
                         {sortBy === "name" && (
                           <span className="ml-1">
                             {sortOrder === "asc" ? (
@@ -356,7 +355,7 @@ const ZoneList = () => {
               />
             </div>
           ) : (
-            <div className="text-center">No zones Found.</div>
+            <div className="text-center">No Region Found.</div>
           )}
         </CardContent>
       </Card>
