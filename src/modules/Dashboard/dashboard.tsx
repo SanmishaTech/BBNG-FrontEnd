@@ -1,15 +1,43 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+
+// Message interface for dashboard
+interface Message {
+  id: number;
+  heading: string;
+  powerteam: string;
+  message: string;
+  attachment: string | null;
+  createdAt: string;
+  updatedAt: string;
+  chapterId: number | null;
+}
+
+// Chapter Meeting interface for dashboard
+interface ChapterMeeting {
+  id: number;
+  date: string;
+  meetingTime: string;
+  meetingTitle: string;
+  meetingVenue: string;
+  chapterId: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+import bannerImage from "@/images/banner.jpg";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import {
   Bell,
   FlaskConical,
   LayoutDashboard,
   Menu,
-  Settings,
+  MoveRight,
   Users,
+  Settings,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
- import {
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -25,6 +53,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { ShimmerButton } from "@/components/ui/shimmer-button"
+
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
  import {
   Table,
@@ -86,75 +116,234 @@ const testVolumeData = [
 ];
 
 export default function ResponsiveLabDashboard() {
+  const navigate = useNavigate();
+  const [businessTotal, setBusinessTotal] = useState(0);
+  const [referencesCount, setReferencesCount] = useState(0);
+  const [totalVisitorsCount, setTotalVisitorsCount] = useState(0);
+  const [oneToOneCount, setOneToOneCount] = useState(0);
+  const [memberGivenReferencesCount, setMemberGivenReferencesCount] = useState(0);
+  const [chapterBusinessGenerated, setChapterBusinessGenerated] = useState(0);
+  const [chapterReferencesCount, setChapterReferencesCount] = useState(0);
+  const [chapterVisitorsCount, setChapterVisitorsCount] = useState(0);
+  const [chapterOneToOneCount, setChapterOneToOneCount] = useState(0);
   const [myLeads, setMyLeads] = useState(0);
   const user = localStorage.getItem("user");
-  const User = JSON.parse(user);
-   const [leads, setLeads] = useState([]);
-  const [meetings, setMeetings] = useState([]);
+  const User = user ? JSON.parse(user) : null;
+  const [leads, setLeads] = useState([]);
+  const [meetings, setMeetings] = useState<ChapterMeeting[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
 
   const [openLeadsCount, setOpenLeadsCount] = useState(0);
   const [followUpLeadsCount, setFollowUpLeadsCount] = useState(0);
 
-  // Fetch staff leads
+  // Fetch business total
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`/api/all_staff`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + localStorage.getItem("token"),
-          },
-        });
-        const leads = response.data.data.Staff;
-        setLeads(leads);
-        const openLeads = leads.filter((lead) => lead.lead_status === "Open");
-        setMyLeads(leads.length);
-        setOpenLeadsCount(openLeads.length);
-        const followUpLeads = leads.filter(
-          (lead) => lead.follow_up_type === "Call"
-        );
-        setFollowUpLeadsCount(followUpLeads.length);
+        const response = await fetch('/api/statistics/business-generated');
+        const data = await response.json();
+        setBusinessTotal(data.total || 0);
       } catch (error) {
-        console.error("Error fetching dashboard leads data:", error);
+        console.error('Error fetching business data:', error);
+        setBusinessTotal(0);
       }
     };
-
+    
     fetchData();
   }, []);
 
-  // Fetch meetings
-
-  const [teachingCount, setTeachingCount] = useState(0);
-  const [nonTeachingCount, setNonTeachingCount] = useState(0);
+  // Fetch references count
   useEffect(() => {
-    const fetchMeetings = async () => {
+    const fetchReferencesCount = async () => {
       try {
-        const response = await axios.get(`/api/all_meetings`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + localStorage.getItem("token"),
-          },
-        });
-        if (response.data.status) {
-          const meetingsData = response.data.data.Meeting;
-          setMeetings(meetingsData);
-          // Filter based on the staff_type property
-          setTeachingCount(
-            leads.filter((lead) => lead.staff_type === "Teaching").length
-          );
-          setNonTeachingCount(
-            leads.filter((lead) => lead.staff_type === "Non-Teaching").length
-          );
-        } else {
-          console.error("Failed to fetch meetings:", response.data.message);
-        }
+        const response = await fetch('/api/statistics/references-count');
+        const data = await response.json();
+        setReferencesCount(data.total || 0);
       } catch (error) {
-        console.error("Error fetching meetings:", error);
+        console.error('Error fetching references count:', error);
+        setReferencesCount(0);
       }
     };
-
-    fetchMeetings();
+    
+    fetchReferencesCount();
   }, []);
+
+  // Fetch total visitors count
+  useEffect(() => {
+    const fetchTotalVisitorsCount = async () => {
+      try {
+        const response = await fetch('/api/statistics/total-visitors');
+        const data = await response.json();
+        setTotalVisitorsCount(data.total || 0);
+      } catch (error) {
+        console.error('Error fetching total visitors count:', error);
+        setTotalVisitorsCount(0);
+      } 
+    };
+    
+    fetchTotalVisitorsCount();
+  }, []);
+
+  // Fetch one-to-one count
+  useEffect(() => {
+    const fetchOneToOneCount = async () => {
+      try {
+        const response = await fetch('/api/statistics/one-to-one');
+        const data = await response.json();
+        setOneToOneCount(data.total || 0);
+      } catch (error) {
+        console.error('Error fetching one-to-one count:', error);
+        setOneToOneCount(0);
+      }
+    };
+    
+    fetchOneToOneCount();
+  }, []);
+
+  // Fetch member's given references count
+  useEffect(() => {
+    const fetchMemberGivenReferences = async () => {
+      if (User && User.member && User.member.id) {
+        try {
+          const response = await fetch(`/api/statistics/member-given-references/${User.member.id}`);
+          const data = await response.json();
+          setMemberGivenReferencesCount(data.total || 0);
+        } catch (error) {
+          console.error('Error fetching member given references count:', error);
+          setMemberGivenReferencesCount(0);
+        }
+      }
+    };
+    
+    fetchMemberGivenReferences();
+  }, [User]);
+
+  // Fetch chapter's business generated amount
+  useEffect(() => {
+    const fetchChapterBusinessGenerated = async () => {
+      if (User && User.member && User.member.chapterId) {
+        try {
+          const response = await fetch(`/api/statistics/chapter-business-generated/${User.member.chapterId}`);
+          const data = await response.json();
+          setChapterBusinessGenerated(data.total || 0);
+        } catch (error) {
+          console.error('Error fetching chapter business generated data:', error);
+          setChapterBusinessGenerated(0);
+        }
+      }
+    };
+    
+    fetchChapterBusinessGenerated();
+  }, [User]);
+
+  // Fetch chapter's references count
+  useEffect(() => {
+    const fetchChapterReferencesCount = async () => {
+      if (User && User.member && User.member.chapterId) {
+        try {
+          const response = await fetch(`/api/statistics/chapter-references-count/${User.member.chapterId}`);
+          const data = await response.json();
+          setChapterReferencesCount(data.total || 0);
+        } catch (error) {
+          console.error('Error fetching chapter references count:', error);
+          setChapterReferencesCount(0);
+        }
+      }
+    };
+    
+    fetchChapterReferencesCount();
+  }, [User]);
+
+  // Fetch chapter's visitors count
+  useEffect(() => {
+    const fetchChapterVisitorsCount = async () => {
+      if (User && User.member && User.member.chapterId) {
+        try {
+          const response = await fetch(`/api/statistics/chapter-visitors-count/${User.member.chapterId}`);
+          const data = await response.json();
+          setChapterVisitorsCount(data.total || 0);
+        } catch (error) {
+          console.error('Error fetching chapter visitors count:', error);
+          setChapterVisitorsCount(0);
+        }
+      }
+    };
+    
+    fetchChapterVisitorsCount();
+  }, [User]);
+
+  // Fetch chapter one-to-one count
+  useEffect(() => {
+    const fetchChapterOneToOneCount = async () => {
+      try {
+        if (User?.member?.chapterId) {
+          const response = await fetch(`/api/statistics/chapter-one-to-one-count/${User.member.chapterId}`);
+          const data = await response.json();
+          setChapterOneToOneCount(data.total || 0);
+        } else {
+          setChapterOneToOneCount(0);
+        }
+      } catch (error) {
+        console.error('Error fetching chapter one-to-one count:', error);
+        setChapterOneToOneCount(0);
+      }
+    };
+    
+    fetchChapterOneToOneCount();
+  }, [User?.member?.chapterId]);
+
+  // Fetch recent messages
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        let endpoint = '/api/statistics/recent-messages';
+        
+        // If user has a member ID, fetch both global and chapter-specific messages
+        if (User?.member?.id) {
+          endpoint = `/api/statistics/member-messages/${User.member.id}`;
+        }
+        
+        const response = await fetch(endpoint);
+        const data = await response.json();
+        setMessages(data.messages || []);
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+        setMessages([]);
+      }
+    };
+    
+    fetchMessages();
+  }, [User?.member?.id]);
+
+  // Fetch chapter meetings
+  useEffect(() => {
+    const fetchChapterMeetings = async () => {
+      try {
+        let endpoint = '/api/statistics/chapter-meetings';
+        
+        // If user has a member ID, fetch meetings for member's chapter
+        if (User?.member?.id) {
+          endpoint = `/api/statistics/member-chapter-meetings/${User.member.id}`;
+        } else if (User?.member?.chapterId) {
+          // Fallback to direct chapter ID if available
+          endpoint = `/api/statistics/chapter-meetings/${User.member.chapterId}`;
+        } else {
+          // If no chapter info, don't fetch
+          setMeetings([]);
+          return;
+        }
+        
+        const response = await fetch(endpoint);
+        const data = await response.json();
+        setMeetings(data.meetings || []);
+      } catch (error) {
+        console.error('Error fetching chapter meetings:', error);
+        setMeetings([]);
+      }
+    };
+    
+    fetchChapterMeetings();
+  }, [User?.member?.id, User?.member?.chapterId]);
 
   return (
     <div className="flex h-screen ">
@@ -164,53 +353,181 @@ export default function ResponsiveLabDashboard() {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-4 md:p-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold">Welcome</h1>
+          <img src={bannerImage} alt="Welcome Banner 2024" className="w-full rounded-lg shadow-md" />
+         
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+
+        <div className="flex justify-center gap-3 items-center mb-6">
+          <ShimmerButton className="shadow-2xl" onClick={() => navigate('/dashboard/references')}> 
+        <span className="whitespace-pre-wrap text-center text-sm font-medium leading-none tracking-tight text-white dark:from-white dark:to-slate-900/10 lg:text-lg">
+        Give Reference
+        </span>
+      </ShimmerButton>
+      <ShimmerButton className="shadow-2xl" onClick={() => navigate('#')}>
+        <span className="whitespace-pre-wrap text-center text-sm font-medium leading-none tracking-tight text-white dark:from-white dark:to-slate-900/10 lg:text-lg">
+        Mark Done Deal 
+        </span>
+      </ShimmerButton>
+      <ShimmerButton 
+        className="shadow-2xl" 
+        onClick={() => navigate('/one-to-ones')}
+      >
+        <span className="whitespace-pre-wrap text-center text-sm font-medium leading-none tracking-tight text-white dark:from-white dark:to-slate-900/10 lg:text-lg">
+        121 Request
+        </span>
+      </ShimmerButton>
+          </div>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 space-y-3">
+        <Card className="bg-accent/40">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">
+          BBNG Business Generated
+        </CardTitle>
+        <Users className="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">₹{businessTotal.toLocaleString()}</div>
+      </CardContent>
+    </Card>
           <Card className="bg-accent/40">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Records
+                Reference Shared
               </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{teachingCount}</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-accent/40">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-              Records
-              </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{nonTeachingCount}</div>
+              <div className="text-2xl font-bold">{referencesCount}</div>
             </CardContent>
           </Card>
 
           <Card className="bg-accent/40">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-              Records
+              Total Visitors
               </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{followUpLeadsCount}</div>
+              <div className="text-2xl font-bold">{totalVisitorsCount}</div>
             </CardContent>
           </Card>
           <Card className="bg-accent/40">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-              Records
+                One to One
               </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{myLeads && myLeads}</div>
+              <div className="text-2xl font-bold">{oneToOneCount}</div>
+            </CardContent>
+          </Card>
+        </div>
+
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 space-y-3">
+        <Card className="bg-accent/40">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">
+Reference Given        </CardTitle>
+        <Users className="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{memberGivenReferencesCount}</div>
+      </CardContent>
+    </Card>
+          <Card className="bg-accent/40">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+              Business Given
+
+              </CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-accent/40">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+              References Recevied
+
+              </CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{}</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-accent/40">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+              Business Received
+
+              </CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{}</div>
+            </CardContent>
+          </Card>
+        </div>
+
+
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="bg-accent/40">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">
+{User?.member?.chapter?.name || ''} Business Generated
+        </CardTitle>
+        <Users className="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">₹{chapterBusinessGenerated.toLocaleString()}</div>
+      </CardContent>
+    </Card>
+          <Card className="bg-accent/40">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+              {User?.member?.chapter?.name || ''} References Shared
+
+
+              </CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{chapterReferencesCount}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-accent/40">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+              {User?.member?.chapter?.name || ''} Visitors
+
+              </CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{chapterVisitorsCount}</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-accent/40">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+              {User?.member?.chapter?.name || ''} One 2 One
+
+              </CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{chapterOneToOneCount}</div>
             </CardContent>
           </Card>
         </div>
@@ -218,163 +535,75 @@ export default function ResponsiveLabDashboard() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 mt-4 ">
           <Card className="col-span-full lg:col-span-4 overflow-x-auto bg-accent/40">
             <CardHeader>
-              <CardTitle>My Open Tasks</CardTitle>
+              <CardTitle>Messages</CardTitle>
             </CardHeader>
-            <CardContent className="overflow-x-auto ">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[100px]">Task ID</TableHead>
-                    <TableHead>Contact Name</TableHead>
-                    <TableHead>Task</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Priority</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentTests.map((test) => (
-                    <TableRow key={test.id}>
-                      <TableCell className="font-medium">{test.id}</TableCell>
-                      <TableCell>{test.contact_person}</TableCell>
-                      <TableCell>{test.follow_up_remark}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            test.status === "Completed"
-                              ? "default"
-                              : "secondary"
-                          }
-                        >
-                          {test.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            test.follow_up_type === "Low"
-                              ? "success"
-                              : test.follow_up_type === "High"
-                                ? "destructive"
-                                : "outline"
-                          }
-                        >
-                          {test.follow_up_type}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <CardContent className={`${messages.length > 3 ? 'max-h-[300px] overflow-y-auto' : 'overflow-x-auto'} space-y-4`}>
+              {messages.length > 0 ? (
+                messages.map((message) => (
+                  <div key={message.id} className="p-4 rounded-lg border bg-card">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h4 className="text-sm font-semibold">{message.heading}</h4>
+                        <p className="text-xs text-muted-foreground">{message.powerteam}</p>
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(message.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm">{message.message}</p>
+                    {message.attachment && (
+                      <p className="mt-2 text-xs text-blue-500">
+                        <a href={message.attachment} target="_blank" rel="noopener noreferrer">
+                          View Attachment
+                        </a>
+                      </p>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-muted-foreground">
+                  <p>No messages to display</p>
+                </div>
+              )}
             </CardContent>
           </Card>
           <Card className="col-span-full lg:col-span-3 overflow-x-auto bg-accent/40">
             <CardHeader>
               <CardTitle>My Meetings</CardTitle>
-              <CardDescription>Meetings with Clients</CardDescription>
+              {/* <CardDescription>Chapter Meetings</CardDescription> */}
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {meetings.slice(0, 5).map((meeting) => (
-                  <div
-                    key={meeting.id}
-                    className="flex items-center justify-between"
-                  >
-                    <div>
-                      <p className="text-sm font-medium">{meeting.venue}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {meeting.synopsis}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium">
-                        {new Date(meeting.date).toLocaleDateString()}
-                      </p>
-                      <p className="text-sm">{meeting.time}</p>
+            <CardContent className={`${meetings.length > 3 ? 'max-h-[300px] overflow-y-auto' : 'overflow-x-auto'} space-y-4`}>
+              {meetings.length > 0 ? (
+                meetings.map((meeting) => (
+                  <div key={meeting.id} className="p-4 rounded-lg border bg-card">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h4 className="text-sm font-semibold">{meeting.meetingTitle}</h4>
+                        <p className="text-xs text-muted-foreground">{meeting.meetingVenue}</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(meeting.date).toLocaleDateString()}
+                        </span>
+                        <p className="text-xs">{meeting.meetingTime}</p>
+                      </div>
                     </div>
                   </div>
-                ))}
-                {meetings.length >= 5 && (
-                  <div className="mt-4 text-right">
-                    <button
-                       className="text-xs hover:text-blue-500"
-                    >
-                      See More...
-                    </button>
-                  </div>
-                )}
-              </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-muted-foreground">
+                  <p>No meetings to display</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 mt-4">
-          <Card className="col-span-full lg:col-span-4 bg-accent/40">
-            <CardHeader>
-              <CardTitle>Volume Over Time</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={350}>
-                <BarChart data={testVolumeData}>
-                  <XAxis
-                    dataKey="name"
-                    stroke="#888888"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    stroke="#888888"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(value) => `${value}`}
-                  />
-                  <Bar dataKey="tests" fill="#adfa1d" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-          <Card className="col-span-full lg:col-span-3 bg-accent/40">
-            <CardHeader>
-              <CardTitle>Statistics</CardTitle>
-              <CardDescription>Key performance indicators</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-8">
-              <div className="space-y-2">
-                <div className="flex items-center">
-                  <div className="flex-1">
-                    <div className="text-sm font-medium">Accuracy</div>
-                    <div className="text-sm text-muted-foreground">98.2%</div>
-                  </div>
-                  <div>+0.2%</div>
-                </div>
-                <Progress value={98} className="h-2" />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center">
-                  <div className="flex-1">
-                    <div className="text-sm font-medium">Turnaround Time</div>
-                    <div className="text-sm text-muted-foreground">
-                      24.5 hours
-                    </div>
-                  </div>
-                  <div>-1.5h</div>
-                </div>
-                <Progress value={82} className="h-2" />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center">
-                  <div className="flex-1">
-                    <div className="text-sm font-medium">Utilization</div>
-                    <div className="text-sm text-muted-foreground">87.3%</div>
-                  </div>
-                  <div>+3.7%</div>
-                </div>
-                <Progress value={87} className="h-2" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+
+
+       
+
+         
       </main>
     </div>
   );
