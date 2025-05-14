@@ -55,11 +55,6 @@ interface ThankYouSlip {
     id: number;
     name: string;
   };
-  fromMember?: {
-    id: number;
-    memberName: string;
-    organizationName?: string;
-  };
   createdAt: string;
 }
 
@@ -205,10 +200,7 @@ const ThankYouSlipList = () => {
                         {format(new Date(slip.date), "PP")}
                       </TableCell>
                       <TableCell onClick={() => viewThankYouSlip(slip.id)}>
-                        {activeTab === "given" ? 
-                          slip.toWhom : 
-                          (slip.fromMember?.memberName || slip.chapter.name)
-                        }
+                        {activeTab === "given" ? slip.toWhom : slip.chapter.name}
                       </TableCell>
                       <TableCell onClick={() => viewThankYouSlip(slip.id)}>
                         {slip.amount}
