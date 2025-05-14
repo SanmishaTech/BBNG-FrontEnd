@@ -178,7 +178,7 @@ const createMemberSchema = (mode: "create" | "edit") => {
 // Environment variable for the API base URL (recommended)
 // const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000";
 // For this example, we'll use the hardcoded one if not available.
-const IMAGE_BASE_URL = "http://localhost:3000"; // Replace with your actual image base URL
+const IMAGE_BASE_URL = "http://15.207.30.113"; // Replace with your actual image base URL
 
 export default function MemberForm({ mode }: MemberFormProps) {
   const { id } = useParams<{ id: string }>();
@@ -302,7 +302,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
       reset({
         ...restApiData,
         chapterId: chapter?.id || apiData.chapterId,
-        dateOfBirth: apiData.dateOfBirth ? new Date(apiData.dateOfBirth) : new Date(),
+        dateOfBirth: apiData.dateOfBirth
+          ? new Date(apiData.dateOfBirth)
+          : new Date(),
         // Form fields for new files should be undefined
         profilePicture1: undefined,
         profilePicture2: undefined,
@@ -591,10 +593,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                       <DatetimePicker
                         value={field.value}
                         onChange={field.onChange}
-                        format={[
-                          ["days", "months", "years"],
-                          
-                        ]}
+                        format={[["days", "months", "years"]]}
                       />
                       <FormMessage />
                     </FormItem>
@@ -631,7 +630,6 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   )}
                 />
               </div>
-             
             </CardContent>
           </Card>
 
@@ -654,7 +652,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   </FormItem>
                 )}
               />
-               <FormField
+              <FormField
                 control={form.control}
                 name="gstNo"
                 render={({ field }) => (
@@ -812,8 +810,11 @@ export default function MemberForm({ mode }: MemberFormProps) {
                           onChange={(e) => {
                             let value = e.target.value;
                             // Automatically add https:// if user enters www.
-                            if (value.startsWith('www.') && !value.startsWith('http')) {
-                              value = 'https://' + value;
+                            if (
+                              value.startsWith("www.") &&
+                              !value.startsWith("http")
+                            ) {
+                              value = "https://" + value;
                             }
                             field.onChange(value);
                           }}
@@ -976,7 +977,8 @@ export default function MemberForm({ mode }: MemberFormProps) {
             <CardHeader>
               <CardTitle className="text-lg">Profile Pictures</CardTitle>
               <p className="text-xs text-muted-foreground">
-                Compatible: JPEG, PNG | Max: 5MB | Recommended: 1000x1000px (1:1 ratio)
+                Compatible: JPEG, PNG | Max: 5MB | Recommended: 1000x1000px (1:1
+                ratio)
               </p>
             </CardHeader>
             <CardContent>

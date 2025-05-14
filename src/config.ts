@@ -8,18 +8,19 @@ const getBackendUrl = () => {
     if (import.meta.env.VITE_BACKEND_URL) {
       return import.meta.env.VITE_BACKEND_URL;
     }
-    
+
     // Otherwise, derive from current hostname
     const hostname = window.location.hostname;
-    console.log(hostname)
+    console.log(hostname);
     // If deployed to IP address or domain, use that
-    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+    if (hostname !== "localhost" && hostname !== "127.0.0.1") {
       return `http://${hostname}`;
     }
   }
   // Default for development
-  return "http://localhost:3000";
+  return "http://15.207.30.113";
 };
 
 export const backendUrl = getBackendUrl();
-export const allowRegistration = import.meta.env.VITE_ALLOW_REGISTRATION === "true";
+export const allowRegistration =
+  import.meta.env.VITE_ALLOW_REGISTRATION === "true";
