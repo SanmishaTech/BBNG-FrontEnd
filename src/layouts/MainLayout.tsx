@@ -8,7 +8,6 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
-import { NotificationPopover } from "@/components/ui/notification-popover"
 
 import {
   SidebarInset,
@@ -152,23 +151,22 @@ export default function MainLayout() {
             <div className="flex items-center gap-4">
               {/* Sidebar Trigger */}
               <SidebarTrigger className="text-white -ml-1" />
-              
+
               {/* Welcome Message */}
               <h1 className="text-white">Welcome, {userData?.name}</h1>
             </div>
-            
+
             {/* Dark Mode Switcher - On the right side */}
             <div className="flex items-center gap-4">
-            <NotificationPopover/>
-            <Button
-              onClick={toggleDarkMode}
-              className="text-white size-7 cursor-pointer"
-              variant="ghost"
-              size="icon"
-              aria-label="Toggle Dark Mode"
-            >
-              {isDarkMode ? <Moon /> : <Sun />}
-            </Button>
+              <Button
+                onClick={toggleDarkMode}
+                className="text-white size-7 cursor-pointer"
+                variant="ghost"
+                size="icon"
+                aria-label="Toggle Dark Mode"
+              >
+                {isDarkMode ? <Moon /> : <Sun />}
+              </Button>
             </div>
           </div>
         </header>
