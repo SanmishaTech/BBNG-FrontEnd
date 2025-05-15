@@ -1,6 +1,21 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
+// Add custom styles for hiding scrollbars while maintaining scroll functionality
+const hideScrollbarStyle = `
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+`;
+
+// Add inline style for hiding scrollbars
+const scrollbarHideStyle = {
+  scrollbarWidth: "none" as "none",  /* Firefox */
+  msOverflowStyle: "none" as "none",  /* IE and Edge */
+};
+
 // Message interface for dashboard
 interface Message {
   id: number;
@@ -23,6 +38,30 @@ interface ChapterMeeting {
   chapterId: number;
   createdAt: string;
   updatedAt: string;
+}
+
+// Training interface for dashboard
+interface Training {
+  id: number;
+  trainingDate: string;
+  trainingTopic: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// UpcomingBirthday interface for dashboard
+interface UpcomingBirthday {
+  id: number;
+  memberName: string;
+  dateOfBirth: string;
+  chapterId: number | null;
+  organizationName: string;
+  businessCategory: string;
+  chapter: {
+    name: string | null;
+  } | null;
+  daysUntilBirthday: number;
+  upcomingBirthday: string;
 }
 
 import bannerImage from "@/images/banner.jpg";
@@ -132,6 +171,8 @@ export default function ResponsiveLabDashboard() {
   const [leads, setLeads] = useState([]);
   const [meetings, setMeetings] = useState<ChapterMeeting[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [trainings, setTrainings] = useState<Training[]>([]);
+  const [upcomingBirthdays, setUpcomingBirthdays] = useState<UpcomingBirthday[]>([]);
 
   const [openLeadsCount, setOpenLeadsCount] = useState(0);
   const [followUpLeadsCount, setFollowUpLeadsCount] = useState(0);
@@ -345,21 +386,56 @@ export default function ResponsiveLabDashboard() {
     fetchChapterMeetings();
   }, [User?.member?.id, User?.member?.chapterId]);
 
+  // Fetch trainings - simple approach, no filtering
+  useEffect(() => {
+    const fetchTrainings = async () => {
+      try {
+        const response = await fetch('/api/statistics/trainings');
+        const data = await response.json();
+        setTrainings(data.trainings || []);
+      } catch (error) {
+        console.error('Error fetching trainings:', error);
+        setTrainings([]);
+      }
+    };
+    
+    fetchTrainings();
+  }, []);
+
+  // Fetch upcoming birthdays
+  useEffect(() => {
+    const fetchUpcomingBirthdays = async () => {
+      try {
+        const response = await fetch('/api/statistics/upcoming-birthdays');
+        const data = await response.json();
+        setUpcomingBirthdays(data.birthdays || []);
+      } catch (error) {
+        console.error('Error fetching upcoming birthdays:', error);
+        setUpcomingBirthdays([]);
+      }
+    };
+    
+    fetchUpcomingBirthdays();
+  }, []);
+
   return (
     <div className="flex h-screen ">
       {/* Sidebar for larger screens */}
       {/* <Sidebar className="hidden md:block w-64 shadow-md" /> */}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-4 md:p-8">
+      <main 
+        className="flex-1 overflow-y-auto p-4 md:p-8"
+        style={scrollbarHideStyle}
+      >
         <div className="flex justify-between items-center mb-6">
           <img src={bannerImage} alt="Welcome Banner 2024" className="w-full rounded-lg shadow-md" />
          
         </div>
 
-
+        {User?.role !== "admin" && (
         <div className="flex justify-center gap-3 items-center mb-6">
-          <ShimmerButton className="shadow-2xl" onClick={() => navigate('/dashboard/references')}> 
+          <ShimmerButton className="shadow-2xl" onClick={() => navigate('/references/create')}> 
         <span className="whitespace-pre-wrap text-center text-sm font-medium leading-none tracking-tight text-white dark:from-white dark:to-slate-900/10 lg:text-lg">
         Give Reference
         </span>
@@ -378,17 +454,18 @@ export default function ResponsiveLabDashboard() {
         </span>
       </ShimmerButton>
           </div>
+        )}
 
-
-          <h1 className="text-xl font-bold text-start bg-gradient-to-r from-blue-600 to-white text-white px-3 py-1 shadow-[2px_2px_0_rgba(0,0,0,0.2)] rounded mb-2 mt-2">
-  CHAPTER
-</h1>
+   
+          <h1 className="text-xl font-bold text-start bg-gradient-to-r from-blue-600 to-white-400 text-white px-3 py-1   rounded mb-1 mt-2">
+          BBNG
+          </h1>
 
  
 
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 space-y-3">
-        <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">
           BBNG Business Generated
@@ -399,7 +476,7 @@ export default function ResponsiveLabDashboard() {
         <div className="text-2xl font-bold">₹{businessTotal.toLocaleString()}</div>
       </CardContent>
     </Card>
-          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform">
+          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 Reference Shared
@@ -411,7 +488,7 @@ export default function ResponsiveLabDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform">
+          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
               Total Visitors
@@ -422,7 +499,7 @@ export default function ResponsiveLabDashboard() {
               <div className="text-2xl font-bold">{totalVisitorsCount}</div>
             </CardContent>
           </Card>
-          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform">
+          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 One to One
@@ -434,13 +511,14 @@ export default function ResponsiveLabDashboard() {
             </CardContent>
           </Card>
         </div>
+        {User?.role !== "admin" && (
+          <>
 
-
-        <h1 className="text-xl font-bold text-start bg-gradient-to-r from-blue-600 to-white-400 text-white px-3 py-1 shadow-[2px_2px_0_rgba(0,0,0,0.2)] rounded">
-    SELF
-  </h1>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 space-y-3">
-        <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform">
+        <h1 className="text-xl font-bold text-start bg-gradient-to-r from-blue-600 to-white-400 text-white px-3 py-1   rounded mb-1 mt-2">
+           SELF
+         </h1>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">
 Reference Given        </CardTitle>
@@ -450,7 +528,7 @@ Reference Given        </CardTitle>
         <div className="text-2xl font-bold">{memberGivenReferencesCount}</div>
       </CardContent>
     </Card>
-          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform">
+          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
               Business Given
@@ -463,7 +541,7 @@ Reference Given        </CardTitle>
             </CardContent>
           </Card>
 
-          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform">
+          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
               References Recevied
@@ -475,7 +553,7 @@ Reference Given        </CardTitle>
               <div className="text-2xl font-bold">{}</div>
             </CardContent>
           </Card>
-          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform">
+          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
               Business Received
@@ -490,11 +568,11 @@ Reference Given        </CardTitle>
         </div>
 
 
-        <h1 className=" text-xl font-bold text-start bg-gradient-to-r from-blue-600 to-white-400 text-white px-3 py-1 shadow-[2px_2px_0_rgba(0,0,0,0.2)] rounded">
+        <h1 className="text-xl font-bold text-start bg-gradient-to-r from-blue-600 to-white-400 text-white px-3 py-1   rounded mb-1 mt-2">
     CHAPTER
   </h1>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform">
+        <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">
 {User?.member?.chapter?.name || ''} Business Generated
@@ -505,7 +583,7 @@ Reference Given        </CardTitle>
         <div className="text-2xl font-bold">₹{chapterBusinessGenerated.toLocaleString()}</div>
       </CardContent>
     </Card>
-          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform">
+          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
               {User?.member?.chapter?.name || ''} References Shared
@@ -519,7 +597,7 @@ Reference Given        </CardTitle>
             </CardContent>
           </Card>
 
-          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform">
+          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
               {User?.member?.chapter?.name || ''} Visitors
@@ -531,7 +609,7 @@ Reference Given        </CardTitle>
               <div className="text-2xl font-bold">{chapterVisitorsCount}</div>
             </CardContent>
           </Card>
-          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform">
+          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
               {User?.member?.chapter?.name || ''} One 2 One
@@ -544,6 +622,8 @@ Reference Given        </CardTitle>
             </CardContent>
           </Card>
         </div>
+        </>
+        )}
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 mt-4 ">
           <Card className="col-span-full lg:col-span-4 overflow-x-auto bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform">
@@ -606,6 +686,76 @@ Reference Given        </CardTitle>
               ) : (
                 <div className="text-center py-4 text-muted-foreground">
                   <p>No meetings to display</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 mt-4 ">
+          <Card className="col-span-full lg:col-span-4 overflow-x-auto bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform">
+            <CardHeader>
+              <CardTitle>Training</CardTitle>
+            </CardHeader>
+            <CardContent 
+              className={`${trainings.length > 3 ? 'max-h-[300px] overflow-y-auto' : 'overflow-x-auto'} space-y-4`}
+              style={trainings.length > 3 ? scrollbarHideStyle : {}}
+            >
+              {trainings.length > 0 ? (
+                trainings.map((training) => (
+                  <div key={training.id} className="p-4 rounded-lg border bg-card">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h4 className="text-sm font-semibold">{training.trainingTopic}</h4>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(training.trainingDate).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-muted-foreground">
+                  <p>No upcoming trainings</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          <Card className=" col-span-full lg:col-span-3 overflow-x-auto bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform">
+            <CardHeader>
+              <CardTitle>Upcomming Birthdays</CardTitle>
+            </CardHeader>
+            <CardContent 
+              className={`${upcomingBirthdays.length > 3 ? 'max-h-[300px] overflow-y-auto' : 'overflow-x-auto'} space-y-4`}
+              style={upcomingBirthdays.length > 3 ? scrollbarHideStyle : {}}
+            >
+              {upcomingBirthdays.length > 0 ? (
+                upcomingBirthdays.map((birthday) => (
+                  <div key={birthday.id} className="p-4 rounded-lg border bg-card">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h4 className="text-sm font-semibold">{birthday.memberName}</h4>
+                        <p className="text-xs text-muted-foreground">{birthday.organizationName}</p>
+                        <p className="text-xs text-muted-foreground">{birthday.chapter?.name || 'No Chapter'}</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xs font-medium">
+                          {new Date(birthday.upcomingBirthday).toLocaleDateString()}
+                        </span>
+                        <p className="text-xs text-muted-foreground">
+                          {birthday.daysUntilBirthday === 0 ? 'Today!' : 
+                           birthday.daysUntilBirthday === 1 ? 'Tomorrow' : 
+                           `In ${birthday.daysUntilBirthday} days`}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-muted-foreground">
+                  <p>No upcoming birthdays</p>
                 </div>
               )}
             </CardContent>
