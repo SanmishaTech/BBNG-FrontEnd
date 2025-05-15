@@ -161,6 +161,7 @@ export default function ResponsiveLabDashboard() {
   const [totalVisitorsCount, setTotalVisitorsCount] = useState(0);
   const [oneToOneCount, setOneToOneCount] = useState(0);
   const [memberGivenReferencesCount, setMemberGivenReferencesCount] = useState(0);
+  const [memberReceivedReferencesCount, setMemberReceivedReferencesCount] = useState(0);
   const [chapterBusinessGenerated, setChapterBusinessGenerated] = useState(0);
   const [chapterReferencesCount, setChapterReferencesCount] = useState(0);
   const [chapterVisitorsCount, setChapterVisitorsCount] = useState(0);
@@ -257,6 +258,24 @@ export default function ResponsiveLabDashboard() {
     };
     
     fetchMemberGivenReferences();
+  }, [User]);
+
+  // Fetch member's received references count
+  useEffect(() => {
+    const fetchMemberReceivedReferences = async () => {
+      if (User && User.member && User.member.id) {
+        try {
+          const response = await fetch(`/api/statistics/member-received-references/${User.member.id}`);
+          const data = await response.json();
+          setMemberReceivedReferencesCount(data.total || 0);
+        } catch (error) {
+          console.error('Error fetching member received references count:', error);
+          setMemberReceivedReferencesCount(0);
+        }
+      }
+    };
+    
+    fetchMemberReceivedReferences();
   }, [User]);
 
   // Fetch chapter's business generated amount
@@ -465,6 +484,17 @@ export default function ResponsiveLabDashboard() {
 
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Reference Shared
+              </CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{referencesCount}</div>
+            </CardContent>
+          </Card>
         <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">
@@ -479,12 +509,12 @@ export default function ResponsiveLabDashboard() {
           <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Reference Shared
+                One to One
               </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{referencesCount}</div>
+              <div className="text-2xl font-bold">{oneToOneCount}</div>
             </CardContent>
           </Card>
 
@@ -499,79 +529,27 @@ export default function ResponsiveLabDashboard() {
               <div className="text-2xl font-bold">{totalVisitorsCount}</div>
             </CardContent>
           </Card>
-          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                One to One
-              </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{oneToOneCount}</div>
-            </CardContent>
-          </Card>
         </div>
         {User?.role !== "admin" && (
           <>
 
         <h1 className="text-xl font-bold text-start bg-gradient-to-r from-blue-600 to-white-400 text-white px-3 py-1   rounded mb-1 mt-2">
-           SELF
-         </h1>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">
-Reference Given        </CardTitle>
-        <Users className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{memberGivenReferencesCount}</div>
-      </CardContent>
-    </Card>
-          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-              Business Given
-
-              </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{}</div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-              References Recevied
-
-              </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{}</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-              Business Received
-
-              </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{}</div>
-            </CardContent>
-          </Card>
-        </div>
-
-
-        <h1 className="text-xl font-bold text-start bg-gradient-to-r from-blue-600 to-white-400 text-white px-3 py-1   rounded mb-1 mt-2">
     CHAPTER
   </h1>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+              {User?.member?.chapter?.name || ''} References Shared
+
+
+              </CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{chapterReferencesCount}</div>
+            </CardContent>
+          </Card>
         <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">
@@ -586,14 +564,13 @@ Reference Given        </CardTitle>
           <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-              {User?.member?.chapter?.name || ''} References Shared
-
+              {User?.member?.chapter?.name || ''} One 2 One
 
               </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{chapterReferencesCount}</div>
+              <div className="text-2xl font-bold">{chapterOneToOneCount}</div>
             </CardContent>
           </Card>
 
@@ -609,21 +586,67 @@ Reference Given        </CardTitle>
               <div className="text-2xl font-bold">{chapterVisitorsCount}</div>
             </CardContent>
           </Card>
+        </div>
+        
+        
+
+
+        <h1 className="text-xl font-bold text-start bg-gradient-to-r from-blue-600 to-white-400 text-white px-3 py-1   rounded mb-1 mt-2">
+           SELF
+         </h1>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-              {User?.member?.chapter?.name || ''} One 2 One
+              Business Received
 
               </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{chapterOneToOneCount}</div>
+              <div className="text-2xl font-bold">{}</div>
             </CardContent>
           </Card>
+          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+              Business Given
+
+              </CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{}</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+              References Recevied
+
+              </CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{memberReceivedReferencesCount}</div>
+            </CardContent>
+          </Card>
+        <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">
+Reference Given        </CardTitle>
+        <Users className="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{memberGivenReferencesCount}</div>
+      </CardContent>
+    </Card>
+
         </div>
-        </>
-        )}
+      </>
+      )}
+
+
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 mt-4 ">
           <Card className="col-span-full lg:col-span-4 overflow-x-auto bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform">
