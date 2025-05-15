@@ -125,79 +125,79 @@ const initialData = {
       ],
     },
     admin: {
-      projects: [],
-
-      navMain: [
+      projects: [
         {
-          title: "Masters",
-          url: "#",
-          icon: SquareTerminal,
-          isActive: false,
-          items: [
-            // {
-            //   title: "Manage Users",
-            //   url: "/users",
-            //   icon: UsersRound,
-            // },
-            {
-              title: "Manage Zones",
-              url: "/zones",
-              icon: UsersRound,
-            },
-            {
-              title: "Manage Locations",
-              url: "/location",
-              icon: UsersRound,
-            },
-            {
-              title: "Manage Chapters",
-              url: "/chapters",
-              icon: UsersRound,
-            },
-            {
-              title: "Manage Packages",
-              url: "/packages",
-              icon: UsersRound,
-            },
-            {
-              title: "Manage Members",
-              url: "/members",
-              icon: UsersRound,
-            },
-            {
-              title: "Manage Memberships",
-              url: "/memberships",
-              icon: UsersRound,
-            },
-            {
-              title: "Manage Categories",
-              url: "/categories",
-              icon: UsersRound,
-            },
-            {
-              title: "Manage Sub-Categories",
-              url: "/sub-categories",
-              icon: UsersRound,
-            },
-
-            {
-              title: "Manage Trainings",
-              url: "/trainings",
-              icon: UsersRound,
-            },
-            {
-              title: "Manage Messages",
-              url: "/messages",
-              icon: UsersRound,
-            },
-            // {
-            //   title: "Manage Site Settings",
-            //   url: "/site",
-            //   icon: UsersRound,
-            // },
-          ],
+          name: "Dashboard",
+          url: "/dashboard",
+          icon: UsersRound, 
         },
+        {
+          name: "Manage Zones",
+          url: "/zones",
+          icon: UsersRound,
+        },
+        {
+          name: "Manage Locations",
+          url: "/location",
+          icon: UsersRound,
+        },
+        {
+          name: "Manage Chapters",
+          url: "/chapters",
+          icon: UsersRound,
+        },
+        {
+          name: "Manage Packages",
+          url: "/packages",
+          icon: UsersRound,
+        },
+        {
+          name: "Manage Members",
+          url: "/members",
+          icon: UsersRound,
+        },
+        {
+          name: "Manage Memberships",
+          url: "/memberships",
+          icon: UsersRound,
+        },
+        {
+          name: "Manage Categories",
+          url: "/categories",
+          icon: UsersRound,
+        },
+        {
+          name: "Manage Sub-Categories",
+          url: "/sub-categories",
+          icon: UsersRound,
+        },
+
+        {
+          name: "Manage Trainings",
+          url: "/trainings",
+          icon: UsersRound,
+        },
+        {
+          name: "Manage Messages",
+          url: "/messages",
+          icon: UsersRound,
+        },
+       
       ],
+
+      // navMain: [
+      //   {
+      //     title: "Masters",
+      //     url: "#",
+      //     icon: SquareTerminal,
+      //     isActive: false,
+      //     items: [
+           
+         
+             
+      //     ],
+      //   },
+      // ],
     },
   },
   user: {
