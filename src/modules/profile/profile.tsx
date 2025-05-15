@@ -176,9 +176,9 @@ const createMemberSchema = (mode: "create" | "edit") => {
 };
 
 // Environment variable for the API base URL (recommended)
-// const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000";
+// const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://15.207.30.113/";
 // For this example, we'll use the hardcoded one if not available.
-const IMAGE_BASE_URL = "http://15.207.30.113"; // Replace with your actual image base URL
+const IMAGE_BASE_URL = "http://15.207.30.113/"; // Replace with your actual image base URL
 
 export default function MemberForm({ mode }: MemberFormProps) {
   // const { id } = useParams<{ id: string }>();

@@ -64,6 +64,7 @@ const formSchema = z.object({
       required_error: "To Whom is required",
     })
     .min(1, "To Whom is required"),
+  toWhomId: z.number().optional(),
   amount: z
     .string({
       required_error: "Amount is required",
@@ -142,8 +143,9 @@ const DirectThankYouSlip: React.FC = () => {
     const thankYouSlipData = {
       date: values.date.toISOString(),
       chapterId: Number(values.chapterId),
-      memberId: Number(values.memberId),
+      fromMemberId: Number(values.memberId),
       toWhom: values.toWhom,
+      toWhomId: values.toWhomId,
       amount: values.amount,
       narration: values.narration,
       testimony: values.testimony || "",
@@ -309,7 +311,15 @@ const DirectThankYouSlip: React.FC = () => {
                     <FormItem>
                       <FormLabel>To Whom</FormLabel>
                       <FormControl>
-                        <Input placeholder="Recipient name" {...field} />
+                        <Input 
+                          placeholder="Recipient name" 
+                          {...field} 
+                          onChange={(e) => {
+                            field.onChange(e);
+                            // Clear toWhomId when manual entry
+                            form.setValue("toWhomId", undefined);
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

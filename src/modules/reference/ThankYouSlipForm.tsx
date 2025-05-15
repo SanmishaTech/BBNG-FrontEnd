@@ -92,7 +92,7 @@ const ThankYouSlipForm = () => {
     const loadReferenceData = async () => {
       if (!referenceId) {
         toast.error("Reference ID is missing");
-        navigate("/dashboard/references/received");
+        navigate("/references/received");
         return;
       }
 
@@ -122,12 +122,12 @@ const ThankYouSlipForm = () => {
           }
         } else {
           toast.error("Failed to load reference data");
-          navigate("/dashboard/references/received");
+          navigate("/references")
         }
       } catch (error) {
         console.error("Error loading reference:", error);
         toast.error("Failed to load reference data");
-        navigate("/dashboard/references/received");
+        navigate("/references/received");
       } finally {
         setLoading(false);
       }
@@ -144,7 +144,7 @@ const ThankYouSlipForm = () => {
       
       if (response && response.thankYouSlip) {
         toast.success("Thank you slip submitted successfully");
-        navigate("/dashboard/references/received");
+        navigate("/references/received");
       } else {
         toast.error("Failed to submit thank you slip");
       }
@@ -355,7 +355,7 @@ const ThankYouSlipForm = () => {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => navigate("/dashboard/references/received")}
+                  onClick={() => navigate("/references/received")}
                 >
                   Cancel
                 </Button>

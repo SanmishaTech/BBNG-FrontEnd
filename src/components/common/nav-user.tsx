@@ -95,6 +95,13 @@ export function NavUser({
                   Update Profile
                 </DropdownMenuItem>
                 <DropdownMenuItem
+                  onClick={() => navigate("/memberships")}
+                  className="cursor-pointer"
+                >
+                  <UserPen className="mr-2 h-4 w-4" />
+                  View Memberships
+                </DropdownMenuItem>
+                <DropdownMenuItem
                   onClick={() => navigate("/forgot-password")}
                   className="cursor-pointer"
                 >

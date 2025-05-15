@@ -255,11 +255,11 @@ const ReferenceDetail = () => {
                     )}
                   </CardDescription>
                 </div>
-                <Link to={`/references/${id}/edit`}>
+              {!isReceiver &&   <Link to={`/references/${id}/edit`}>
                   <Button size="sm">
                     <Pencil className="mr-2 h-4 w-4" /> Edit
                   </Button>
-                </Link>
+                </Link>}
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -275,9 +275,7 @@ const ReferenceDetail = () => {
                     <Button onClick={openStatusUpdateDialog} variant="outline" size="sm">
                       <History className="mr-2 h-4 w-4" /> Update Status
                     </Button>
-                  ) : (
-                    <div className="text-sm text-gray-500 italic">Status updates managed by receiver</div>
-                  )}
+                    ) : null}
                 </div>
               </div>
 
@@ -420,9 +418,9 @@ const ReferenceDetail = () => {
                   <History className="mr-2 h-4 w-4" /> Update Status
                 </Button>
               ) : null}
-                <Link to={`/references/${id}/edit`}>
+                {isReceiver && <Link to={`/references/${id}/edit`}>
                   <Button>Edit Reference</Button>
-                </Link>
+                </Link>}
               </div>
             </CardFooter>
           </Card>

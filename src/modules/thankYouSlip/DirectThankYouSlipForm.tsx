@@ -61,6 +61,7 @@ const formSchema = z.object({
   date: z.date(),
   chapterId: z.number(),
   toWhom: z.string().min(1, "Recipient is required"),
+  toWhomId: z.number().optional(),
   amount: z.string().min(1, "Amount is required"),
   narration: z.string().min(1, "Narration is required"),
   testimony: z.string().min(1, "Testimony is required"),
@@ -94,6 +95,7 @@ const DirectThankYouSlipForm = () => {
       date: new Date(),
       chapterId: 0,
       toWhom: "",
+      toWhomId: undefined,
       amount: "",
       narration: "",
       testimony: "",
@@ -152,14 +154,20 @@ const DirectThankYouSlipForm = () => {
     const id = parseInt(chapterId);
     form.setValue("chapterId", id);
     form.setValue("toWhom", "");
+    form.setValue("toWhomId", undefined);
     loadMembersForChapter(id);
   };
 
   // Form submission handler
   const onSubmit = async (data: FormValues) => {
     try {
-      // Submit thank you slip data to backend
-      const response = await post("/thankyou-slips", data);
+      // Submit thank you slip data to backend with fromMemberId and toWhomId
+      const submissionData = {
+        ...data,
+        // The backend will get the current user's member ID if fromMemberId is not provided
+      };
+      
+      const response = await post("/thankyou-slips", submissionData);
       
       if (response && response.thankYouSlip) {
         toast.success("Thank you slip submitted successfully");
@@ -330,6 +338,7 @@ const DirectThankYouSlipForm = () => {
                                 key={member.id}
                                 onSelect={() => {
                                   field.onChange(member.memberName);
+                                  form.setValue("toWhomId", member.id);
                                   setOpen(false);
                                 }}
                               >

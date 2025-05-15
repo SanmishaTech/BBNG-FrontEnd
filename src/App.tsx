@@ -323,7 +323,7 @@ const App = () => {
             <Route
               path="/memberships/add"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute roles={['admin']}>
                   <CreateMembership />
                 </ProtectedRoute>
               }
@@ -331,7 +331,7 @@ const App = () => {
             <Route
               path="/memberships/:id/edit"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute roles={['admin']}>
                   <EditMembership />
                 </ProtectedRoute>
               }
@@ -339,7 +339,7 @@ const App = () => {
             <Route
               path="/members/:memberId/memberships/add"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute roles={['admin']}>
                   <CreateMembership />
                 </ProtectedRoute>
               }
@@ -418,7 +418,7 @@ const App = () => {
               }
             />
             <Route
-              path="/dashboard/references"
+              path="/references"
               element={
                 <ProtectedRoute>
                   <ReferenceRouter />
@@ -461,7 +461,7 @@ const App = () => {
               }
             />
             <Route
-              path="/dashboard/references/given"
+              path="/references/given"
               element={
                 <ProtectedRoute>
                   <GivenReferences />
@@ -477,7 +477,7 @@ const App = () => {
               }
             />
             <Route
-              path="/dashboard/references/received"
+              path="/references/received"
               element={
                 <ProtectedRoute>
                   <ReceivedReferences />

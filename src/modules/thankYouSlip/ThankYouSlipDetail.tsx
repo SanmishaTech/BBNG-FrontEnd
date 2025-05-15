@@ -28,8 +28,17 @@ interface ThankYouSlip {
   date: string;
   amount: string;
   toWhom: string;
+  toWhomId?: number;
+  toWhomMember?: {
+    id: number;
+    memberName: string;
+  };
   narration: string;
   testimony: string;
+  fromMember?: {
+    id: number;
+    memberName: string;
+  };
   reference?: {
     id: number;
     nameOfReferral: string;
@@ -182,11 +191,19 @@ const ThankYouSlipDetail = () => {
             <div className="space-y-2">
               <div className="flex items-center text-sm text-muted-foreground">
                 <User className="h-4 w-4 mr-2" />
-                {slipType === "given" ? "To Whom" : "Received By"}
+                {slipType === "given" ? "From Member" : "Sent By"}
               </div>
               <p className="text-lg font-medium">
-                { `${thankYouSlip.fromMember?.memberName}`}
+                {thankYouSlip.fromMember?.memberName || "Unknown"}
               </p>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center text-sm text-muted-foreground">
+                <User className="h-4 w-4 mr-2" />
+                {slipType === "given" ? "To Whom" : "Received By"}
+              </div>
+              <p className="text-lg font-medium">{thankYouSlip.toWhomMember?.memberName || thankYouSlip.toWhom}</p>
             </div>
 
             <div className="space-y-2">
@@ -285,27 +302,11 @@ const ThankYouSlipDetail = () => {
             <div className="flex flex-col gap-2">
               <div className="flex items-center">
                 <User className="h-4 w-4 mr-2" />
-                {slipType === "given" ? (
-                  <>
-                    <span className="font-medium">From:</span> Your chapter ({thankYouSlip.chapter.name})
-                  </>
-                ) : (
-                  <>
-                    <span className="font-medium">From:</span> {thankYouSlip.chapter.name} chapter
-                  </>
-                )}
+                <span className="font-medium">From:</span> {thankYouSlip.fromMember?.memberName || "Unknown"} ({thankYouSlip.chapter.name})
               </div>
               <div className="flex items-center">
                 <User className="h-4 w-4 mr-2" />
-                {slipType === "given" ? (
-                  <>
-                    <span className="font-medium">To:</span> {thankYouSlip.toWhom}
-                  </>
-                ) : (
-                  <>
-                    <span className="font-medium">To:</span> You ({thankYouSlip.toWhom})
-                  </>
-                )}
+                <span className="font-medium">To:</span> {thankYouSlip.toWhomMember?.memberName || thankYouSlip.toWhom}
               </div>
             </div>
             <div>

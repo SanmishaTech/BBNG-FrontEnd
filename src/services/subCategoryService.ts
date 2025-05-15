@@ -1,10 +1,17 @@
 import { get, post, put, del as deleteRequest } from './apiService';
-import { getSubCategories } from './subCategoryService';
 
 export interface Category {
   id: number;
   name: string;
   description: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SubCategory {
+  id: number;
+  name: string;
+  categoryId: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -26,23 +33,24 @@ export const getSubCategories = async (
   return await get('/subcategories', { page, limit, search, sortBy, sortOrder });
 };
 
-export const getSubCategoryById = async (id: number): Promise<Category> => {
+export const getSubCategoryById = async (id: number): Promise<SubCategory> => {
   return await get(`/subcategories/${id}`);
 };
 
-export const createSubCategory = async (data: Omit<Category, 'id' | 'createdAt' | 'updatedAt'>): Promise<Category> => {
-  return await post('/subcategories', data, {});
+export const createSubCategory = async (data: Omit<SubCategory, 'id' | 'createdAt' | 'updatedAt'>): Promise<SubCategory> => {
+  return await post('/subcategories', data);
 };
 
-export const updateSubCategory = async (
-  id: number,
-  data: Partial<Omit<Category, 'id' | 'createdAt' | 'updatedAt'>>
-): Promise<Category> => {
-  return await put(`/subcategories/${id}`, data, {});
+export const updateSubCategory = async (id: number, data: Partial<Omit<SubCategory, 'id' | 'createdAt' | 'updatedAt'>>): Promise<SubCategory> => {
+  return await put(`/subcategories/${id}`, data);
 };
 
-export const deleteSubCategory = async (id: number): Promise<{ message: string }> => {
+export const deleteSubCategory = async (id: number): Promise<void> => {
   return await deleteRequest(`/subcategories/${id}`);
+};
+
+export const getSubCategoriesByCategoryId = async (categoryId: number): Promise<SubCategory[]> => {
+  return await get(`/subcategories/category/${categoryId}`);
 };
 
 export default {
@@ -51,4 +59,5 @@ export default {
   createSubCategory,
   updateSubCategory,
   deleteSubCategory,
+  getSubCategoriesByCategoryId,
 }; 

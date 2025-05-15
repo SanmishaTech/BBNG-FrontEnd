@@ -49,7 +49,7 @@ const referenceSchema = z.object({
   date: z.date({
     required_error: "Date is required",
   }),
-  noOfReferences: z.number().optional().nullable(),
+  // noOfReferences: z.number().optional().nullable(),
   chapterId: z.number({
     required_error: "Chapter is required",
   }).min(1, "Please select a chapter"),
@@ -111,7 +111,7 @@ const ReferenceForm = () => {
     resolver: zodResolver(referenceSchema),
     defaultValues: {
       date: new Date(),
-      noOfReferences: undefined,
+      // noOfReferences: undefined,
       chapterId: 0,
       memberId: 0,
       urgency: '',
@@ -157,14 +157,14 @@ const ReferenceForm = () => {
 
           form.reset({
             date: new Date(reference.date),
-            noOfReferences: reference.noOfReferences,
+            // noOfReferences: reference.noOfReferences,
             chapterId: reference.chapterId,
             memberId: reference.receiverId,
             urgency: reference.urgency || '',
             self: reference.self,
             nameOfReferral: reference.nameOfReferral,
             mobile1: reference.mobile1,
-            mobile2: reference.mobile2 || '',
+            mobile2: reference.mobile2 || '', 
             email: reference.email || '',
             remarks: reference.remarks || '',
             addressLine1: reference.addressLine1 || '',
@@ -175,7 +175,7 @@ const ReferenceForm = () => {
         } catch (error) {
           console.error("Error loading reference:", error);
           toast.error("Failed to load reference");
-          navigate("/dashboard/references/given");
+          navigate("/references")
         } finally {
           setLoading(false);
         }
@@ -196,7 +196,7 @@ const ReferenceForm = () => {
         // Backend expects date as string
         date: data.date instanceof Date ? data.date.toISOString() : new Date().toISOString(),
         // Convert numbers to string where needed
-        noOfReferences: data.noOfReferences !== undefined && data.noOfReferences !== null ? data.noOfReferences.toString() : undefined,
+        // noOfReferences: data.noOfReferences !== undefined && data.noOfReferences !== null ? data.noOfReferences.toString() : undefined,
         // Keep as numbers for these fields
         chapterId: data.chapterId,
         memberId: data.memberId,
@@ -223,7 +223,7 @@ const ReferenceForm = () => {
         await post("/references", formattedData);
         toast.success("Reference created successfully");
       }
-      navigate("/dashboard/references/given");
+      navigate("/references/given");
     } catch (error) {
       console.error("Error saving reference:", error);
       toast.error(isEditMode ? "Failed to update reference" : "Failed to create reference");
@@ -350,7 +350,7 @@ const ReferenceForm = () => {
                   />
 
                   {/* Number of References */}
-                  <FormField
+                  {/* <FormField
                     control={form.control}
                     name="noOfReferences"
                     render={({ field }) => (
@@ -368,7 +368,7 @@ const ReferenceForm = () => {
                         <FormMessage />
                       </FormItem>
                     )}
-                  />
+                  /> */}
 
                   {/* Chapter */}
                   <FormField
@@ -642,7 +642,7 @@ const ReferenceForm = () => {
                   <Button 
                     type="button" 
                     variant="outline" 
-                    onClick={() => navigate("/dashboard/references/given")}
+                    onClick={() => navigate("/references/given")}
                   >
                     Cancel
                   </Button>

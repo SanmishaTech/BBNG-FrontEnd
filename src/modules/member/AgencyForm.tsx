@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -38,8 +38,16 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import React from "react";
 import { DatetimePicker } from "@/components/ui/datetime-picker";
+import { getCategories } from "@/services/categoryService";
+import { getSubCategoriesByCategoryId } from "@/services/subCategoryService";
+import { Info } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Chapter {
   id: number;
@@ -52,6 +60,19 @@ interface Chapter {
     id: number;
     name: string;
   }>;
+}
+
+// Add interfaces for category and subcategory
+interface Category {
+  id: number;
+  name: string;
+  description?: string;
+}
+
+interface SubCategory {
+  id: number;
+  name: string;
+  categoryId: number;
 }
 
 export type MemberFormProps = {
@@ -124,7 +145,14 @@ const createMemberSchema = (mode: "create" | "edit") => {
       .or(z.literal(""))
       .transform((val) => (val === "" ? null : val))
       .nullable(),
-    gstNo: z.string().optional(),
+    gstNo: z
+      .string()
+      .regex(
+        /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9A-Z]{1}Z[0-9A-Z]{1}$/,
+        "Invalid GST number format. Example: 27AAPFU0939F1ZV"
+      )
+      .or(z.literal(""))
+      .optional(),
     organizationName: z.string().min(1, "Organization name is required"),
     businessTagline: z.string().optional(),
     organizationMobileNo: z
@@ -134,8 +162,8 @@ const createMemberSchema = (mode: "create" | "edit") => {
     organizationEmail: z
       .string()
       .email("Invalid email address")
-      .optional()
-      .or(z.literal("")),
+      .or(z.literal(""))
+      .optional(),
     orgAddressLine1: z.string().min(1, "Address is required"),
     orgAddressLine2: z.string().optional(),
     orgLocation: z.string().min(1, "Location is required"),
@@ -143,8 +171,8 @@ const createMemberSchema = (mode: "create" | "edit") => {
     organizationWebsite: z
       .string()
       .url("Invalid URL")
-      .optional()
-      .or(z.literal("")),
+      .or(z.literal(""))
+      .optional(),
     organizationDescription: z.string().optional(),
     addressLine1: z.string().min(1, "Address is required"),
     location: z.string().min(1, "Location is required"),
@@ -176,14 +204,44 @@ const createMemberSchema = (mode: "create" | "edit") => {
 };
 
 // Environment variable for the API base URL (recommended)
-// const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000";
+// const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://15.207.30.113/";
 // For this example, we'll use the hardcoded one if not available.
-const IMAGE_BASE_URL = "http://15.207.30.113"; // Replace with your actual image base URL
+const IMAGE_BASE_URL = "http://15.207.30.113/"; // Replace with your actual image base URL
 
 export default function MemberForm({ mode }: MemberFormProps) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [existingProfilePics, setExistingProfilePics] = useState<{
+    profilePicture1?: string;
+    profilePicture2?: string;
+    profilePicture3?: string;
+  }>({});
+  const [loading, setLoading] = useState(false);
+  const [, setFormattedPhone] = useState<string | undefined>();
+  const [visitorId, setVisitorId] = useState<string>("");
+
+  // Replace hardcoded category list with fetched categories
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+
+  // Fetch categories from the API
+  const { data: categoriesData, isLoading: loadingCategories } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      const response = await getCategories();
+      return response.categories || [] as Category[];
+    },
+  });
+
+  // Fetch subcategories when a category is selected
+  const { data: subcategories = [], isLoading: loadingSubcategories } = useQuery({
+    queryKey: ["subcategories", selectedCategoryId],
+    queryFn: async () => {
+      if (!selectedCategoryId) return [] as SubCategory[];
+      return await getSubCategoriesByCategoryId(selectedCategoryId);
+    },
+    enabled: !!selectedCategoryId,
+  });
 
   const memberSchema = useMemo(() => createMemberSchema(mode), [mode]);
   type FormValues = z.infer<typeof memberSchema>;
@@ -225,7 +283,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
       memberName: visitorData?.memberName || "",
       chapterId: visitorData?.chapterId || undefined,
       category: visitorData?.category || "",
-      businessCategory: "",
+      businessCategory: visitorData?.businessCategory || "",
       gender: visitorData?.gender || "",
       dateOfBirth: new Date(), // Consider undefined and let Zod handle required or user pick
       mobile1: visitorData?.mobile1 || "",
@@ -299,9 +357,25 @@ export default function MemberForm({ mode }: MemberFormProps) {
       });
       setExistingImageUrls(processedImagePaths);
 
+      // Find category ID by name to enable subcategory fetching
+      if (categoriesData && apiData.category) {
+        const categoryObj = categoriesData.find(cat => cat.name === apiData.category);
+        if (categoryObj) {
+          setSelectedCategoryId(categoryObj.id);
+        }
+      }
+      
+      // Set selected chapter ID to enable fetching chapter roles
+      const chapterId = chapter?.id || apiData.chapterId;
+      if (chapterId) {
+        setSelectedChapterId(chapterId);
+      }
+
       reset({
         ...restApiData,
-        chapterId: chapter?.id || apiData.chapterId,
+        chapterId: chapterId,
+        category: apiData.category || "",
+        businessCategory: apiData.businessCategory || "",
         dateOfBirth: apiData.dateOfBirth
           ? new Date(apiData.dateOfBirth)
           : new Date(),
@@ -319,30 +393,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
     enabled: mode === "edit" && !!id,
   });
 
-  const categoryList = [
-    "Printing",
-    "Printing & Packaging",
-    "Private Detective",
-    "Project Management Consultant",
-    "Property Advocate",
-    "Puja Purohit",
-    "Rainwater Harvesting",
-    "Readymade Blouse",
-    "Readymix Products",
-    "Real Estate Consultant",
-    "Recording Studio",
-    "Restaurant",
-    "SAP Consultant",
-    "Sarees",
-    "Scientific Equipments",
-    "Security",
-    "Security System",
-    "Set Designer",
-    "Share and Stock Broker",
-    "Sheet Metal Components & Dies Mfg.",
-  ];
-
-  // Mutations
+  // Add back the createMutation and updateMutation
   const createMutation = useMutation<any, Error, MemberFormValues>({
     mutationFn: (data: MemberFormValues) => {
       const formData = new FormData();
@@ -412,22 +463,33 @@ export default function MemberForm({ mode }: MemberFormProps) {
     }
   };
 
+  // Define isLoading for button states
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
-  if (mode === "edit" && loadingMember) {
-    return (
-      <Card className="mx-auto my-8">
-        <CardContent className="p-6">Loading member data…</CardContent>
-      </Card>
-    );
-  }
-  if (loadingChapters && chapters.length === 0) {
-    return (
-      <Card className="mx-auto my-8">
-        <CardContent className="p-6">Loading form options…</CardContent>
-      </Card>
-    );
-  }
+  // Add an effect to set selectedCategoryId when categoriesData loads or changes
+  useEffect(() => {
+    if (categoriesData?.length && form.getValues().category) {
+      const categoryName = form.getValues().category;
+      const categoryObj = categoriesData.find(cat => cat.name === categoryName);
+      if (categoryObj && !selectedCategoryId) {
+        setSelectedCategoryId(categoryObj.id);
+      }
+    }
+  }, [categoriesData, form, selectedCategoryId]);
+
+  // Add state for selected chapter
+  const [selectedChapterId, setSelectedChapterId] = useState<number | null>(null);
+
+  // Fetch chapter roles when a chapter is selected
+  const { data: chapterRoles, isLoading: loadingChapterRoles } = useQuery({
+    queryKey: ["chapterRoles", selectedChapterId],
+    queryFn: async () => {
+      if (!selectedChapterId) return null;
+      const data = await get(`/api/chapter-roles/chapter/${selectedChapterId}`);
+      return data;
+    },
+    enabled: !!selectedChapterId,
+  });
 
   return (
     <Card className="mx-auto my-8 ">
@@ -492,7 +554,11 @@ export default function MemberForm({ mode }: MemberFormProps) {
                       <FormLabel>Chapter</FormLabel>
                       <Select
                         value={field.value ? String(field.value) : ""}
-                        onValueChange={(v) => field.onChange(Number(v))}
+                        onValueChange={(v) => {
+                          const chapterId = Number(v);
+                          field.onChange(chapterId);
+                          setSelectedChapterId(chapterId);
+                        }}
                         disabled={loadingChapters}
                       >
                         <SelectTrigger className="w-full">
@@ -510,6 +576,49 @@ export default function MemberForm({ mode }: MemberFormProps) {
                         </SelectContent>
                       </Select>
                       <FormMessage />
+                      {/* Display Chapter Roles Information */}
+                      {!loadingChapterRoles && chapterRoles && chapterRoles.length > 0 && (
+                        <div className="mt-2 text-sm text-muted-foreground">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center cursor-help">
+                                  <Info className="h-4 w-4 mr-1" />
+                                  <span>Chapter Leadership Info</span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent className="w-80 p-4">
+                                <div className="space-y-2">
+                                  <h4 className="font-medium text-center mb-2">Chapter Leadership</h4>
+                                  {(() => {
+                                    const leadershipRoles = chapterRoles
+                                      .filter((role: any) => 
+                                        role.role.toLowerCase().includes('director') || 
+                                        role.role.toLowerCase().includes('secretary') ||
+                                        role.role.toLowerCase().includes('president')
+                                      );
+                                    
+                                    if (leadershipRoles.length === 0) {
+                                      return (
+                                        <div className="text-center text-sm text-muted-foreground">
+                                          No leadership roles assigned
+                                        </div>
+                                      );
+                                    }
+                                    
+                                    return leadershipRoles.map((role: any) => (
+                                      <div key={role.id} className="flex justify-between">
+                                        <span className="font-medium">{role.role}:</span>
+                                        <span>{role.member?.memberName || "Unassigned"}</span>
+                                      </div>
+                                    ));
+                                  })()}
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      )}
                     </FormItem>
                   )}
                 />
@@ -523,17 +632,26 @@ export default function MemberForm({ mode }: MemberFormProps) {
                       <FormLabel>Business Category</FormLabel>
                       <Select
                         value={field.value}
-                        onValueChange={field.onChange}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          // Find the selected category and set its ID
+                          const category = categoriesData?.find(cat => cat.name === value);
+                          setSelectedCategoryId(category?.id || null);
+                        }}
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select business category" />
                         </SelectTrigger>
                         <SelectContent>
-                          {categoryList.map((catItem) => (
-                            <SelectItem key={catItem} value={catItem}>
-                              {catItem}
-                            </SelectItem>
-                          ))}
+                          {loadingCategories ? (
+                            <SelectItem value="loading">Loading categories...</SelectItem>
+                          ) : (
+                            Array.isArray(categoriesData) && categoriesData.map((category) => (
+                              <SelectItem key={category.id} value={category.name}>
+                                {category.name}
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -546,12 +664,28 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Another Business Category</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="e.g., Specialized Consulting"
-                        />
-                      </FormControl>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        disabled={!selectedCategoryId || loadingSubcategories}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select subcategory" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {loadingSubcategories ? (
+                            <SelectItem value="loading">Loading subcategories...</SelectItem>
+                          ) : subcategories.length > 0 ? (
+                            subcategories.map((subCategory) => (
+                              <SelectItem key={subCategory.id} value={subCategory.name}>
+                                {subCategory.name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="none">No subcategories available</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -593,7 +727,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                       <DatetimePicker
                         value={field.value}
                         onChange={field.onChange}
-                        format={[["days", "months", "years"]]}
+                        format={[["days", "months", "years"], []]}
                       />
                       <FormMessage />
                     </FormItem>
@@ -662,7 +796,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                       <Input
                         {...field}
                         value={field.value || ""}
-                        placeholder="Enter GST number"
+                        placeholder="e.g., 27AAPFU0939F1ZV"
                       />
                     </FormControl>
                     <FormMessage />
@@ -722,7 +856,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="organizationEmail"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>Email (Optional)</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -800,7 +934,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="organizationWebsite"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Website</FormLabel>
+                      <FormLabel>Website (Optional)</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -1056,7 +1190,13 @@ export default function MemberForm({ mode }: MemberFormProps) {
                             {/* Display name of newly selected file (optional) */}
                             {value && (
                               <p className="text-xs text-gray-600 truncate">
-                                Selected: {value.name}
+                                Selected: {(() => {
+                                  // Type guard to safely access file name
+                                  if (value instanceof File) {
+                                    return value.name;
+                                  }
+                                  return String(value);
+                                })()}
                               </p>
                             )}
                           </div>
