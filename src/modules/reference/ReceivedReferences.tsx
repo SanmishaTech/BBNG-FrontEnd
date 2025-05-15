@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { get, patch } from "@/services/apiService";
 import { format } from "date-fns";
 import { 
@@ -374,12 +374,34 @@ const ReceivedReferences = () => {
         <h1 className="text-3xl font-bold tracking-tight mb-2">References Received</h1>
         <p className="text-gray-500">References you have received from other members. You can update their status.</p>
         <div className="flex gap-4 mt-4">
-          <Link to="/dashboard/references/given">
+        <NavLink
+         className={({ isActive }) =>
+          isActive
+            ? "bg-blue-100 text-blue-700 shadow-sm"
+            : "text-gray-600"
+        }
+          end
+          to="/references/received">
+
+            <Button variant="outline" className="shadow-sm">
+              <ArrowLeftRight className="h-4 w-4 mr-2" />
+              View Recieved
+            </Button>
+          </NavLink>
+          <NavLink
+         className={({ isActive }) =>
+          isActive
+            ? "bg-blue-100 text-blue-700 shadow-sm"
+            : "text-gray-600"
+        }
+          end
+          to="/references/given">
+
             <Button variant="outline" className="shadow-sm">
               <ArrowLeftRight className="h-4 w-4 mr-2" />
               View Given
             </Button>
-          </Link>
+          </NavLink>
         </div>
       </div>
       

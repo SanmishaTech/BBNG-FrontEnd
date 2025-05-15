@@ -15,6 +15,7 @@ import {
   ArrowLeftRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { NavLink } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import {
   Card,
@@ -399,19 +400,43 @@ const GivenReferences = () => {
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight mb-2">References Given</h1>
         <p className="text-gray-500">References you have provided to other members.</p>
-        <div className="flex gap-4 mt-4">
-          <Link to="/dashboard/references/received">
+        <div className="flex gap-4 mt-4 justify-between">
+          <div className="flex gap-4">
+          <NavLink
+          className={({ isActive, isPending }) =>
+            isPending ? "pending" : isActive ? "active" : ""
+          }
+          end
+          to="/references/received">
             <Button variant="outline" className="shadow-sm">
               <ArrowLeftRight className="h-4 w-4 mr-2" />
               View Received
             </Button>
-          </Link>
+          </NavLink>
+          <NavLink
+        className={({ isActive }) =>
+          isActive
+            ? "bg-blue-100 text-blue-700 shadow-sm"
+            : "text-gray-600"
+        }
+          end
+          to="/references/given">
+            <Button variant="outline" className="shadow-sm">
+              <ArrowLeftRight className="h-4 w-4 mr-2" />
+              View Given
+            </Button>
+          </NavLink>
+          </div>
+          
+          <div>
           <Link to="/references/create">
             <Button className="shadow-sm">
               <Plus className="h-4 w-4 mr-2" />
               Add Reference
             </Button>
           </Link>
+          </div>
+          
         </div>
       </div>
       

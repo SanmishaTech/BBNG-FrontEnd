@@ -1,4 +1,3 @@
- 
 import * as React from "react";
 import {
   ArrowUpCircleIcon,
@@ -16,6 +15,9 @@ import {
   Icon,
   FileText,
   UserRound,
+  User,
+  UserCircle,
+  CreditCard,
 } from "lucide-react";
 
 import { NavMain } from "@/components/common/nav-main";
@@ -47,32 +49,9 @@ const initialData = {
           url: "/dashboard",
           icon: UsersRound, 
         },
-        {
-          name: "Zones",
-          url: "/zones",
-          icon: UsersRound,
-        },
-        {
-          name: "Location",
-          url: "/location",
-          icon: UsersRound,
-        },
-        {
-          name: "Categories",
-          url: "/categories",
-          icon: UsersRound,
-        },
-        {
-          name: "Sub-Categories",
-          url: "/sub-categories",
-          icon: UsersRound,
-        },
-
-        {
-          name: "Training",
-          url: "/trainings",
-          icon: UsersRound,
-        },
+        
+       
+      
         {
           name: "Messages",
           url: "/messages",
@@ -109,6 +88,11 @@ const initialData = {
           url: "/one-to-ones",
           icon: BookOpen,
         },
+        {
+          name: "References",
+          url: "/references",
+          icon: BookOpen,
+        }
       ],
       navMain: [
         {
@@ -197,6 +181,29 @@ const initialData = {
             // },
           ],
         },
+      ],
+    },
+    member: {
+      projects: [],
+      navMain: [
+        {
+          title: "My Information",
+          url: "#", 
+          icon: User,
+          isActive: false,
+          items: [
+            {
+              title: "My Profile",
+              url: "/profile",
+              icon: UserCircle,
+            },
+            {
+              title: "My Memberships",
+              url: "/memberships",
+              icon: CreditCard,
+            }
+          ],
+        }
       ],
     },
   },

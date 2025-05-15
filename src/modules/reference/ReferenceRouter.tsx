@@ -6,7 +6,7 @@ const ReferenceRouter = () => {
 
   useEffect(() => {
     // Default to the given references page
-    navigate("/dashboard/references/given");
+    navigate("/references/given");
   }, [navigate]);
 
   return null; // This component just redirects, doesn't render anything

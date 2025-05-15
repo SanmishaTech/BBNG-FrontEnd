@@ -51,6 +51,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useRoleAccess } from "@/hooks/useRoleAccess";
 
 // Helper functions for GST validation
 const MAHARASHTRA_KEYWORDS = ['maharashtra', 'mumbai', 'pune', 'nagpur', 'thane', 'nashik', 'aurangabad', 'solapur', 'navi mumbai'];
@@ -149,6 +150,18 @@ interface MemberData {
 }
 
 export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
+  const { isAdmin } = useRoleAccess();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  
+  // Redirect non-admin users
+  useEffect(() => {
+    if (!isAdmin) {
+      toast.error("You don't have permission to access this page");
+      navigate("/memberships");
+    }
+  }, [isAdmin, navigate]);
+
   const [invoiceDateOpen, setInvoiceDateOpen] = useState(false);
   const [paymentDateOpen, setPaymentDateOpen] = useState(false);
   const [packagePopoverOpen, setPackagePopoverOpen] = useState(false);
@@ -156,8 +169,6 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
   const [chequeDateOpen, setChequeDateOpen] = useState(false);
   
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
   
   // Initialize form
   const form = useForm<MembershipFormInputs>({
@@ -519,6 +530,7 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                             onChange={field.onChange}
                             format={[
                               ["days", "months", "years"],
+                              ["hours", "minutes"]
                              ]}
                           />
                           <FormMessage />
@@ -706,6 +718,7 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                             onChange={field.onChange}
                             format={[
                               ["days", "months", "years"],
+                              ["hours", "minutes"]
                              ]}
                           />
                           <FormMessage />
@@ -747,13 +760,14 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                             <FormItem>
                               <FormLabel>Cheque Date</FormLabel>
                               <DatetimePicker
-                            value={field.value}
-                            className="w-full"
-                            onChange={field.onChange}
-                            format={[
-                              ["days", "months", "years"],
-                             ]}
-                          />
+                                value={field.value || new Date()}
+                                className="w-full"
+                                onChange={field.onChange}
+                                format={[
+                                  ["days", "months", "years"],
+                                  ["hours", "minutes"]
+                                ]}
+                              />
                               <FormMessage />
                             </FormItem>
                           )}

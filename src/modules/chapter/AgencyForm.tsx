@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/form";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import ZoneRolesInfo from "@/components/common/ZoneRolesInfo";
 
 // ----------------------
 // 1) Schema Definition
@@ -317,21 +318,24 @@ export default function ChapterForm({ mode }: { mode: "create" | "edit" }) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Zone</FormLabel>
-                      <Select
-                        value={String(field.value)}
-                        onValueChange={(v) => field.onChange(v ? Number(v) : 0)}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select a zone" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {zones.map((z) => (
-                            <SelectItem key={z.id} value={String(z.id)}>
-                              {z.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div className="flex items-center">
+                        <Select
+                          value={String(field.value)}
+                          onValueChange={(v) => field.onChange(v ? Number(v) : 0)}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select a zone" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {zones.map((z) => (
+                              <SelectItem key={z.id} value={String(z.id)}>
+                                {z.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <ZoneRolesInfo zoneId={field.value > 0 ? field.value : null} />
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -387,7 +391,7 @@ export default function ChapterForm({ mode }: { mode: "create" | "edit" }) {
                         onChange={field.onChange}
                         format={[
                           ["days", "months", "years"],
-                          
+                          [] // Empty array for time format since we only need the date
                         ]}
                       />
                       <FormMessage />

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -20,6 +20,7 @@ import {
   Save,
   Check,
   X,
+  UserCheck,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useNavigate, useParams } from "react-router-dom";
@@ -27,6 +28,13 @@ import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+
+interface AttendanceData {
+  meeting: any;
+  memberAttendance: any[];
+  totalMembers: number;
+  presentCount: number;
+}
 
 const EditAttendance = () => {
   const { meetingId } = useParams();
@@ -36,25 +44,41 @@ const EditAttendance = () => {
   const [sortOrder, setSortOrder] = useState("asc");
   const [search, setSearch] = useState("");
   const [attendanceMap, setAttendanceMap] = useState<Record<number, boolean>>({});
+  const [substituteMap, setSubstituteMap] = useState<Record<number, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch meeting attendance data
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError } = useQuery<AttendanceData>({
     queryKey: ["meetingAttendance", meetingId],
     queryFn: () => get(`/meeting-attendance?meetingId=${meetingId}`),
     enabled: !!meetingId,
-    onSuccess: (data) => {
-      // Initialize the attendance map from the API response
-      const initialMap: Record<number, boolean> = {};
-      console.log("API response data:", data);
-      data.memberAttendance.forEach((item: any) => {
-        console.log(`Setting initial attendance for member ${item.member.id} (${item.member.memberName}): ${item.isPresent}`);
-        initialMap[item.member.id] = item.isPresent;
-      });
-      console.log("Initial attendance map:", initialMap);
-      setAttendanceMap(initialMap);
-    },
   });
+
+  // Initialize attendance and substitute maps when data is loaded
+  useEffect(() => {
+    if (data) {
+      // Initialize the attendance map from the API response - all members present by default
+      const initialAttendanceMap: Record<number, boolean> = {};
+      const initialSubstituteMap: Record<number, boolean> = {};
+      
+      console.log("API response data:", data);
+      
+      data.memberAttendance.forEach((item: any) => {
+        // Set all members to present by default
+        initialAttendanceMap[item.member.id] = true;
+        // Initialize substitute status from API or default to false
+        initialSubstituteMap[item.member.id] = item.isSubstitute || false;
+        
+        console.log(`Setting initial attendance for member ${item.member.id} (${item.member.memberName}): Present, Substitute: ${initialSubstituteMap[item.member.id]}`);
+      });
+      
+      console.log("Initial attendance map:", initialAttendanceMap);
+      console.log("Initial substitute map:", initialSubstituteMap);
+      
+      setAttendanceMap(initialAttendanceMap);
+      setSubstituteMap(initialSubstituteMap);
+    }
+  }, [data]);
 
   const meeting = data?.meeting;
   const memberAttendance = data?.memberAttendance || [];
@@ -103,17 +127,34 @@ const EditAttendance = () => {
     });
   };
 
+  const handleSubstituteChange = (memberId: number, isSubstitute: boolean) => {
+    console.log(`Changing substitute status for member ${memberId} to ${isSubstitute ? 'Yes' : 'No'}`);
+    setSubstituteMap((prev) => {
+      const newMap = {
+        ...prev,
+        [memberId]: isSubstitute,
+      };
+      console.log("Updated substitute map:", newMap);
+      return newMap;
+    });
+  };
+
   const saveAttendance = () => {
     if (!meetingId) return;
     
     setIsSubmitting(true);
     
-    // Convert attendance map to array format for API
+    // Convert attendance map to array format for API, including substitute status
     const attendanceData = Object.entries(attendanceMap).map(([memberId, isPresent]) => {
-      console.log(`Saving member ${memberId} attendance: ${isPresent ? 'Present' : 'Absent'}`);
+      const memberIdNum = parseInt(memberId);
+      const isSubstitute = isPresent ? substituteMap[memberIdNum] || false : false;
+      
+      console.log(`Saving member ${memberId} attendance: ${isPresent ? 'Present' : 'Absent'}, Substitute: ${isSubstitute}`);
+      
       return {
-        memberId: parseInt(memberId),
+        memberId: memberIdNum,
         isPresent,
+        isSubstitute,
       };
     });
     
@@ -208,13 +249,15 @@ const EditAttendance = () => {
           <div className="flex flex-wrap gap-4 mb-6 mt-6">
             {/* Search Input */}
             <div className="flex-grow">
-              <Input
-                placeholder="Search members..."
-                value={search}
-                onChange={handleSearchChange}
-                className="w-full"
-                icon={<Search className="h-4 w-4" />}
-              />
+              <div className="relative">
+                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search members..."
+                  value={search}
+                  onChange={handleSearchChange}
+                  className="w-full pl-8"
+                />
+              </div>
             </div>
 
             {/* Action Buttons */}
@@ -320,7 +363,7 @@ const EditAttendance = () => {
                       <TableCell>{item.member.businessCategory}</TableCell>
                       <TableCell>
                         <div className="flex justify-center space-x-4">
-                          <div className="flex items-center">
+                          <div className="flex items-center flex-wrap gap-2">
                             <Button
                               variant={attendanceMap[item.member.id] ? "default" : "outline"}
                               size="sm"
@@ -343,9 +386,31 @@ const EditAttendance = () => {
                               <X size={16} />
                               <span className="ml-1">Absent</span>
                             </Button>
-                            <span className="ml-3 text-sm text-gray-500">
-                              {`Current state: ${attendanceMap[item.member.id] ? 'Present' : 'Absent'}`}
-                            </span>
+                            
+                            {/* Substitute toggle button - only shown when member is present */}
+                            {attendanceMap[item.member.id] && (
+                              <Button
+                                variant={substituteMap[item.member.id] ? "default" : "outline"}
+                                size="sm"
+                                className={`px-3 ml-2 ${
+                                  substituteMap[item.member.id] ? "bg-blue-600" : ""
+                                }`}
+                                onClick={() => handleSubstituteChange(item.member.id, !substituteMap[item.member.id])}
+                              >
+                                <UserCheck size={16} />
+                                <span className="ml-1">Substitute</span>
+                              </Button>
+                            )}
+                            
+                            <div className="ml-3 text-sm text-gray-500 min-w-[150px]">
+                              <div>
+                                Status: {attendanceMap[item.member.id] ? 'Present' : 'Absent'}
+                              </div>
+                              <div>
+                                {attendanceMap[item.member.id] && 
+                                 <span className="opacity-80">{substituteMap[item.member.id] ? 'Substitute: Yes' : 'Substitute: No'}</span>}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </TableCell>

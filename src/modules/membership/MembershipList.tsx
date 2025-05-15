@@ -35,6 +35,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useRoleAccess } from "@/hooks/useRoleAccess";
 
 interface MembershipListProps {
   memberId?: number; // Optional member ID for filtering
@@ -44,6 +45,7 @@ interface MembershipListProps {
 function MembershipList({ memberId }: MembershipListProps) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { isAdmin } = useRoleAccess();
   const [currentPage, setCurrentPage] = useState(1);
   const [recordsPerPage, setRecordsPerPage] = useState(10);
   const [sortBy, setSortBy] = useState("invoiceDate");
@@ -154,7 +156,7 @@ function MembershipList({ memberId }: MembershipListProps) {
           {/* Toolbar */}
           <div className="flex flex-wrap gap-4 mb-6 mt-6">
             {/* Search Input */}
-            <div className="flex-grow">
+           {isAdmin && <div className="flex-grow">
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -164,24 +166,26 @@ function MembershipList({ memberId }: MembershipListProps) {
                   className="pl-8 w-full"
                 />
               </div>
-            </div>
+            </div>}
 
-            {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                onClick={() =>
-                  navigate(
-                    memberId
-                      ? `/members/${memberId}/memberships/add`
-                      : "/memberships/add"
-                  )
-                }
-                className="bg-primary hover:bg-primary/90 text-white shadow-sm transition-all duration-200 hover:shadow-md"
-              >
-                <PlusCircle className="mr-2 h-5 w-5" />
-                Add New
-              </Button>
-            </div>
+            {/* Action Buttons - Only show for admin users */}
+            {isAdmin && (
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  onClick={() =>
+                    navigate(
+                      memberId
+                        ? `/members/${memberId}/memberships/add`
+                        : "/memberships/add"
+                    )
+                  }
+                  className="bg-primary hover:bg-primary/90 text-white shadow-sm transition-all duration-200 hover:shadow-md"
+                >
+                  <PlusCircle className="mr-2 h-5 w-5" />
+                  Add New
+                </Button>
+              </div>
+            )}
           </div>
 
           <Separator className="mb-4" />
@@ -240,7 +244,7 @@ function MembershipList({ memberId }: MembershipListProps) {
                     <TableHead>Period</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="text-end">Actions</TableHead>
+                    {isAdmin && <TableHead className="text-end">Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -290,26 +294,28 @@ function MembershipList({ memberId }: MembershipListProps) {
                             {isActive ? "Active" : "Expired"}
                           </Badge>
                         </TableCell>
-                        <TableCell>
-                          <div className="justify-end flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                navigate(`/memberships/${membership.id}/edit`)
-                              }
-                            >
-                              <Edit size={16} />
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => confirmDelete(membership.id)}
-                            >
-                              <Trash2 size={16} />
-                            </Button>
-                          </div>
-                        </TableCell>
+                        {isAdmin && (
+                          <TableCell>
+                            <div className="justify-end flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  navigate(`/memberships/${membership.id}/edit`)
+                                }
+                              >
+                                <Edit size={16} />
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => confirmDelete(membership.id)}
+                              >
+                                <Trash2 size={16} />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        )}
                       </TableRow>
                     );
                   })}
@@ -318,7 +324,7 @@ function MembershipList({ memberId }: MembershipListProps) {
 
               {/* Pagination */}
               <div className="flex justify-between items-center mt-4">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground text-center">
                   Showing{" "}
                   <strong>
                     {memberships.length > 0
@@ -346,19 +352,21 @@ function MembershipList({ memberId }: MembershipListProps) {
               <p className="text-muted-foreground mb-4">
                 No memberships found.
               </p>
-              <Button
-                onClick={() =>
-                  navigate(
-                    memberId
-                      ? `/members/${memberId}/memberships/add`
-                      : "/memberships/add"
-                  )
-                }
-                variant="default"
-              >
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add New Membership
-              </Button>
+              {isAdmin && (
+                <Button
+                  onClick={() =>
+                    navigate(
+                      memberId
+                        ? `/members/${memberId}/memberships/add`
+                        : "/memberships/add"
+                    )
+                  }
+                  variant="default"
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add New Membership
+                </Button>
+              )}
             </div>
           )}
         </CardContent>
