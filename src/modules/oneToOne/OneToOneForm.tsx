@@ -144,11 +144,9 @@ const OneToOneForm = () => {
 
   return (
     <div className="container mx-auto py-6">
-      <div className="flex items-center mb-6">
-        <Button variant="outline" size="sm" onClick={() => navigate("/one-to-ones")} className="mr-4">
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back
-        </Button>
-        <h1 className="text-2xl font-bold">Schedule a One-to-One Meeting</h1>
+      <div className="flex justify-center items-center mb-6">
+        
+        <h1 className="text-2xl  font-bold">Schedule a One-to-One Meeting</h1>
       </div>
 
       <Card className="max-w-2xl mx-auto shadow-sm">
@@ -172,7 +170,7 @@ const OneToOneForm = () => {
                   onValueChange={(value) => handleChange("chapterId", value)}
                   required
                 >
-                  <SelectTrigger id="chapter" className="h-10">
+                  <SelectTrigger id="chapter" className="h-10 w-full">
                     <SelectValue placeholder="Select a chapter" />
                   </SelectTrigger>
                   <SelectContent>
@@ -197,7 +195,7 @@ const OneToOneForm = () => {
                   required
                   disabled={!formData.chapterId || loadingMembers}
                 >
-                  <SelectTrigger id="member" className="h-10">
+                  <SelectTrigger id="member" className="h-10 w-full">
                     <SelectValue placeholder={loadingMembers ? "Loading members..." : formData.chapterId ? "Select a member" : "First select a chapter"} />
                   </SelectTrigger>
                   <SelectContent>
@@ -260,7 +258,7 @@ const OneToOneForm = () => {
               Cancel
             </Button>
             <Button type="submit" disabled={submitting}>
-              {submitting ? "Scheduling..." : "Schedule Meeting"}
+              {submitting ? "Scheduling..." : "Meeting"}
             </Button>
           </CardFooter>
         </form>
