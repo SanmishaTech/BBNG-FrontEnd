@@ -18,6 +18,7 @@ import ResetPassword from "./modules/Auth/ResetPassword";
 import Zones from "./modules/zones/CountryList";
 import ZoneRoleEditor from "./modules/zones/ZoneRoleAssignment"; // Added import for ZoneRoleEditor
 import Categories from "./modules/Category/CategoryList";
+import States from "./modules/states/StateList";
 import ProtectedRoute from "./components/common/protected-route"; // Correct path
 import Location from "./modules/location/CountryList"; // Correct path
 import UserList from "@/modules/User/UserList";
@@ -165,6 +166,14 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <Categories />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/states"
+              element={
+                <ProtectedRoute>
+                  <States />
                 </ProtectedRoute>
               }
             />

@@ -116,6 +116,11 @@ const initialData = {
           icon: UsersRound, 
         },
         {
+          name: "Manage States",
+          url: "/states",
+          icon: UsersRound,
+        },
+        {
           name: "Manage Zones",
           url: "/zones",
           icon: UsersRound,
