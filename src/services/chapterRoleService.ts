@@ -13,7 +13,7 @@ export interface ChapterRole {
     email: string;
     mobile1: string;
     organizationName?: string;
-    profilePicture1?: string;
+    profilePicture?: string;
   };
 }
 
@@ -42,7 +42,7 @@ export interface Member {
   email: string;
   mobile1: string;
   organizationName?: string;
-  profilePicture1?: string;
+  profilePicture?: string;
 }
 
 // Get all roles for a specific chapter

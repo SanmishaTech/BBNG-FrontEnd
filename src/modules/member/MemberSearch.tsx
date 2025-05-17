@@ -33,7 +33,7 @@ const MemberSearch = () => {
             .includes(searchQuery.toLowerCase()) ||
           member?.member?.chapter?.name
             ?.toLowerCase()
-            .includes(searchQuery.toLowerCase())
+            .includes(searchQuery.toLowerCase()),
       );
       setFilteredMembers(filtered);
     }
@@ -52,13 +52,13 @@ const MemberSearch = () => {
 
         // For cover photo, still use the second picture if available
         // If not, fall back to the best available photo (which might be the same as profilePicture)
-        const coverPhoto = member.profilePicture2
+        const coverPhoto = member.coverPhoto
           ? `${import.meta.env.VITE_BACKEND_URL}/uploads/members/${
-              member.profilePicture2
+              member.coverPhoto
             }`
-          : member.profilePicture1 || member.profilePicture3
-          ? profilePicture
-          : undefined;
+          : member.profilePicture || member.logo
+            ? profilePicture
+            : undefined;
 
         return {
           id: member.id.toString(),
@@ -106,7 +106,7 @@ const MemberSearch = () => {
         <input
           type="text"
           className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Search members by name, email, designation, or department..."
+          placeholder="Search members by Category, chapter, Name..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />

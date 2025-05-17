@@ -4,12 +4,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
- import { toast } from "sonner";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
- 
+
 import { get, postupload, putupload } from "@/services/apiService"; // Assuming these are correctly implemented
 import { getStates } from "@/services/stateService";
- import {
+import {
   Card,
   CardContent,
   CardDescription,
@@ -25,7 +25,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
- import {
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -33,22 +33,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { get, postupload, putupload } from "@/services/apiService";
 import { Label } from "@/components/ui/label";
-import {DatetimePicker} from "@/components/ui/date-time-picker";
-import { getCategories   } from "@/services/categoryService";
- 
+import { DatetimePicker } from "@/components/ui/date-time-picker";
+import { getCategories } from "@/services/categoryService";
+
 import { getSubCategoriesByCategoryId } from "@/services/subCategoryService";
-import { cn } from "@/lib/utils"; 
+import { cn } from "@/lib/utils";
 // import MembershipStatusAlert from "@/components/common/membership-status-alert";
-import { Info, Check, ChevronsUpDown, X } from 'lucide-react'; 
+import { Info, Check, ChevronsUpDown, X } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button"; 
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -102,7 +101,7 @@ type BaseMemberFormValues = {
   memberName: string;
   chapterId: number;
   category: string;
-  businessCategory: string[]; 
+  businessCategory: string[];
   gender: string;
   dateOfBirth: Date;
   mobile1: string;
@@ -126,9 +125,9 @@ type BaseMemberFormValues = {
   specificAsk?: string;
   specificGive?: string;
   clients?: string;
-  profilePicture1?: File; 
-  profilePicture2?: File; 
-  profilePicture3?: File; 
+  profilePicture?: File;
+  coverPhoto?: File;
+  logo?: File;
   email: string;
   stateId?: number;
 };
@@ -150,7 +149,7 @@ const createMemberSchema = (mode: "create" | "edit") => {
       .int()
       .min(1, "Chapter is required"),
     category: z.string().min(1, "Business category is required"),
-    businessCategory: z.array(z.string()).optional(), 
+    businessCategory: z.array(z.string()).optional(),
     gender: z.string().optional(),
     dateOfBirth: z.date({ required_error: "Date of birth is required" }),
     mobile1: z.string().regex(/^[0-9]{10}$/, "Valid mobile number is required"),
@@ -164,7 +163,7 @@ const createMemberSchema = (mode: "create" | "edit") => {
       .string()
       .regex(
         /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9A-Z]{1}Z[0-9A-Z]{1}$/,
-        "Invalid GST number format. Example: 27AAPFU0939F1ZV"
+        "Invalid GST number format. Example: 27AAPFU0939F1ZV",
       )
       .or(z.literal(""))
       .optional(),
@@ -196,11 +195,12 @@ const createMemberSchema = (mode: "create" | "edit") => {
     specificAsk: z.string().optional(),
     specificGive: z.string().optional(),
     clients: z.string().optional(),
-    profilePicture1: z.instanceof(File).optional(),
-    profilePicture2: z.instanceof(File).optional(),
-    profilePicture3: z.instanceof(File).optional(),
+    profilePicture: z.instanceof(File).optional(),
+    coverPhoto: z.instanceof(File).optional(),
+    logo: z.instanceof(File).optional(),
     email: z.string().email("Valid email is required"),
-    stateId: z.number({ required_error: "State is required" })
+    stateId: z
+      .number({ required_error: "State is required" })
       .int()
       .min(1, "State is required"),
   });
@@ -221,58 +221,60 @@ const createMemberSchema = (mode: "create" | "edit") => {
   return baseSchema;
 };
 
- 
 // Environment variable for the API base URL (recommended)
 // const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000/";
 // For this example, we'll use the hardcoded one if not available.
 const IMAGE_BASE_URL = "http://localhost:3000/"; // Replace with your actual image base URL
- 
+
 export default function MemberForm({ mode }: MemberFormProps) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [existingProfilePics, setExistingProfilePics] = useState<{
-    profilePicture1?: string;
-    profilePicture2?: string;
-    profilePicture3?: string;
+    profilePicture?: string;
+    coverPhoto?: string;
+    logo?: string;
   }>({});
   const [loading, setLoading] = useState(false);
   const [, setFormattedPhone] = useState<string | undefined>();
   const [visitorId, setVisitorId] = useState<string>("");
 
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
+    null,
+  );
 
   const { data: categoriesData, isLoading: loadingCategories } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
       const response = await getCategories();
-      return response.categories || [] as Category[];
+      return response.categories || ([] as Category[]);
     },
   });
-  
+
   // Fetch states from the API
   const { data: states = [], isLoading: loadingStates } = useQuery({
     queryKey: ["states"],
     queryFn: async () => {
       const response = await getStates();
-      return response.states || [] as State[];
+      return response.states || ([] as State[]);
     },
   });
 
-  const { data: subcategories = [], isLoading: loadingSubcategories } = useQuery({
-    queryKey: ["subcategories", selectedCategoryId],
-    queryFn: async () => {
-      if (!selectedCategoryId) return [] as SubCategory[];
-      return await getSubCategoriesByCategoryId(selectedCategoryId);
-    },
-    enabled: !!selectedCategoryId,
-  });
+  const { data: subcategories = [], isLoading: loadingSubcategories } =
+    useQuery({
+      queryKey: ["subcategories", selectedCategoryId],
+      queryFn: async () => {
+        if (!selectedCategoryId) return [] as SubCategory[];
+        return await getSubCategoriesByCategoryId(selectedCategoryId);
+      },
+      enabled: !!selectedCategoryId,
+    });
 
   const memberSchema = useMemo(() => createMemberSchema(mode), [mode]);
   type FormValues = z.infer<typeof memberSchema>;
 
   const [existingImageUrls, setExistingImageUrls] = useState<(string | null)[]>(
-    [null, null, null]
+    [null, null, null],
   );
 
   const { data: chapters = [], isLoading: loadingChapters } = useQuery<
@@ -304,17 +306,19 @@ export default function MemberForm({ mode }: MemberFormProps) {
       memberName: visitorData?.memberName || "",
       chapterId: visitorData?.chapterId || undefined,
       category: visitorData?.category || "",
-      businessCategory: visitorData?.businessCategory 
-        ? (Array.isArray(visitorData.businessCategory) ? visitorData.businessCategory : [visitorData.businessCategory]) 
-        : [], 
+      businessCategory: visitorData?.businessCategory
+        ? Array.isArray(visitorData.businessCategory)
+          ? visitorData.businessCategory
+          : [visitorData.businessCategory]
+        : [],
       gender: visitorData?.gender || "",
-      dateOfBirth: new Date(), 
+      dateOfBirth: new Date(),
       mobile1: visitorData?.mobile1 || "",
       mobile2: visitorData?.mobile2 || null,
       gstNo: "",
       organizationName: "",
       businessTagline: "",
-      organizationMobileNo: visitorData?.mobile1 || "", 
+      organizationMobileNo: visitorData?.mobile1 || "",
       organizationLandlineNo: "",
       organizationEmail: "",
       orgAddressLine1: visitorData?.addressLine1 || "",
@@ -331,9 +335,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
       specificAsk: "",
       specificGive: "",
       clients: "",
-      profilePicture1: undefined,
-      profilePicture2: undefined,
-      profilePicture3: undefined,
+      profilePicture: undefined,
+      coverPhoto: undefined,
+      logo: undefined,
       email: visitorData?.email || "",
       ...(mode === "create" ? { password: "", verifyPassword: "" } : {}),
     } as FormValues,
@@ -354,15 +358,10 @@ export default function MemberForm({ mode }: MemberFormProps) {
     queryKey: ["member", id],
     queryFn: async () => {
       const apiData = await get(`/api/members/${id}`);
-      const {
-        profilePicture1, 
-        profilePicture2, 
-        profilePicture3, 
-        chapter,
-        ...restApiData
-      } = apiData;
+      const { profilePicture, coverPhoto, logo, chapter, ...restApiData } =
+        apiData;
 
-      const apiImagePaths = [profilePicture1, profilePicture2, profilePicture3];
+      const apiImagePaths = [profilePicture, coverPhoto, logo];
       const processedImagePaths = apiImagePaths.map((path) => {
         if (
           path &&
@@ -370,20 +369,22 @@ export default function MemberForm({ mode }: MemberFormProps) {
           (path.startsWith("uploads/") || path.startsWith("/uploads/"))
         ) {
           if (/\.(jpeg|jpg|gif|png|webp)$/i.test(path)) {
-            return path; 
+            return path;
           }
         }
-        return null; 
+        return null;
       });
       setExistingImageUrls(processedImagePaths);
 
       if (categoriesData && apiData.category) {
-        const categoryObj = categoriesData.find(cat => cat.name === apiData.category);
+        const categoryObj = categoriesData.find(
+          (cat) => cat.name === apiData.category,
+        );
         if (categoryObj) {
           setSelectedCategoryId(categoryObj.id);
         }
       }
-      
+
       const chapterId = chapter?.id || apiData.chapterId;
       if (chapterId) {
         setSelectedChapterId(chapterId);
@@ -393,19 +394,21 @@ export default function MemberForm({ mode }: MemberFormProps) {
         ...restApiData,
         chapterId: chapterId,
         category: apiData.category || "",
-        businessCategory: apiData.businessCategory 
-          ? (Array.isArray(apiData.businessCategory) ? apiData.businessCategory : [apiData.businessCategory]) 
-          : [], 
+        businessCategory: apiData.businessCategory
+          ? Array.isArray(apiData.businessCategory)
+            ? apiData.businessCategory
+            : [apiData.businessCategory]
+          : [],
         dateOfBirth: apiData.dateOfBirth
           ? new Date(apiData.dateOfBirth)
           : new Date(),
-        profilePicture1: undefined,
-        profilePicture2: undefined,
-        profilePicture3: undefined,
+        profilePicture: undefined,
+        coverPhoto: undefined,
+        logo: undefined,
         mobile2: apiData.mobile2 || null,
         organizationEmail: apiData.organizationEmail || "",
         organizationWebsite: apiData.organizationWebsite || "",
-      } as FormValues); 
+      } as FormValues);
 
       return apiData;
     },
@@ -486,14 +489,18 @@ export default function MemberForm({ mode }: MemberFormProps) {
   useEffect(() => {
     if (categoriesData?.length && form.getValues().category) {
       const categoryName = form.getValues().category;
-      const categoryObj = categoriesData.find(cat => cat.name === categoryName);
+      const categoryObj = categoriesData.find(
+        (cat) => cat.name === categoryName,
+      );
       if (categoryObj && !selectedCategoryId) {
         setSelectedCategoryId(categoryObj.id);
       }
     }
   }, [categoriesData, form, selectedCategoryId]);
 
-  const [selectedChapterId, setSelectedChapterId] = useState<number | null>(null);
+  const [selectedChapterId, setSelectedChapterId] = useState<number | null>(
+    null,
+  );
 
   const { data: chapterRoles, isLoading: loadingChapterRoles } = useQuery({
     queryKey: ["chapterRoles", selectedChapterId],
@@ -532,7 +539,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
 
           <Card className="mb-6 shadow-none border-0">
             <CardHeader>
-              <CardTitle className="text-lg">Basic Details</CardTitle> 
+              <CardTitle className="text-lg">Basic Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 md:space-y-6">
               <div className="grid md:grid-cols-2 gap-4 md:gap-6">
@@ -582,48 +589,69 @@ export default function MemberForm({ mode }: MemberFormProps) {
                         </SelectContent>
                       </Select>
                       <FormMessage />
-                      {!loadingChapterRoles && chapterRoles && chapterRoles.length > 0 && (
-                        <div className="mt-2 text-sm text-muted-foreground">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className="flex items-center cursor-help">
-                                  <Info className="h-4 w-4 mr-1" />
-                                  <span>Chapter Leadership Info</span>
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent className="w-80 p-4">
-                                <div className="space-y-2">
-                                  <h4 className="font-medium text-center mb-2">Chapter Leadership</h4>
-                                  {(() => {
-                                    const leadershipRoles = chapterRoles
-                                      .filter((role: any) => 
-                                        role.role.toLowerCase().includes('director') || 
-                                        role.role.toLowerCase().includes('secretary') ||
-                                        role.role.toLowerCase().includes('president')
+                      {!loadingChapterRoles &&
+                        chapterRoles &&
+                        chapterRoles.length > 0 && (
+                          <div className="mt-2 text-sm text-muted-foreground">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="flex items-center cursor-help">
+                                    <Info className="h-4 w-4 mr-1" />
+                                    <span>Chapter Leadership Info</span>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent className="w-80 p-4">
+                                  <div className="space-y-2">
+                                    <h4 className="font-medium text-center mb-2">
+                                      Chapter Leadership
+                                    </h4>
+                                    {(() => {
+                                      const leadershipRoles =
+                                        chapterRoles.filter(
+                                          (role: any) =>
+                                            role.role
+                                              .toLowerCase()
+                                              .includes("director") ||
+                                            role.role
+                                              .toLowerCase()
+                                              .includes("secretary") ||
+                                            role.role
+                                              .toLowerCase()
+                                              .includes("president"),
+                                        );
+
+                                      if (leadershipRoles.length === 0) {
+                                        return (
+                                          <div className="text-center text-sm text-muted-foreground">
+                                            No leadership roles assigned
+                                          </div>
+                                        );
+                                      }
+
+                                      return leadershipRoles.map(
+                                        (role: any) => (
+                                          <div
+                                            key={role.id}
+                                            className="flex justify-between"
+                                          >
+                                            <span className="font-medium">
+                                              {role.role}:
+                                            </span>
+                                            <span>
+                                              {role.member?.memberName ||
+                                                "Unassigned"}
+                                            </span>
+                                          </div>
+                                        ),
                                       );
-                                    
-                                    if (leadershipRoles.length === 0) {
-                                      return (
-                                        <div className="text-center text-sm text-muted-foreground">
-                                          No leadership roles assigned
-                                        </div>
-                                      );
-                                    }
-                                    
-                                    return leadershipRoles.map((role: any) => (
-                                      <div key={role.id} className="flex justify-between">
-                                        <span className="font-medium">{role.role}:</span>
-                                        <span>{role.member?.memberName || "Unassigned"}</span>
-                                      </div>
-                                    ));
-                                  })()}
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
-                      )}
+                                    })()}
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                        )}
                     </FormItem>
                   )}
                 />
@@ -639,7 +667,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
                         value={field.value}
                         onValueChange={(value) => {
                           field.onChange(value);
-                          const category = categoriesData?.find(cat => cat.name === value);
+                          const category = categoriesData?.find(
+                            (cat) => cat.name === value,
+                          );
                           setSelectedCategoryId(category?.id || null);
                         }}
                       >
@@ -648,10 +678,16 @@ export default function MemberForm({ mode }: MemberFormProps) {
                         </SelectTrigger>
                         <SelectContent>
                           {loadingCategories ? (
-                            <SelectItem value="loading">Loading categories...</SelectItem>
+                            <SelectItem value="loading">
+                              Loading categories...
+                            </SelectItem>
                           ) : (
-                            Array.isArray(categoriesData) && categoriesData.map((category) => (
-                              <SelectItem key={category.id} value={category.name}>
+                            Array.isArray(categoriesData) &&
+                            categoriesData.map((category) => (
+                              <SelectItem
+                                key={category.id}
+                                value={category.name}
+                              >
                                 {category.name}
                               </SelectItem>
                             ))
@@ -666,17 +702,19 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   control={form.control}
                   name="businessCategory"
                   render={({ field }) => {
-                    const selectedValues = field.value || []; 
+                    const selectedValues = field.value || [];
                     const handleSelect = (currentValue: string) => {
-                      const newSelectedValues = selectedValues.includes(currentValue)
-                        ? selectedValues.filter(val => val !== currentValue)
+                      const newSelectedValues = selectedValues.includes(
+                        currentValue,
+                      )
+                        ? selectedValues.filter((val) => val !== currentValue)
                         : [...selectedValues, currentValue];
                       field.onChange(newSelectedValues);
                     };
 
                     return (
                       <FormItem>
-                        <FormLabel>Business Subcategories</FormLabel> 
+                        <FormLabel>Business Subcategories</FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
                             <FormControl>
@@ -684,35 +722,40 @@ export default function MemberForm({ mode }: MemberFormProps) {
                                 variant="outline"
                                 role="combobox"
                                 className={cn(
-                                  "w-full justify-between h-auto min-h-[2.5rem]", 
-                                  !field.value?.length && "text-muted-foreground"
+                                  "w-full justify-between h-auto min-h-[2.5rem]",
+                                  !field.value?.length &&
+                                    "text-muted-foreground",
                                 )}
-                                disabled={!selectedCategoryId || loadingSubcategories}
+                                disabled={
+                                  !selectedCategoryId || loadingSubcategories
+                                }
                               >
                                 <div className="flex gap-1 flex-wrap items-center">
-                                  {selectedValues.length > 0 ? 
-                                    selectedValues.map(val => (
-                                      <Badge
-                                        variant="secondary"
-                                        key={val}
-                                        className="mr-1 mb-1"
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          handleSelect(val);
-                                        }}
-                                      >
-                                        {subcategories.find(sub => sub.name === val)?.name || val}
-                                        <X 
-                                          className="ml-1 h-3 w-3 cursor-pointer hover:text-destructive"
-                                          onClick={(e) => { 
-                                            e.preventDefault(); 
-                                            e.stopPropagation(); 
-                                            handleSelect(val); 
+                                  {selectedValues.length > 0
+                                    ? selectedValues.map((val) => (
+                                        <Badge
+                                          variant="secondary"
+                                          key={val}
+                                          className="mr-1 mb-1"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleSelect(val);
                                           }}
-                                        />
-                                      </Badge>
-                                    ))
+                                        >
+                                          {subcategories.find(
+                                            (sub) => sub.name === val,
+                                          )?.name || val}
+                                          <X
+                                            className="ml-1 h-3 w-3 cursor-pointer hover:text-destructive"
+                                            onClick={(e) => {
+                                              e.preventDefault();
+                                              e.stopPropagation();
+                                              handleSelect(val);
+                                            }}
+                                          />
+                                        </Badge>
+                                      ))
                                     : "Select subcategories"}
                                 </div>
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -723,10 +766,14 @@ export default function MemberForm({ mode }: MemberFormProps) {
                             <Command>
                               <CommandInput placeholder="Search subcategories..." />
                               <CommandList>
-                                <CommandEmpty>No subcategory found.</CommandEmpty>
+                                <CommandEmpty>
+                                  No subcategory found.
+                                </CommandEmpty>
                                 <CommandGroup>
                                   {loadingSubcategories ? (
-                                    <CommandItem disabled>Loading subcategories...</CommandItem>
+                                    <CommandItem disabled>
+                                      Loading subcategories...
+                                    </CommandItem>
                                   ) : subcategories.length > 0 ? (
                                     subcategories.map((subCategory) => (
                                       <CommandItem
@@ -739,16 +786,20 @@ export default function MemberForm({ mode }: MemberFormProps) {
                                         <Check
                                           className={cn(
                                             "mr-2 h-4 w-4",
-                                            selectedValues.includes(subCategory.name)
+                                            selectedValues.includes(
+                                              subCategory.name,
+                                            )
                                               ? "opacity-100"
-                                              : "opacity-0"
+                                              : "opacity-0",
                                           )}
                                         />
                                         {subCategory.name}
                                       </CommandItem>
                                     ))
                                   ) : (
-                                    <CommandItem disabled>No subcategories available</CommandItem>
+                                    <CommandItem disabled>
+                                      No subcategories available
+                                    </CommandItem>
                                   )}
                                 </CommandGroup>
                               </CommandList>
@@ -945,33 +996,38 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   )}
                 />
                 <FormField
-                          control={form.control}
-                          name="stateId"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>State</FormLabel>
-                              <FormControl>
-                                <Select
-                                  onValueChange={(value) => field.onChange(parseInt(value))}
-                                  value={field.value?.toString()}
-                                  disabled={loading || loadingStates}
-                                >
-                                  <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Select a state" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {states?.map((state: State) => (
-                                      <SelectItem key={state.id} value={state.id.toString()}>
-                                        {state.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                  control={form.control}
+                  name="stateId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>State</FormLabel>
+                      <FormControl>
+                        <Select
+                          onValueChange={(value) =>
+                            field.onChange(parseInt(value))
+                          }
+                          value={field.value?.toString()}
+                          disabled={loading || loadingStates}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select a state" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {states?.map((state: State) => (
+                              <SelectItem
+                                key={state.id}
+                                value={state.id.toString()}
+                              >
+                                {state.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
               <div className="grid md:grid-cols-3 gap-4 md:gap-6">
                 <FormField
@@ -1084,44 +1140,48 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   </FormItem>
                 )}
               />
-                 <div className="grid md:grid-cols-2 gap-4 md:gap-6">
-                        
-                        <FormField
-                          control={form.control}
-                          name="category"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Category</FormLabel>
-                              <FormControl>
-                                <Select
-                                  onValueChange={(value) => {
-                                    field.onChange(value);
-                                    // Find the category ID based on selected name
-                                    const categoryObj = categoriesData?.find(cat => cat.name === value);
-                                    if (categoryObj) {
-                                      setSelectedCategoryId(categoryObj.id);
-                                    }
-                                  }}
-                                  value={field.value}
-                                  disabled={loading || loadingCategories}
-                                >
-                                  <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Select a category" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {categoriesData?.map((category: Category) => (
-                                      <SelectItem key={category.id} value={category.name}>
-                                        {category.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
+              <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <FormControl>
+                        <Select
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            // Find the category ID based on selected name
+                            const categoryObj = categoriesData?.find(
+                              (cat) => cat.name === value,
+                            );
+                            if (categoryObj) {
+                              setSelectedCategoryId(categoryObj.id);
+                            }
+                          }}
+                          value={field.value}
+                          disabled={loading || loadingCategories}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select a category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categoriesData?.map((category: Category) => (
+                              <SelectItem
+                                key={category.id}
+                                value={category.name}
+                              >
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               <div className="grid md:grid-cols-2 gap-4 md:gap-6">
                 <FormField
                   control={form.control}
@@ -1226,7 +1286,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   const relativeImagePath = existingImageUrls[index];
                   const fieldName = `profilePicture${
                     index + 1
-                  }` as keyof FormValues; 
+                  }` as keyof FormValues;
 
                   const displayUrl = relativeImagePath
                     ? `${IMAGE_BASE_URL}/${
@@ -1238,12 +1298,12 @@ export default function MemberForm({ mode }: MemberFormProps) {
 
                   return (
                     <FormField
-                      key={fieldName} 
+                      key={fieldName}
                       control={form.control}
-                      name={fieldName} 
-                      render={(
-                        { field: { onChange, value, ...fieldProps } } 
-                      ) => (
+                      name={fieldName}
+                      render={({
+                        field: { onChange, value, ...fieldProps },
+                      }) => (
                         <FormItem>
                           <FormLabel>{`Profile Picture ${
                             index + 1
@@ -1281,15 +1341,16 @@ export default function MemberForm({ mode }: MemberFormProps) {
                                 accept="image/jpeg,image/png,image/webp"
                                 onChange={(e) => {
                                   const file = e.target.files?.[0];
-                                  onChange(file || undefined); 
+                                  onChange(file || undefined);
                                 }}
-                                {...fieldProps} 
+                                {...fieldProps}
                                 className="w-full"
                               />
                             </FormControl>
                             {value && (
                               <p className="text-xs text-gray-600 truncate">
-                                Selected: {(() => {
+                                Selected:{" "}
+                                {(() => {
                                   if (value instanceof File) {
                                     return value.name;
                                   }
@@ -1353,7 +1414,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   />
                   <FormField
                     control={form.control}
-                    name="verifyPassword" 
+                    name="verifyPassword"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Confirm Password</FormLabel>
@@ -1389,8 +1450,8 @@ export default function MemberForm({ mode }: MemberFormProps) {
               {isLoading
                 ? "Saving..."
                 : mode === "create"
-                ? "Create Member"
-                : "Update Member"}
+                  ? "Create Member"
+                  : "Update Member"}
             </Button>
           </CardFooter>
         </form>
