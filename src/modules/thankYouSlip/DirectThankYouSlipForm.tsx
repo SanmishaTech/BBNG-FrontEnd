@@ -132,8 +132,8 @@ const DirectThankYouSlipForm = () => {
           toast.error("Failed to load chapter data");
         }
       } catch (error) {
-        console.error("Error loading chapter data:", error);
-        toast.error("Failed to load chapter data");
+        console.error("Error loading done deal data:", error);
+        toast.error("Failed to load done deal data");
       } finally {
         setLoading(false);
       }
@@ -190,13 +190,13 @@ const DirectThankYouSlipForm = () => {
       const response = await post("/thankyou-slips", submissionData);
       
       if (response && response.thankYouSlip) {
-        toast.success("Thank you slip submitted successfully");
-        navigate("/dashboard/thankyou-slips");
+        toast.success("Done deal submitted successfully");
+        navigate("/dashboard/done-deal");
       } else {
-        toast.error("Failed to submit thank you slip");
+        toast.error("Failed to submit done deal");
       }
     } catch (error: any) {
-      console.error("Error submitting thank you slip:", error);
+      console.error("Error submitting done deal:", error);
       
       // Handle validation errors
       if (error.response?.data?.errors) {
@@ -209,7 +209,7 @@ const DirectThankYouSlipForm = () => {
         }
         toast.error("Please correct the errors in the form");
       } else {
-        toast.error("Failed to submit thank you slip");
+        toast.error("Failed to submit done deal");
       }
     }
   };
@@ -233,7 +233,7 @@ const DirectThankYouSlipForm = () => {
           <CardContent className="pt-6">
             <div className="text-center py-4">
               <p className="text-red-500">No chapters found in the system.</p>
-              <p>Please contact an administrator to set up chapters before creating thank you slips.</p>
+              <p>Please contact an administrator to set up chapters before creating done deals.</p>
             </div>
           </CardContent>
         </Card>
@@ -245,9 +245,9 @@ const DirectThankYouSlipForm = () => {
     <div className="container mx-auto py-6">
       <Card className="max-w-3xl mx-auto">
         <CardHeader className="pb-3">
-          <CardTitle className="text-2xl">Create Direct Thank You Slip</CardTitle>
+          <CardTitle className="text-2xl">Create Direct Deal</CardTitle>
           <CardDescription>
-            Send a thank you slip directly to a member from a specific chapter
+            Send a done deal directly to a member from a specific chapter
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -377,7 +377,7 @@ const DirectThankYouSlipForm = () => {
                       </DialogContent>
                     </Dialog>
                     <FormDescription>
-                      Select a member from the chapter who will receive this thank you slip
+                      Select a member from the chapter who will receive this done deal
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -417,7 +417,7 @@ const DirectThankYouSlipForm = () => {
                       />
                     </FormControl>
                     <FormDescription>
-                      Provide details about the thank you
+                      Provide details about the done deal
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -450,11 +450,11 @@ const DirectThankYouSlipForm = () => {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => navigate("/dashboard/thankyou-slips")}
+                  onClick={() => navigate("/dashboard/done-deal")}
                 >
                   Cancel
                 </Button>
-                <Button type="submit">Submit Thank You Slip</Button>
+                <Button type="submit">Submit Done Deal</Button>
               </div>
             </form>
           </Form>

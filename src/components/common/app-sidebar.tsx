@@ -69,8 +69,8 @@ const initialData = {
           icon: UsersRound,
         },
         {
-          name: "Thank You Slips",
-          url: "/dashboard/thankyou-slips",
+          name: "Done Deal",
+          url: "/dashboard/done-deal",
           icon: FileText,
         },
         {
@@ -114,6 +114,11 @@ const initialData = {
           name: "Dashboard",
           url: "/dashboard",
           icon: UsersRound, 
+        },
+        {
+          name: "Manage States",
+          url: "/states",
+          icon: UsersRound,
         },
         {
           name: "Manage Zones",

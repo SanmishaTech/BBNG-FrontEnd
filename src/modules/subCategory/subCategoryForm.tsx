@@ -222,51 +222,52 @@ const SubCategoryForm = ({
     <div className={className}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-7">
         {/* Category Name Field */}
-        <div className="grid gap-2 relative">
-          <Label htmlFor="name">Sub-Category Name</Label>
-          <Input
-            id="name"
-            placeholder="Enter sub-category name"
-            {...register("name")}
-            disabled={isFormLoading}
-          />
-          {errors.name && (
-            <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
-              {errors.name.message}
-            </span>
-          )}
-        </div>
-
-        {/* Category Dropdown Field */}
-        <div className="grid gap-2 relative">
-          <Label htmlFor="categoryId">Category</Label>
-          <Controller
-            name="categoryId"
-            control={control}
-            render={({ field }) => (
-              <Select
-                onValueChange={(value) => field.onChange(parseInt(value))}
-                value={field.value?.toString()}
-                disabled={isFormLoading || isLoadingCategories}
-              >
-                <SelectTrigger id="categoryId">
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories?.map((category) => (
-                    <SelectItem key={category.id} value={category.id.toString()}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        <div className="grid grid-cols-2 gap-4 ">
+        
+          <div>
+            <Label className="mb-2" htmlFor="categoryId">Category</Label>
+            <Controller
+              name="categoryId"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  onValueChange={(value) => field.onChange(parseInt(value))}
+                  value={field.value?.toString()}
+                  disabled={isFormLoading || isLoadingCategories}
+                >
+                  <SelectTrigger className="w-full" id="categoryId">
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories?.map((category) => (
+                      <SelectItem key={category.id} value={category.id.toString()}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.categoryId && (
+              <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
+                {errors.categoryId.message}
+              </span>
             )}
-          />
-          {errors.categoryId && (
-            <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
-              {errors.categoryId.message}
-            </span>
-          )}
+          </div>
+          <div>
+            <Label className="mb-2" htmlFor="name">Sub-Category Name</Label>
+            <Input
+              id="name"
+              placeholder="Enter sub-category name"
+              {...register("name")}
+              disabled={isFormLoading}
+            />
+            {errors.name && (
+              <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
+                {errors.name.message}
+              </span>
+            )}
+          </div>
         </div>
         
 

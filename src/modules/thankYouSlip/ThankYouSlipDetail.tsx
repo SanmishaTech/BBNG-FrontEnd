@@ -80,8 +80,8 @@ const ThankYouSlipDetail = () => {
   useEffect(() => {
     const loadThankYouSlipDetails = async () => {
       if (!id) {
-        toast.error("Thank you slip ID is missing");
-        navigate("/dashboard/thankyou-slips");
+        toast.error("Done deal ID is missing");
+        navigate("/dashboard/done-deal");
         return;
       }
 
@@ -93,13 +93,13 @@ const ThankYouSlipDetail = () => {
         if (response && response.id) {
           setThankYouSlip(response);
         } else {
-          toast.error("Failed to load thank you slip details");
-          navigate("/dashboard/thankyou-slips");
+          toast.error("Failed to load done deal details");
+          navigate("/dashboard/done-deal");
         }
       } catch (error) {
-        console.error("Error loading thank you slip:", error);
-        toast.error("Failed to load thank you slip details");
-        navigate("/dashboard/thankyou-slips");
+        console.error("Error loading done deal:", error);
+        toast.error("Failed to load done deal details");
+        navigate("/dashboard/done-deal");
       } finally {
         setLoading(false);
       }
@@ -113,7 +113,7 @@ const ThankYouSlipDetail = () => {
       <div className="container mx-auto py-6">
         <Card className="max-w-4xl mx-auto">
           <CardContent className="pt-6">
-            <div className="text-center py-4">Loading thank you slip details...</div>
+            <div className="text-center py-4">Loading done deal details...</div>
           </CardContent>
         </Card>
       </div>
@@ -126,12 +126,12 @@ const ThankYouSlipDetail = () => {
         <Card className="max-w-4xl mx-auto">
           <CardContent className="pt-6">
             <div className="text-center py-4">
-              <p className="text-red-500">Thank you slip not found</p>
+              <p className="text-red-500">Done deal not found</p>
               <Button 
                 className="mt-4" 
-                onClick={() => navigate("/dashboard/thankyou-slips")}
+                onClick={() => navigate("/dashboard/done-deal")}
               >
-                Return to Thank You Slips
+                Return to Done Deals
               </Button>
             </div>
           </CardContent>
@@ -149,7 +149,7 @@ const ThankYouSlipDetail = () => {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-2xl flex items-center">
-                Thank You Slip Details
+                Done Deal Details
                 <Badge variant={thankYouSlip.reference ? "outline" : "default"} className="ml-2">
                   {thankYouSlip.reference ? "Reference-based" : "Direct"}
                 </Badge>
@@ -158,7 +158,7 @@ const ThankYouSlipDetail = () => {
                 Created on {format(new Date(thankYouSlip.createdAt), "PPP")}
               </CardDescription>
             </div>
-            <Button variant="outline" onClick={() => navigate("/dashboard/thankyou-slips")}>
+            <Button variant="outline" onClick={() => navigate("/dashboard/done-deal")}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to List
             </Button>
@@ -183,12 +183,12 @@ const ThankYouSlipDetail = () => {
               </div>
               <p className="text-lg font-medium">
                 <Badge variant={thankYouSlip.reference ? "outline" : "default"}>
-                  {thankYouSlip.reference ? "Reference-based" : "Direct Thank You"}
+                  {thankYouSlip.reference ? "Reference-based" : "Direct Done Deal"}
                 </Badge>
               </p>
             </div>
 
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <div className="flex items-center text-sm text-muted-foreground">
                 <User className="h-4 w-4 mr-2" />
                 {slipType === "given" ? "From Member" : "Sent By"}
@@ -196,7 +196,7 @@ const ThankYouSlipDetail = () => {
               <p className="text-lg font-medium">
                 {thankYouSlip.fromMember?.memberName || "Unknown"}
               </p>
-            </div>
+            </div> */}
 
             <div className="space-y-2">
               <div className="flex items-center text-sm text-muted-foreground">

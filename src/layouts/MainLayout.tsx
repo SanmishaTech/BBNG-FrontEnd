@@ -153,7 +153,7 @@ export default function MainLayout() {
               <SidebarTrigger className="text-white -ml-1" />
 
               {/* Welcome Message */}
-              <h1 className="text-white">Welcome, {userData?.name}</h1>
+              <h1 className="text-white">Welcome, {userData?.name} <span className="text-blue-200 text-sm">({userData?.role})</span></h1>
             </div>
 
             {/* Dark Mode Switcher - On the right side */}

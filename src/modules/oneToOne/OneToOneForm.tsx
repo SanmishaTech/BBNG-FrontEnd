@@ -87,8 +87,8 @@ const OneToOneForm = () => {
     const loadChapterMembers = async () => {
       setLoadingMembers(true);
       try {
-        // Load members by chapter
-        const membersResponse = await get(`/members?chapterId=${formData.chapterId}`);
+        // Load members by chapter, excluding the current user
+        const membersResponse = await get(`/members?chapterId=${formData.chapterId}&excludeCurrentUser=true`);
         setChapterMembers(membersResponse.members || []);
       } catch (error) {
         console.error("Error loading chapter members:", error);
