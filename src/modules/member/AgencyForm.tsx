@@ -1,10 +1,11 @@
-import React, { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { get, postupload, putupload } from "@/services/apiService"; // Assuming these are correctly implemented
+import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -13,23 +14,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import MembershipStatusAlert from "@/components/common/MembershipStatusAlert";
-import Validate from "@/lib/Handlevalidation"; // Assuming this is correctly implemented
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { toast } from "sonner";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Form,
   FormControl,
@@ -38,16 +22,43 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { DatetimePicker } from "@/components/ui/datetime-picker";
-import { getCategories } from "@/services/categoryService";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { get, postupload, putupload } from "@/services/apiService";
+import { Label } from "@/components/ui/label";
+import {DatetimePicker} from "@/components/ui/date-time-picker";
+import { getCategories   } from "@/services/categoryService";
 import { getSubCategoriesByCategoryId } from "@/services/subCategoryService";
-import { Info } from "lucide-react";
+import { cn } from "@/lib/utils"; 
+// import MembershipStatusAlert from "@/components/common/membership-status-alert";
+import { Info, Check, ChevronsUpDown, X } from 'lucide-react'; 
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button"; 
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
 
 interface Chapter {
   id: number;
@@ -62,7 +73,6 @@ interface Chapter {
   }>;
 }
 
-// Add interfaces for category and subcategory
 interface Category {
   id: number;
   name: string;
@@ -79,12 +89,11 @@ export type MemberFormProps = {
   mode: "create" | "edit";
 };
 
-// Define base types for form values
 type BaseMemberFormValues = {
   memberName: string;
   chapterId: number;
   category: string;
-  businessCategory: string;
+  businessCategory: string[]; 
   gender: string;
   dateOfBirth: Date;
   mobile1: string;
@@ -108,9 +117,9 @@ type BaseMemberFormValues = {
   specificAsk?: string;
   specificGive?: string;
   clients?: string;
-  profilePicture1?: File; // For new uploads
-  profilePicture2?: File; // For new uploads
-  profilePicture3?: File; // For new uploads
+  profilePicture1?: File; 
+  profilePicture2?: File; 
+  profilePicture3?: File; 
   email: string;
 };
 
@@ -121,10 +130,8 @@ type CreateMemberFormValues = BaseMemberFormValues & {
 
 type EditMemberFormValues = BaseMemberFormValues;
 
-// Union type for form values
 type MemberFormValues = CreateMemberFormValues | EditMemberFormValues;
 
-// Zod schema definition
 const createMemberSchema = (mode: "create" | "edit") => {
   const baseSchema = z.object({
     memberName: z.string().min(1, "Name is required"),
@@ -133,9 +140,7 @@ const createMemberSchema = (mode: "create" | "edit") => {
       .int()
       .min(1, "Chapter is required"),
     category: z.string().min(1, "Business category is required"),
-    businessCategory: z
-      .string()
-      .min(1, "Another business category is required"),
+    businessCategory: z.array(z.string()).optional(), 
     gender: z.string().optional(),
     dateOfBirth: z.date({ required_error: "Date of birth is required" }),
     mobile1: z.string().regex(/^[0-9]{10}$/, "Valid mobile number is required"),
@@ -203,10 +208,7 @@ const createMemberSchema = (mode: "create" | "edit") => {
   return baseSchema;
 };
 
-// Environment variable for the API base URL (recommended)
-// const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://15.207.30.113/";
-// For this example, we'll use the hardcoded one if not available.
-const IMAGE_BASE_URL = "http://15.207.30.113/"; // Replace with your actual image base URL
+const IMAGE_BASE_URL = "http://localhost:3000/"; 
 
 export default function MemberForm({ mode }: MemberFormProps) {
   const { id } = useParams<{ id: string }>();
@@ -221,10 +223,8 @@ export default function MemberForm({ mode }: MemberFormProps) {
   const [, setFormattedPhone] = useState<string | undefined>();
   const [visitorId, setVisitorId] = useState<string>("");
 
-  // Replace hardcoded category list with fetched categories
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
 
-  // Fetch categories from the API
   const { data: categoriesData, isLoading: loadingCategories } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
@@ -233,7 +233,6 @@ export default function MemberForm({ mode }: MemberFormProps) {
     },
   });
 
-  // Fetch subcategories when a category is selected
   const { data: subcategories = [], isLoading: loadingSubcategories } = useQuery({
     queryKey: ["subcategories", selectedCategoryId],
     queryFn: async () => {
@@ -246,12 +245,10 @@ export default function MemberForm({ mode }: MemberFormProps) {
   const memberSchema = useMemo(() => createMemberSchema(mode), [mode]);
   type FormValues = z.infer<typeof memberSchema>;
 
-  // State to hold existing image URLs (relative paths) or null for each of the 3 slots
   const [existingImageUrls, setExistingImageUrls] = useState<(string | null)[]>(
     [null, null, null]
   );
 
-  // Fetch chapters
   const { data: chapters = [], isLoading: loadingChapters } = useQuery<
     Chapter[]
   >({
@@ -259,14 +256,12 @@ export default function MemberForm({ mode }: MemberFormProps) {
     queryFn: () => get("/chapters").then((r) => r.chapters),
   });
 
-  // Check if we have visitor data in localStorage to pre-fill the form
   const visitorData = useMemo(() => {
     if (mode === "create") {
       try {
         const savedData = localStorage.getItem("visitorToMember");
         if (savedData) {
           const parsedData = JSON.parse(savedData);
-          // Clear the localStorage after retrieving the data
           localStorage.removeItem("visitorToMember");
           return parsedData;
         }
@@ -283,15 +278,17 @@ export default function MemberForm({ mode }: MemberFormProps) {
       memberName: visitorData?.memberName || "",
       chapterId: visitorData?.chapterId || undefined,
       category: visitorData?.category || "",
-      businessCategory: visitorData?.businessCategory || "",
+      businessCategory: visitorData?.businessCategory 
+        ? (Array.isArray(visitorData.businessCategory) ? visitorData.businessCategory : [visitorData.businessCategory]) 
+        : [], 
       gender: visitorData?.gender || "",
-      dateOfBirth: new Date(), // Consider undefined and let Zod handle required or user pick
+      dateOfBirth: new Date(), 
       mobile1: visitorData?.mobile1 || "",
       mobile2: visitorData?.mobile2 || null,
       gstNo: "",
       organizationName: "",
       businessTagline: "",
-      organizationMobileNo: visitorData?.mobile1 || "", // Use mobile1 as organization mobile
+      organizationMobileNo: visitorData?.mobile1 || "", 
       organizationLandlineNo: "",
       organizationEmail: "",
       orgAddressLine1: visitorData?.addressLine1 || "",
@@ -317,7 +314,6 @@ export default function MemberForm({ mode }: MemberFormProps) {
 
   const { reset } = form;
 
-  // Fetch membership status data
   const { data: membershipStatus } = useQuery({
     queryKey: ["membershipStatus", id],
     queryFn: async () => {
@@ -327,20 +323,18 @@ export default function MemberForm({ mode }: MemberFormProps) {
     enabled: mode === "edit" && !!id,
   });
 
-  // Fetch member data for editing
   const { isLoading: loadingMember } = useQuery({
     queryKey: ["member", id],
     queryFn: async () => {
       const apiData = await get(`/api/members/${id}`);
       const {
-        profilePicture1, // Raw path from API
-        profilePicture2, // Raw path from API
-        profilePicture3, // Raw path from API
+        profilePicture1, 
+        profilePicture2, 
+        profilePicture3, 
         chapter,
         ...restApiData
       } = apiData;
 
-      // Process and validate image paths from API
       const apiImagePaths = [profilePicture1, profilePicture2, profilePicture3];
       const processedImagePaths = apiImagePaths.map((path) => {
         if (
@@ -348,16 +342,14 @@ export default function MemberForm({ mode }: MemberFormProps) {
           typeof path === "string" &&
           (path.startsWith("uploads/") || path.startsWith("/uploads/"))
         ) {
-          // Basic check for common image extensions
           if (/\.(jpeg|jpg|gif|png|webp)$/i.test(path)) {
-            return path; // It's a valid relative image path
+            return path; 
           }
         }
-        return null; // Invalid or not an image path we want to display
+        return null; 
       });
       setExistingImageUrls(processedImagePaths);
 
-      // Find category ID by name to enable subcategory fetching
       if (categoriesData && apiData.category) {
         const categoryObj = categoriesData.find(cat => cat.name === apiData.category);
         if (categoryObj) {
@@ -365,7 +357,6 @@ export default function MemberForm({ mode }: MemberFormProps) {
         }
       }
       
-      // Set selected chapter ID to enable fetching chapter roles
       const chapterId = chapter?.id || apiData.chapterId;
       if (chapterId) {
         setSelectedChapterId(chapterId);
@@ -375,25 +366,25 @@ export default function MemberForm({ mode }: MemberFormProps) {
         ...restApiData,
         chapterId: chapterId,
         category: apiData.category || "",
-        businessCategory: apiData.businessCategory || "",
+        businessCategory: apiData.businessCategory 
+          ? (Array.isArray(apiData.businessCategory) ? apiData.businessCategory : [apiData.businessCategory]) 
+          : [], 
         dateOfBirth: apiData.dateOfBirth
           ? new Date(apiData.dateOfBirth)
           : new Date(),
-        // Form fields for new files should be undefined
         profilePicture1: undefined,
         profilePicture2: undefined,
         profilePicture3: undefined,
         mobile2: apiData.mobile2 || null,
         organizationEmail: apiData.organizationEmail || "",
         organizationWebsite: apiData.organizationWebsite || "",
-      } as FormValues); // Ensure this matches EditMemberFormValues structure
+      } as FormValues); 
 
       return apiData;
     },
     enabled: mode === "edit" && !!id,
   });
 
-  // Add back the createMutation and updateMutation
   const createMutation = useMutation<any, Error, MemberFormValues>({
     mutationFn: (data: MemberFormValues) => {
       const formData = new FormData();
@@ -463,10 +454,8 @@ export default function MemberForm({ mode }: MemberFormProps) {
     }
   };
 
-  // Define isLoading for button states
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
-  // Add an effect to set selectedCategoryId when categoriesData loads or changes
   useEffect(() => {
     if (categoriesData?.length && form.getValues().category) {
       const categoryName = form.getValues().category;
@@ -477,10 +466,8 @@ export default function MemberForm({ mode }: MemberFormProps) {
     }
   }, [categoriesData, form, selectedCategoryId]);
 
-  // Add state for selected chapter
   const [selectedChapterId, setSelectedChapterId] = useState<number | null>(null);
 
-  // Fetch chapter roles when a chapter is selected
   const { data: chapterRoles, isLoading: loadingChapterRoles } = useQuery({
     queryKey: ["chapterRoles", selectedChapterId],
     queryFn: async () => {
@@ -493,8 +480,6 @@ export default function MemberForm({ mode }: MemberFormProps) {
 
   return (
     <Card className="mx-auto my-8 ">
-      {" "}
-      {/* Added max-width for better layout */}
       <CardHeader>
         <CardTitle>
           {mode === "create" ? "Create New Member" : "Edit Member"}
@@ -507,9 +492,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
       </CardHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
-          {/* Membership Status Alert - Only show when editing */}
-          {console.log(membershipStatus)}
-          {mode === "edit" && membershipStatus && (
+          {/* {mode === "edit" && membershipStatus && (
             <div className="mb-6">
               <MembershipStatusAlert
                 isActive={membershipStatus.active}
@@ -518,17 +501,13 @@ export default function MemberForm({ mode }: MemberFormProps) {
                 daysUntilExpiry={membershipStatus.daysUntilExpiry}
               />
             </div>
-          )}
+          )} */}
 
-          {/* Basic Details */}
           <Card className="mb-6 shadow-none border-0">
             <CardHeader>
-              <CardTitle className="text-lg">Basic Details</CardTitle>{" "}
-              {/* Slightly smaller title */}
+              <CardTitle className="text-lg">Basic Details</CardTitle> 
             </CardHeader>
             <CardContent className="space-y-4 md:space-y-6">
-              {" "}
-              {/* Adjusted spacing */}
               <div className="grid md:grid-cols-2 gap-4 md:gap-6">
                 <FormField
                   control={form.control}
@@ -576,7 +555,6 @@ export default function MemberForm({ mode }: MemberFormProps) {
                         </SelectContent>
                       </Select>
                       <FormMessage />
-                      {/* Display Chapter Roles Information */}
                       {!loadingChapterRoles && chapterRoles && chapterRoles.length > 0 && (
                         <div className="mt-2 text-sm text-muted-foreground">
                           <TooltipProvider>
@@ -634,7 +612,6 @@ export default function MemberForm({ mode }: MemberFormProps) {
                         value={field.value}
                         onValueChange={(value) => {
                           field.onChange(value);
-                          // Find the selected category and set its ID
                           const category = categoriesData?.find(cat => cat.name === value);
                           setSelectedCategoryId(category?.id || null);
                         }}
@@ -661,60 +638,100 @@ export default function MemberForm({ mode }: MemberFormProps) {
                 <FormField
                   control={form.control}
                   name="businessCategory"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Another Business Category</FormLabel>
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        disabled={!selectedCategoryId || loadingSubcategories}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select subcategory" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {loadingSubcategories ? (
-                            <SelectItem value="loading">Loading subcategories...</SelectItem>
-                          ) : subcategories.length > 0 ? (
-                            subcategories.map((subCategory) => (
-                              <SelectItem key={subCategory.id} value={subCategory.name}>
-                                {subCategory.name}
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="none">No subcategories available</SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="gender"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Gender</FormLabel>
-                      <Select
-                        value={field.value || ""}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select gender" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {["male", "female", "other"].map((genderVal) => (
-                            <SelectItem key={genderVal} value={genderVal}>
-                              {genderVal.charAt(0).toUpperCase() +
-                                genderVal.slice(1)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    const selectedValues = field.value || []; 
+                    const handleSelect = (currentValue: string) => {
+                      const newSelectedValues = selectedValues.includes(currentValue)
+                        ? selectedValues.filter(val => val !== currentValue)
+                        : [...selectedValues, currentValue];
+                      field.onChange(newSelectedValues);
+                    };
+
+                    return (
+                      <FormItem>
+                        <FormLabel>Business Subcategories</FormLabel> 
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn(
+                                  "w-full justify-between h-auto min-h-[2.5rem]", 
+                                  !field.value?.length && "text-muted-foreground"
+                                )}
+                                disabled={!selectedCategoryId || loadingSubcategories}
+                              >
+                                <div className="flex gap-1 flex-wrap items-center">
+                                  {selectedValues.length > 0 ? 
+                                    selectedValues.map(val => (
+                                      <Badge
+                                        variant="secondary"
+                                        key={val}
+                                        className="mr-1 mb-1"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          handleSelect(val);
+                                        }}
+                                      >
+                                        {subcategories.find(sub => sub.name === val)?.name || val}
+                                        <X 
+                                          className="ml-1 h-3 w-3 cursor-pointer hover:text-destructive"
+                                          onClick={(e) => { 
+                                            e.preventDefault(); 
+                                            e.stopPropagation(); 
+                                            handleSelect(val); 
+                                          }}
+                                        />
+                                      </Badge>
+                                    ))
+                                    : "Select subcategories"}
+                                </div>
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                            <Command>
+                              <CommandInput placeholder="Search subcategories..." />
+                              <CommandList>
+                                <CommandEmpty>No subcategory found.</CommandEmpty>
+                                <CommandGroup>
+                                  {loadingSubcategories ? (
+                                    <CommandItem disabled>Loading subcategories...</CommandItem>
+                                  ) : subcategories.length > 0 ? (
+                                    subcategories.map((subCategory) => (
+                                      <CommandItem
+                                        key={subCategory.id}
+                                        value={subCategory.name}
+                                        onSelect={() => {
+                                          handleSelect(subCategory.name);
+                                        }}
+                                      >
+                                        <Check
+                                          className={cn(
+                                            "mr-2 h-4 w-4",
+                                            selectedValues.includes(subCategory.name)
+                                              ? "opacity-100"
+                                              : "opacity-0"
+                                          )}
+                                        />
+                                        {subCategory.name}
+                                      </CommandItem>
+                                    ))
+                                  ) : (
+                                    <CommandItem disabled>No subcategories available</CommandItem>
+                                  )}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
               </div>
               <div className="grid md:grid-cols-3 gap-4 md:gap-6">
@@ -767,7 +784,6 @@ export default function MemberForm({ mode }: MemberFormProps) {
             </CardContent>
           </Card>
 
-          {/* Business Details */}
           <Card className="mb-6 shadow-none border-0">
             <CardHeader>
               <CardTitle className="text-lg">Business Details</CardTitle>
@@ -943,7 +959,6 @@ export default function MemberForm({ mode }: MemberFormProps) {
                           placeholder="www.example.com / https://example.com"
                           onChange={(e) => {
                             let value = e.target.value;
-                            // Automatically add https:// if user enters www.
                             if (
                               value.startsWith("www.") &&
                               !value.startsWith("http")
@@ -979,7 +994,6 @@ export default function MemberForm({ mode }: MemberFormProps) {
             </CardContent>
           </Card>
 
-          {/* Member Address Details */}
           <Card className="mb-6 shadow-none border-0">
             <CardHeader>
               <CardTitle className="text-lg">Member Address</CardTitle>
@@ -1046,7 +1060,6 @@ export default function MemberForm({ mode }: MemberFormProps) {
             </CardContent>
           </Card>
 
-          {/* Additional Information */}
           <Card className="mb-6 shadow-none border-0">
             <CardHeader>
               <CardTitle className="text-lg">Additional Information</CardTitle>
@@ -1106,7 +1119,6 @@ export default function MemberForm({ mode }: MemberFormProps) {
             </CardContent>
           </Card>
 
-          {/* Profile Pictures Section */}
           <Card className="mb-6 shadow-none border-0">
             <CardHeader>
               <CardTitle className="text-lg">Profile Pictures</CardTitle>
@@ -1118,14 +1130,11 @@ export default function MemberForm({ mode }: MemberFormProps) {
             <CardContent>
               <div className="grid md:grid-cols-3 gap-6">
                 {[0, 1, 2].map((index) => {
-                  // existingImageUrls is an array of (string | null)
-                  // existingImageUrls[index] gives the relative path or null for the current slot
                   const relativeImagePath = existingImageUrls[index];
                   const fieldName = `profilePicture${
                     index + 1
-                  }` as keyof FormValues; // profilePicture1, profilePicture2, profilePicture3
+                  }` as keyof FormValues; 
 
-                  // Construct full URL for display only if a valid relative path exists
                   const displayUrl = relativeImagePath
                     ? `${IMAGE_BASE_URL}/${
                         relativeImagePath.startsWith("/")
@@ -1136,11 +1145,11 @@ export default function MemberForm({ mode }: MemberFormProps) {
 
                   return (
                     <FormField
-                      key={fieldName} // Use fieldName for a more stable key
+                      key={fieldName} 
                       control={form.control}
-                      name={fieldName} // This form field is for NEW File uploads
+                      name={fieldName} 
                       render={(
-                        { field: { onChange, value, ...fieldProps } } // `value` here would be the File object if selected
+                        { field: { onChange, value, ...fieldProps } } 
                       ) => (
                         <FormItem>
                           <FormLabel>{`Profile Picture ${
@@ -1157,7 +1166,6 @@ export default function MemberForm({ mode }: MemberFormProps) {
                                     (
                                       e.target as HTMLImageElement
                                     ).style.display = "none";
-                                    // You could show a placeholder or an icon here
                                     const parent = (
                                       e.target as HTMLImageElement
                                     ).parentElement;
@@ -1174,24 +1182,21 @@ export default function MemberForm({ mode }: MemberFormProps) {
                                 />
                               </div>
                             )}
-                            {/* Input for uploading a new image or replacing existing */}
                             <FormControl>
                               <Input
                                 type="file"
                                 accept="image/jpeg,image/png,image/webp"
                                 onChange={(e) => {
                                   const file = e.target.files?.[0];
-                                  onChange(file || undefined); // Update RHF state with the File or undefined
+                                  onChange(file || undefined); 
                                 }}
-                                {...fieldProps} // name, onBlur, ref
+                                {...fieldProps} 
                                 className="w-full"
                               />
                             </FormControl>
-                            {/* Display name of newly selected file (optional) */}
                             {value && (
                               <p className="text-xs text-gray-600 truncate">
                                 Selected: {(() => {
-                                  // Type guard to safely access file name
                                   if (value instanceof File) {
                                     return value.name;
                                   }
@@ -1210,7 +1215,6 @@ export default function MemberForm({ mode }: MemberFormProps) {
             </CardContent>
           </Card>
 
-          {/* Login Details */}
           <Card className="mb-6 shadow-none border-0">
             <CardHeader>
               <CardTitle className="text-lg">Login Details</CardTitle>
@@ -1256,7 +1260,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   />
                   <FormField
                     control={form.control}
-                    name="verifyPassword" // This should be part of CreateMemberFormValues
+                    name="verifyPassword" 
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Confirm Password</FormLabel>
@@ -1277,8 +1281,6 @@ export default function MemberForm({ mode }: MemberFormProps) {
           </Card>
 
           <CardFooter className="flex justify-end space-x-4 mt-8">
-            {" "}
-            {/* Added margin top */}
             <Button
               type="button"
               variant="outline"

@@ -22,11 +22,18 @@ const MemberSearch = () => {
     if (searchQuery.trim() === "") {
       setFilteredMembers(members);
     } else {
-      const filtered = members.filter(member => 
-        member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        member.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        member.designation?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        member.department?.toLowerCase().includes(searchQuery.toLowerCase())
+      console.log("members", members[0].member);
+      const filtered = members.filter(
+        (member) =>
+          member?.member.memberName
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          member?.member.category
+            ?.toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          member?.member?.chapter?.name
+            ?.toLowerCase()
+            .includes(searchQuery.toLowerCase())
       );
       setFilteredMembers(filtered);
     }
@@ -36,34 +43,43 @@ const MemberSearch = () => {
     setLoading(true);
     try {
       // Fetch real member data from API with the correct endpoint
-      const response = await apiService.get('/members/search');
-      
+      const response = await apiService.get("/members/search");
+
       // Transform API data to match our MemberData type
       const memberData: MemberData[] = response.members.map((member: any) => {
         // Get the best available profile picture using our utility function
         const profilePicture = getBestMemberPhoto(member);
-        
+
         // For cover photo, still use the second picture if available
         // If not, fall back to the best available photo (which might be the same as profilePicture)
         const coverPhoto = member.profilePicture2
-          ? `${import.meta.env.VITE_BACKEND_URL}/uploads/members/${member.profilePicture2}`
-          : (member.profilePicture1 || member.profilePicture3) ? profilePicture : undefined;
-          
+          ? `${import.meta.env.VITE_BACKEND_URL}/uploads/members/${
+              member.profilePicture2
+            }`
+          : member.profilePicture1 || member.profilePicture3
+          ? profilePicture
+          : undefined;
+
         return {
           id: member.id.toString(),
+          member: member,
           name: member.memberName,
           profilePicture,
           coverPhoto,
           email: member.email,
           phone: member.mobile1,
-          designation: member.businessCategory || '',
-          department: member.category || '',
+          designation: member.businessCategory || "",
+          department: member.category || "",
           joinDate: new Date(member.createdAt).toLocaleDateString(),
-          skills: member.specificGive ? member.specificGive.split(',').map((s: string) => s.trim()) : [],
-          lastActive: member.user?.lastLogin ? new Date(member.user.lastLogin).toLocaleDateString() : 'Never'
+          skills: member.specificGive
+            ? member.specificGive.split(",").map((s: string) => s.trim())
+            : [],
+          lastActive: member.user?.lastLogin
+            ? new Date(member.user.lastLogin).toLocaleDateString()
+            : "Never",
         };
       });
-      
+
       setMembers(memberData);
       setFilteredMembers(memberData);
     } catch (error) {
@@ -81,7 +97,7 @@ const MemberSearch = () => {
   return (
     <div className="container mx-auto py-8 px-4">
       <h1 className="text-2xl font-bold mb-6">Member Directory</h1>
-      
+
       {/* Search Box */}
       <div className="relative mb-8">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -95,7 +111,7 @@ const MemberSearch = () => {
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
-      
+
       {loading ? (
         <div className="flex justify-center items-center h-40">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
@@ -103,16 +119,18 @@ const MemberSearch = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {filteredMembers.length > 0 ? (
-            filteredMembers.map(member => (
-              <MemberCard 
-                key={member.id} 
-                member={member} 
-                onViewProfile={() => viewProfile(member.id)} 
+            filteredMembers.map((member) => (
+              <MemberCard
+                key={member.id}
+                member={member}
+                onViewProfile={() => viewProfile(member.id)}
               />
             ))
           ) : (
             <div className="col-span-full text-center py-8">
-              <p className="text-gray-500">No members found matching your search criteria.</p>
+              <p className="text-gray-500">
+                No members found matching your search criteria.
+              </p>
             </div>
           )}
         </div>
@@ -121,4 +139,4 @@ const MemberSearch = () => {
   );
 };
 
-export default MemberSearch; 
+export default MemberSearch;

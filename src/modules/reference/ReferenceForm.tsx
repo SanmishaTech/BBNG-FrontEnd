@@ -104,6 +104,7 @@ const ReferenceForm = () => {
   const isEditMode = !!id;
 
   const [loading, setLoading] = useState(false);
+  const [membersLoading, setMembersLoading] = useState(false);
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
 
@@ -128,24 +129,52 @@ const ReferenceForm = () => {
     },
   });
 
-  // Load chapters and members data
+  // Load chapters data
   useEffect(() => {
-    const fetchOptions = async () => {
+    const fetchChapters = async () => {
       try {
-        const [chaptersRes, membersRes] = await Promise.all([
-          get("/chapters", { limit: 100 }),
-          get("/api/members", { limit: 100 }),
-        ]);
+        const chaptersRes = await get("/chapters", { limit: 100 });
         setChapters(chaptersRes.chapters || []);
-        setMembers(membersRes.members || []);
       } catch (error) {
-        console.error("Error loading form options:", error);
-        toast.error("Failed to load chapters and members");
+        console.error("Error loading chapters:", error);
+        toast.error("Failed to load chapters");
       }
     };
 
-    fetchOptions();
+    fetchChapters();
   }, []);
+
+  // Create a state to track the selected chapter ID
+  const [selectedChapterId, setSelectedChapterId] = useState<number>(0);
+  
+  // Load members data based on selected chapter
+  useEffect(() => {
+    const fetchMembers = async () => {
+      // Don't do anything if no chapter is selected
+      if (selectedChapterId <= 0) {
+        setMembers([]);
+        return;
+      }
+      
+      try {
+        // Use the dedicated membersLoading state to not block the entire form
+        setMembersLoading(true);
+        
+        const membersRes = await get("/api/members", { 
+          limit: 100,
+          chapterId: selectedChapterId // Pass chapterId as query parameter
+        });
+        setMembers(membersRes.members || []);
+      } catch (error) {
+        console.error("Error loading members:", error);
+        toast.error("Failed to load members");
+      } finally {
+        setMembersLoading(false);
+      }
+    };
+
+    fetchMembers();
+  }, [selectedChapterId]); // Re-fetch when selectedChapterId changes
 
   // Load reference data if in edit mode
   useEffect(() => {
@@ -172,6 +201,9 @@ const ReferenceForm = () => {
             addressLine2: reference.addressLine2 || '',
             pincode: reference.pincode || '',
           });
+          
+          // Set the selectedChapterId to load members for the selected chapter
+          setSelectedChapterId(reference.chapterId);
         } catch (error) {
           console.error("Error loading reference:", error);
           toast.error("Failed to load reference");
@@ -378,7 +410,17 @@ const ReferenceForm = () => {
                       <FormItem>
                         <FormLabel>Chapter *</FormLabel>
                         <Select
-                          onValueChange={(value) => field.onChange(parseInt(value))}
+                          onValueChange={(value) => {
+                            // Update the chapterId value
+                            const chapterId = parseInt(value);
+                            field.onChange(chapterId);
+                            
+                            // Update the selectedChapterId state to trigger member fetch
+                            setSelectedChapterId(chapterId);
+                            
+                            // Reset member selection when chapter changes
+                            form.setValue("memberId", 0);
+                          }}
                           value={field.value ? field.value.toString() : undefined}
                         >
                           <FormControl>
@@ -406,26 +448,42 @@ const ReferenceForm = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Member *</FormLabel>
-                        <Select
-                          onValueChange={(value) => {
-                            field.onChange(parseInt(value));
-                            // Auto-filling member data is disabled as per requirements
-                          }}
-                          value={field.value ? field.value.toString() : undefined}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select member" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {filteredMembers.map((member) => (
-                              <SelectItem key={member.id} value={member.id.toString()}>
-                                {member.memberName}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <div className="relative">
+                          <Select
+                            onValueChange={(value) => {
+                              field.onChange(parseInt(value));
+                              // Auto-filling member data is disabled as per requirements
+                            }}
+                            value={field.value ? field.value.toString() : undefined}
+                            disabled={membersLoading || selectedChapterId <= 0}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                {membersLoading ? (
+                                  <div className="flex items-center justify-between w-full">
+                                    <span className="text-muted-foreground">Loading members...</span>
+                                    <div className="animate-spin h-4 w-4 border-2 border-primary rounded-full border-t-transparent"></div>
+                                  </div>
+                                ) : (
+                                  <SelectValue placeholder={selectedChapterId <= 0 ? "Select chapter first" : "Select member"} />
+                                )}
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {filteredMembers.length > 0 ? (
+                                filteredMembers.map((member) => (
+                                  <SelectItem key={member.id} value={member.id.toString()}>
+                                    {member.memberName}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <div className="py-2 px-2 text-center text-sm text-muted-foreground">
+                                  {selectedChapterId > 0 ? "No members found in this chapter" : "Please select a chapter first"}
+                                </div>
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -448,9 +506,9 @@ const ReferenceForm = () => {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="high">High</SelectItem>
-                            <SelectItem value="medium">Medium</SelectItem>
-                            <SelectItem value="low">Low</SelectItem>
+                            <SelectItem value="immediate">Immediate</SelectItem>
+                            <SelectItem value="within_1_month">Within 1 Month</SelectItem>
+                            <SelectItem value="after_1_month">After 1 Month</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -469,9 +527,18 @@ const ReferenceForm = () => {
                             checked={field.value}
                             onCheckedChange={(checked) => {
                               field.onChange(checked);
-                              // Auto-fill form with current user's details when checkbox is checked
                               if (checked) {
                                 autoFillCurrentUserDetails();
+                              } else {
+                                // Clear the fields when unchecked
+                                form.setValue("nameOfReferral", '');
+                                form.setValue("email", '');
+                                form.setValue("mobile1", '');
+                                form.setValue("mobile2", '');
+                                form.setValue("addressLine1", '');
+                                form.setValue("addressLine2", '');
+                                form.setValue("location", '');
+                                form.setValue("pincode", '');
                               }
                             }}
                           />

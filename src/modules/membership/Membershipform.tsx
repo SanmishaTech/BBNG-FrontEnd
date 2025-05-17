@@ -117,27 +117,138 @@ const membershipSchema = z.object({
   paymentDate: z.date({
     required_error: "Payment date is required",
   }),
-  paymentMode: z.string().nullable().optional(),
+  paymentMode: z.string({
+    required_error: "Payment mode is required",
+  }).min(1, "Payment mode is required"),
   
   // Cheque details
-  chequeNumber: z.string().optional().nullable(),
+  chequeNumber: z.string()
+    .optional()
+    .nullable(),
   chequeDate: z.preprocess(
     (val) => (val ? new Date(val as any) : null),
     z.date().optional().nullable()
   ),
-  bankName: z.string().optional().nullable(),
+  bankName: z.string()
+    .optional()
+    .nullable(),
   
   // Bank transfer details
-  neftNumber: z.string().optional().nullable(),
+  neftNumber: z.string()
+    .optional()
+    .nullable(),
   
   // UPI details
-  utrNumber: z.string().optional().nullable(),
-  
+  utrNumber: z.string()
+    .optional()
+    .nullable(),
+    
   // Active status
   active: z.boolean().default(true),
 });
 
-type MembershipFormInputs = z.infer<typeof membershipSchema>;
+// Apply conditional validation for each payment method
+const conditionalMembershipSchema = membershipSchema
+  // Cheque payment validations
+  .refine((data) => {
+    // If payment mode is not cheque, validation passes
+    if (data.paymentMode !== 'cheque') return true;
+    // For cheque payments, these fields are required
+    return !!data.chequeNumber && !!data.chequeDate && !!data.bankName;
+  }, {
+    message: "Cheque number, date, and bank name are required for cheque payments",
+    path: ["chequeNumber"]
+  })
+  // Cheque number format validation
+  .refine((data) => {
+    // Only validate cheque number format if payment mode is cheque and value exists
+    if (data.paymentMode !== 'cheque' || !data.chequeNumber) return true;
+    return /^\d{6,12}$/.test(data.chequeNumber);
+  }, {
+    message: "Cheque number must be 6-12 digits",
+    path: ["chequeNumber"]
+  })
+  // Bank name validations
+  .refine((data) => {
+    // Only validate bank name if payment mode is cheque and value exists
+    if (data.paymentMode !== 'cheque' || !data.bankName) return true;
+    return data.bankName.length >= 3;
+  }, {
+    message: "Bank name must be at least 3 characters",
+    path: ["bankName"]
+  })
+  .refine((data) => {
+    // Only validate bank name format if payment mode is cheque and value exists
+    if (data.paymentMode !== 'cheque' || !data.bankName) return true;
+    return /^[A-Za-z\s\-&.]+$/.test(data.bankName);
+  }, {
+    message: "Bank name should only contain letters, spaces, hyphens, ampersands and periods",
+    path: ["bankName"]
+  })
+  .refine((data) => {
+    // Check for consecutive spaces in bank name
+    if (data.paymentMode !== 'cheque' || !data.bankName) return true;
+    return !(/\s{2,}/.test(data.bankName));
+  }, {
+    message: "Bank name should not contain consecutive spaces",
+    path: ["bankName"]
+  })
+  
+  // Net banking validations
+  .refine((data) => {
+    // If payment mode is not netbanking, validation passes
+    if (data.paymentMode !== 'netbanking') return true;
+    // For netbanking payments, NEFT number is required
+    return !!data.neftNumber;
+  }, {
+    message: "NEFT/IMPS number is required for netbanking payments",
+    path: ["neftNumber"]
+  })
+  .refine((data) => {
+    // Only validate NEFT number format if payment mode is netbanking and value exists
+    if (data.paymentMode !== 'netbanking' || !data.neftNumber) return true;
+    return /^[A-Za-z0-9]{11,18}$/.test(data.neftNumber);
+  }, {
+    message: "NEFT/IMPS number must be 11-18 alphanumeric characters",
+    path: ["neftNumber"]
+  })
+  .refine((data) => {
+    // Validate that NEFT number contains both letters and numbers
+    if (data.paymentMode !== 'netbanking' || !data.neftNumber) return true;
+    return /^(?=.*[A-Za-z])(?=.*\d)/.test(data.neftNumber);
+  }, {
+    message: "NEFT/IMPS number should contain both letters and numbers",
+    path: ["neftNumber"]
+  })
+  
+  // UPI validations
+  .refine((data) => {
+    // If payment mode is not UPI, validation passes
+    if (data.paymentMode !== 'upi') return true;
+    // For UPI payments, UTR number is required
+    return !!data.utrNumber;
+  }, {
+    message: "UTR number is required for UPI payments",
+    path: ["utrNumber"]
+  })
+  .refine((data) => {
+    // Only validate UTR number format if payment mode is UPI and value exists
+    if (data.paymentMode !== 'upi' || !data.utrNumber) return true;
+    return /^[A-Za-z0-9]{16,22}$/.test(data.utrNumber);
+  }, {
+    message: "UTR number must be 16-22 characters long",
+    path: ["utrNumber"]
+  })
+  .refine((data) => {
+    // Validate that UTR number contains both letters and numbers
+    if (data.paymentMode !== 'upi' || !data.utrNumber) return true;
+    return /^(?=.*[A-Za-z])(?=.*\d)/.test(data.utrNumber);
+  }, {
+    message: "UTR number should contain both letters and numbers",
+    path: ["utrNumber"]
+  });
+
+type MembershipFormInputs = z.infer<typeof conditionalMembershipSchema>;
 
 // Types
 interface MemberData {
@@ -162,32 +273,29 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
     }
   }, [isAdmin, navigate]);
 
-  const [invoiceDateOpen, setInvoiceDateOpen] = useState(false);
-  const [paymentDateOpen, setPaymentDateOpen] = useState(false);
   const [packagePopoverOpen, setPackagePopoverOpen] = useState(false);
   const [memberPopoverOpen, setMemberPopoverOpen] = useState(false);
-  const [chequeDateOpen, setChequeDateOpen] = useState(false);
   
   const { id } = useParams<{ id: string }>();
   
   // Initialize form
   const form = useForm<MembershipFormInputs>({
-    resolver: zodResolver(membershipSchema),
+    resolver: zodResolver(conditionalMembershipSchema),
     defaultValues: {
       memberId: undefined,
-      invoiceDate: new Date(),
+      invoiceDate: undefined,  
       packageId: undefined,
       basicFees: 0,
       cgstRate: null,
       sgstRate: null,
       igstRate: null,
       paymentDate: new Date(),
-      paymentMode: null,
-      chequeNumber: null,
+      paymentMode: "cash",
+      chequeNumber: "",
       chequeDate: null,
-      bankName: null,
-      neftNumber: null,
-      utrNumber: null,
+      bankName: "",
+      neftNumber: "",
+      utrNumber: "",
       active: true,
     },
   });
@@ -730,7 +838,8 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                     {/* Conditional Payment Method Fields */}
                     {paymentMode === "cheque" && (
                       <div className="p-4 border rounded-md space-y-3">
-                        <h3 className="text-lg  font-medium">Cheque Details</h3>
+                        <h3 className="text-lg font-medium">Cheque Details</h3>
+                        <p className="text-sm text-muted-foreground mb-2">All fields are required for cheque payments</p>
                       <div className="grid grid-cols-3 gap-4 ">
                         
                         {/* Cheque Number */}
@@ -742,11 +851,12 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                               <FormLabel>Cheque Number</FormLabel>
                               <FormControl>
                                 <Input 
-                                  placeholder="Enter cheque number" 
+                                  placeholder="Enter 6-12 digit number" 
                                   {...field} 
                                   value={field.value || ''}
                                 />
                               </FormControl>
+                              <p className="text-xs text-muted-foreground">Must be 6-12 digits</p>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -787,6 +897,7 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                                   value={field.value || ''}
                                 />
                               </FormControl>
+                              <p className="text-xs text-muted-foreground">Must be at least 3 characters</p>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -797,7 +908,8 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                     
                     {paymentMode === "netbanking" && (
                       <div className="space-y-4 p-4 border rounded-md">
-                        <h3 className="text-sm font-medium">Bank Transfer Details</h3>
+                        <h3 className="text-lg font-medium">Bank Transfer Details</h3>
+                        <p className="text-sm text-muted-foreground mb-2">NEFT/IMPS number is required for bank transfer payments</p>
                         
                         {/* NEFT Number */}
                         <FormField
@@ -808,11 +920,12 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                               <FormLabel>NEFT/IMPS Number</FormLabel>
                               <FormControl>
                                 <Input 
-                                  placeholder="Enter NEFT number" 
+                                  placeholder="Enter NEFT/IMPS reference number" 
                                   {...field} 
                                   value={field.value || ''}
                                 />
                               </FormControl>
+                              <p className="text-xs text-muted-foreground">Must be 11-18 alphanumeric characters</p>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -822,7 +935,8 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                     
                     {paymentMode === "upi" && (
                       <div className="space-y-4 p-4 border rounded-md">
-                        <h3 className="text-sm font-medium">UPI Details</h3>
+                        <h3 className="text-lg font-medium">UPI Details</h3>
+                        <p className="text-sm text-muted-foreground mb-2">UTR number is required for UPI payments</p>
                         
                         {/* UTR Number */}
                         <FormField
@@ -833,11 +947,12 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                               <FormLabel>UTR Number</FormLabel>
                               <FormControl>
                                 <Input 
-                                  placeholder="Enter UTR number" 
+                                  placeholder="Enter UPI transaction reference" 
                                   {...field} 
                                   value={field.value || ''}
                                 />
                               </FormControl>
+                              <p className="text-xs text-muted-foreground">Must be 12-22 alphanumeric characters</p>
                               <FormMessage />
                             </FormItem>
                           )}
