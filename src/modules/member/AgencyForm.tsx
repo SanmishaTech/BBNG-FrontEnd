@@ -143,6 +143,7 @@ type MemberFormValues = CreateMemberFormValues | EditMemberFormValues;
 
 const createMemberSchema = (mode: "create" | "edit") => {
   const baseSchema = z.object({
+    // Date of birth is required for new members but optional for edits
     memberName: z.string().min(1, "Name is required"),
     chapterId: z
       .number({ required_error: "Chapter is required" })
@@ -151,7 +152,9 @@ const createMemberSchema = (mode: "create" | "edit") => {
     category: z.string().min(1, "Business category is required"),
     businessCategory: z.array(z.string()).optional(),
     gender: z.string().optional(),
-    dateOfBirth: z.date({ required_error: "Date of birth is required" }),
+    dateOfBirth: mode === "edit" 
+      ? z.date().nullable().optional()
+      : z.date({ required_error: "Date of birth is required" }),
     mobile1: z.string().regex(/^[0-9]{10}$/, "Valid mobile number is required"),
     mobile2: z
       .string()
@@ -548,7 +551,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="memberName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Member Name</FormLabel>
+                      <FormLabel>Member Name <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -564,7 +567,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="chapterId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Chapter</FormLabel>
+                      <FormLabel>Chapter <span className="text-red-500">*</span></FormLabel>
                       <Select
                         value={field.value ? String(field.value) : ""}
                         onValueChange={(v) => {
@@ -662,7 +665,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="category"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Business Category</FormLabel>
+                      <FormLabel>Business Category <span className="text-red-500">*</span></FormLabel>
                       <Select
                         value={field.value}
                         onValueChange={(value) => {
@@ -704,12 +707,17 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   render={({ field }) => {
                     const selectedValues = field.value || [];
                     const handleSelect = (currentValue: string) => {
-                      const newSelectedValues = selectedValues.includes(
-                        currentValue,
-                      )
-                        ? selectedValues.filter((val) => val !== currentValue)
-                        : [...selectedValues, currentValue];
-                      field.onChange(newSelectedValues);
+                      if (selectedValues.includes(currentValue)) {
+                        // Remove the value if it's already selected
+                        const newSelectedValues = selectedValues.filter(val => val !== currentValue);
+                        field.onChange(newSelectedValues);
+                      } else {
+                        // Add the value only if it doesn't exist yet (should never happen due to uniqueness check)
+                        if (!selectedValues.some(val => val === currentValue)) {
+                          const newSelectedValues = [...selectedValues, currentValue];
+                          field.onChange(newSelectedValues);
+                        }
+                      }
                     };
 
                     return (
@@ -819,10 +827,13 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Date of Birth</FormLabel>
-                      <DatetimePicker
-                        value={field.value}
-                        onChange={field.onChange}
-                        format={[["days", "months", "years"], []]}
+                      <Input
+                        type="date"
+                        value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                        onChange={(e) => {
+                          field.onChange(e.target.value ? new Date(e.target.value) : null);
+                        }}
+                        className="w-full"
                       />
                       <FormMessage />
                     </FormItem>
@@ -833,7 +844,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="mobile1"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Mobile 1</FormLabel>
+                      <FormLabel>Mobile 1 <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="10-digit mobile" />
                       </FormControl>
@@ -872,7 +883,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                 name="organizationName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Organization Name</FormLabel>
+                    <FormLabel>Organization Name <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="Enter organization name" />
                     </FormControl>
@@ -920,7 +931,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="organizationMobileNo"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Organization Mobile</FormLabel>
+                      <FormLabel>Organization Mobile <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="10-digit mobile" />
                       </FormControl>
@@ -970,7 +981,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="orgAddressLine1"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Address Line 1</FormLabel>
+                      <FormLabel>Address Line 1 <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="Building, Street" />
                       </FormControl>
@@ -1000,7 +1011,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="stateId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>State</FormLabel>
+                      <FormLabel>State <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <Select
                           onValueChange={(value) =>
@@ -1035,7 +1046,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="orgLocation"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Organization Location</FormLabel>
+                      <FormLabel>Organization Location <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="City/Town" />
                       </FormControl>
@@ -1048,7 +1059,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="orgPincode"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Organization Pincode</FormLabel>
+                      <FormLabel>Organization Pincode <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="6-digit pincode" />
                       </FormControl>
@@ -1115,7 +1126,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                 name="addressLine1"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Address Line 1</FormLabel>
+                    <FormLabel>Address Line 1 <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="House No, Street" />
                     </FormControl>
@@ -1146,7 +1157,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="category"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Category</FormLabel>
+                      <FormLabel>Category <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <Select
                           onValueChange={(value) => {
@@ -1188,7 +1199,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="location"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Location</FormLabel>
+                      <FormLabel>Location <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="City/Town" />
                       </FormControl>
@@ -1201,7 +1212,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="pincode"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Pincode</FormLabel>
+                      <FormLabel>Pincode <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="6-digit pincode" />
                       </FormControl>
@@ -1305,9 +1316,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                         field: { onChange, value, ...fieldProps },
                       }) => (
                         <FormItem>
-                          <FormLabel>{`Profile Picture ${
-                            index + 1
-                          }`}</FormLabel>
+                          <FormLabel>{index === 0 ? `Profile Picture ` : index === 1 ? 'Cover Image' : 'Logo'}</FormLabel>
                           <div className="space-y-2">
                             {mode === "edit" && displayUrl && (
                               <div className="relative w-full aspect-square rounded-md overflow-hidden border border-dashed">
@@ -1379,7 +1388,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -1400,7 +1409,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel>Password <span className="text-red-500">*</span></FormLabel>
                         <FormControl>
                           <Input
                             type="password"
@@ -1417,7 +1426,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                     name="verifyPassword"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Confirm Password</FormLabel>
+                        <FormLabel>Confirm Password <span className="text-red-500">*</span></FormLabel>
                         <FormControl>
                           <Input
                             type="password"
