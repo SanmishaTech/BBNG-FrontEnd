@@ -187,18 +187,10 @@ const Login = () => {
         <div className="grid gap-2 relative pb-3">
           {" "}
           {/* Added pb-3 for error spacing */}
-          <div className="flex items-center">
-            <Label htmlFor="password">Password</Label>
-            <a
-              href="/forgot-password"
-              tabIndex={isLoading ? -1 : 0} // Prevent tabbing when disabled
-              className="ml-auto text-sm underline-offset-2 hover:underline"
-            >
-              Forgot your password?
-            </a>
-          </div>
+          <Label htmlFor="password">Password</Label>
           <PasswordInput
             id="password"
+            placeholder="Enter your password"
             {...register("password")} // RHF validation triggers on change/blur
             required
             disabled={isLoading}
@@ -212,6 +204,13 @@ const Login = () => {
               {errors.password.message}
             </p>
           )}
+           <a
+              href="/forgot-password"
+              tabIndex={isLoading ? -1 : 0} // Prevent tabbing when disabled
+              className="ml-auto text-sm underline-offset-2 hover:underline"
+            >
+              Forgot your password?
+            </a>
         </div>
 
         {/* Submit Button */}

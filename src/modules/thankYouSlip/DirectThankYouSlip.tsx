@@ -116,11 +116,11 @@ const DirectThankYouSlip: React.FC = () => {
     }
   );
 
-  // Create thank you slip mutation
+  // Create done deal mutation
   const createSlipMutation = useMutation(createDirectThankYouSlip, {
     onSuccess: () => {
       queryClient.invalidateQueries("thankYouSlips");
-      toast.success("Thank you slip created successfully!");
+      toast.success("Done deal created successfully!");
       form.reset({
         date: new Date(),
         chapterId: form.getValues("chapterId"), // Keep the chapter
@@ -133,7 +133,7 @@ const DirectThankYouSlip: React.FC = () => {
     },
     onError: (error: any) => {
       toast.error(
-        error.response?.data?.error || "Failed to create thank you slip"
+        error.response?.data?.error || "Failed to create done deal"
       );
     },
   });
@@ -158,9 +158,9 @@ const DirectThankYouSlip: React.FC = () => {
     <div className="p-6">
       <Card className="w-full max-w-4xl mx-auto">
         <CardHeader>
-          <CardTitle>Create Thank You Slip</CardTitle>
+          <CardTitle>Create Done Deal</CardTitle>
           <CardDescription>
-            Create a new thank you slip for a member
+            Create a new done deal for a member
           </CardDescription>
         </CardHeader>
 
@@ -398,7 +398,7 @@ const DirectThankYouSlip: React.FC = () => {
                       Creating...
                     </>
                   ) : (
-                    "Create Thank You Slip"
+                    "Create Done Deal"
                   )}
                 </Button>
               </div>

@@ -5,6 +5,7 @@ import { z } from "zod";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { get, postupload, putupload } from "@/services/apiService"; // Assuming these are correctly implemented
+import { getStates } from "@/services/stateService";
 import {
   Card,
   CardContent,
@@ -40,6 +41,7 @@ import {
 } from "@/components/ui/form";
 import { DatetimePicker } from "@/components/ui/datetime-picker";
 import { getCategories } from "@/services/categoryService";
+import { Label } from "@/components/ui/label";
 import { getSubCategoriesByCategoryId } from "@/services/subCategoryService";
 import { Info } from "lucide-react";
 import {
@@ -73,6 +75,11 @@ interface SubCategory {
   id: number;
   name: string;
   categoryId: number;
+}
+
+interface State {
+  id: number;
+  name: string;
 }
 
 export type MemberFormProps = {
@@ -112,6 +119,7 @@ type BaseMemberFormValues = {
   profilePicture2?: File; // For new uploads
   profilePicture3?: File; // For new uploads
   email: string;
+  stateId?: number;
 };
 
 type CreateMemberFormValues = BaseMemberFormValues & {
@@ -185,6 +193,9 @@ const createMemberSchema = (mode: "create" | "edit") => {
     profilePicture2: z.instanceof(File).optional(),
     profilePicture3: z.instanceof(File).optional(),
     email: z.string().email("Valid email is required"),
+    stateId: z.number({ required_error: "State is required" })
+      .int()
+      .min(1, "State is required"),
   });
 
   if (mode === "create") {
@@ -204,9 +215,9 @@ const createMemberSchema = (mode: "create" | "edit") => {
 };
 
 // Environment variable for the API base URL (recommended)
-// const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://15.207.30.113/";
+// const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000/";
 // For this example, we'll use the hardcoded one if not available.
-const IMAGE_BASE_URL = "http://15.207.30.113/"; // Replace with your actual image base URL
+const IMAGE_BASE_URL = "http://localhost:3000/"; // Replace with your actual image base URL
 
 export default function MemberForm({ mode }: MemberFormProps) {
   const { id } = useParams<{ id: string }>();
@@ -230,6 +241,15 @@ export default function MemberForm({ mode }: MemberFormProps) {
     queryFn: async () => {
       const response = await getCategories();
       return response.categories || [] as Category[];
+    },
+  });
+  
+  // Fetch states from the API
+  const { data: states = [], isLoading: loadingStates } = useQuery({
+    queryKey: ["states"],
+    queryFn: async () => {
+      const response = await getStates();
+      return response.states || [] as State[];
     },
   });
 
@@ -298,6 +318,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
       orgAddressLine2: visitorData?.addressLine2 || "",
       orgLocation: visitorData?.location || "",
       orgPincode: visitorData?.pincode || "",
+      stateId: 0,
       organizationWebsite: "",
       organizationDescription: "",
       addressLine1: visitorData?.addressLine1 || "",
@@ -870,7 +891,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   )}
                 />
               </div>
-              <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+              <div className="grid md:grid-cols-3 gap-4 md:gap-6">
                 <FormField
                   control={form.control}
                   name="orgAddressLine1"
@@ -901,6 +922,34 @@ export default function MemberForm({ mode }: MemberFormProps) {
                     </FormItem>
                   )}
                 />
+                <FormField
+                          control={form.control}
+                          name="stateId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>State</FormLabel>
+                              <FormControl>
+                                <Select
+                                  onValueChange={(value) => field.onChange(parseInt(value))}
+                                  value={field.value?.toString()}
+                                  disabled={loading || loadingStates}
+                                >
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select a state" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {states?.map((state: State) => (
+                                      <SelectItem key={state.id} value={state.id.toString()}>
+                                        {state.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
               </div>
               <div className="grid md:grid-cols-3 gap-4 md:gap-6">
                 <FormField
@@ -1015,6 +1064,44 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   </FormItem>
                 )}
               />
+                 <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+                        
+                        <FormField
+                          control={form.control}
+                          name="category"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Category</FormLabel>
+                              <FormControl>
+                                <Select
+                                  onValueChange={(value) => {
+                                    field.onChange(value);
+                                    // Find the category ID based on selected name
+                                    const categoryObj = categoriesData?.find(cat => cat.name === value);
+                                    if (categoryObj) {
+                                      setSelectedCategoryId(categoryObj.id);
+                                    }
+                                  }}
+                                  value={field.value}
+                                  disabled={loading || loadingCategories}
+                                >
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select a category" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {categoriesData?.map((category: Category) => (
+                                      <SelectItem key={category.id} value={category.name}>
+                                        {category.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
               <div className="grid md:grid-cols-2 gap-4 md:gap-6">
                 <FormField
                   control={form.control}

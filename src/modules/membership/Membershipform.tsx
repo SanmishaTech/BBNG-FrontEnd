@@ -57,7 +57,7 @@ import { useRoleAccess } from "@/hooks/useRoleAccess";
 const MAHARASHTRA_KEYWORDS = ['maharashtra', 'mumbai', 'pune', 'nagpur', 'thane', 'nashik', 'aurangabad', 'solapur', 'navi mumbai'];
 
 /**
- * Determines if a member is from Maharashtra based on GST number or location data
+ * Determines if a member is from Maharashtra based on GST number, state, or location data
  */
 const isMemberFromMaharashtra = (memberData: any): boolean => {
   if (!memberData) return false;
@@ -76,7 +76,13 @@ const isMemberFromMaharashtra = (memberData: any): boolean => {
     }
   }
   
-  // Fall back to location-based checks if GST number is not available or invalid
+  // Second priority: Check stateName field if GST is not provided
+  if (memberData.stateName) {
+    const state = memberData.stateName.toLowerCase();
+    return state.includes('maharashtra') || MAHARASHTRA_KEYWORDS.some(keyword => state.includes(keyword));
+  }
+  
+  // Fall back to location-based checks if neither GST nor state is available
   const locationStrings = [
     memberData.location,
     memberData.orgLocation
@@ -530,7 +536,7 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                             onChange={field.onChange}
                             format={[
                               ["days", "months", "years"],
-                              ["hours", "minutes"]
+                             
                              ]}
                           />
                           <FormMessage />
@@ -718,7 +724,7 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                             onChange={field.onChange}
                             format={[
                               ["days", "months", "years"],
-                              ["hours", "minutes"]
+                             
                              ]}
                           />
                           <FormMessage />
@@ -765,7 +771,7 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                                 onChange={field.onChange}
                                 format={[
                                   ["days", "months", "years"],
-                                  ["hours", "minutes"]
+                                 
                                 ]}
                               />
                               <FormMessage />

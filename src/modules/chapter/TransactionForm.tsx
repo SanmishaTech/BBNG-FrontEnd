@@ -63,13 +63,13 @@ const transactionSchema = z.object({
   transactionDetails: z.string().optional(),
   description: z.string().optional(),
   reference: z.string().optional(),
-  hasInvoice: z.boolean().default(false),
-  gstRate: numberOptional(),
-  gstAmount: numberOptional(),
-  invoiceNumber: z.string().optional(),
-  partyName: z.string().optional(),
-  partyGSTNo: z.string().optional(),
-  partyAddress: z.string().optional(),
+  // hasInvoice: z.boolean().default(false),
+  // gstRate: numberOptional(),
+  // gstAmount: numberOptional(),
+  // invoiceNumber: z.string().optional(),
+  // partyName: z.string().optional(),
+  // partyGSTNo: z.string().optional(),
+  // partyAddress: z.string().optional(),
 });
 
 type TransactionFormInputs = z.infer<typeof transactionSchema>;
@@ -303,7 +303,7 @@ export default function TransactionForm({ mode }: { mode: "create" | "edit" }) {
       )}
     />
 
-    {isCredit && (
+    {/* {isCredit && (
       <FormField
         control={form.control}
         name="hasInvoice"
@@ -328,7 +328,7 @@ export default function TransactionForm({ mode }: { mode: "create" | "edit" }) {
           </FormItem>
         )}
       />
-    )}
+    )} */}
   </div>
 
   <FormField
@@ -453,7 +453,7 @@ export default function TransactionForm({ mode }: { mode: "create" | "edit" }) {
 
 
 
-  {isCredit && hasInvoice && (
+  {/* {isCredit && hasInvoice && (
     <div className="space-y-4 border-t pt-4">
       <h1 className="text-lg font-semibold">Invoice Details</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -543,7 +543,7 @@ export default function TransactionForm({ mode }: { mode: "create" | "edit" }) {
         />
       </div>
     </div>
-  )}
+  )} */}
           </CardContent>
 
           <CardFooter className="flex justify-end space-x-4 pt-6">

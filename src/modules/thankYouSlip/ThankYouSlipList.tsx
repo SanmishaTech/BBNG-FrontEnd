@@ -94,11 +94,11 @@ const ThankYouSlipList = () => {
           currentPage: response.pagination.currentPage,
         });
       } else {
-        toast.error(`Failed to load ${tab} thank you slips`);
+        toast.error(`Failed to load ${tab} done deal`);
       }
     } catch (error) {
-      console.error(`Error loading ${tab} thank you slips:`, error);
-      toast.error(`Failed to load ${tab} thank you slips`);
+      console.error(`Error loading ${tab} done deal:`, error);
+      toast.error(`Failed to load ${tab} done deal`);
     } finally {
       setLoading(false);
     }
@@ -132,9 +132,9 @@ const ThankYouSlipList = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-2xl">Thank You Slips</CardTitle>
+            <CardTitle className="text-2xl">Done Deal</CardTitle>
             <CardDescription>
-              View and manage thank you slips sent and received by you
+              View and manage done deal sent and received by you
             </CardDescription>
           </div>
           <div className="flex gap-2">
@@ -146,9 +146,9 @@ const ThankYouSlipList = () => {
             >
               <RefreshCcw className="h-4 w-4" />
             </Button>
-            <Button onClick={() => navigate("/dashboard/thankyou-slips/create")}>
+            <Button onClick={() => navigate("/dashboard/done-deal/create")}>
               <PlusCircle className="h-4 w-4 mr-2" />
-              Create Thank You Slip
+              Create Done Deal
             </Button>
           </div>
         </CardHeader>
@@ -169,12 +169,12 @@ const ThankYouSlipList = () => {
         </div>
         <CardContent>
           {loading ? (
-            <div className="py-8 text-center">Loading thank you slips...</div>
+            <div className="py-8 text-center">Loading done deal...</div>
           ) : thankYouSlips.length === 0 ? (
             <div className="py-8 text-center">
-              <p className="text-muted-foreground mb-4">No thank you slips found</p>
-              <Button onClick={() => navigate("/dashboard/thankyou-slips/create")}>
-                Create Your First Thank You Slip
+              <p className="text-muted-foreground mb-4">No deal found</p>
+              <Button onClick={() => navigate("/dashboard/done-deal/create")}>
+                Create Your First Deal
               </Button>
             </div>
           ) : (
@@ -238,7 +238,7 @@ const ThankYouSlipList = () => {
             <div className="text-sm text-muted-foreground">
               Showing {((pagination.currentPage - 1) * 10) + 1} to{" "}
               {Math.min(pagination.currentPage * 10, pagination.totalCount)} of{" "}
-              {pagination.totalCount} thank you slips
+              {pagination.totalCount} done deal
             </div>
             <div className="flex gap-1">
               <Button
