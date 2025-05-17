@@ -6,7 +6,7 @@ export interface MemberSearchResult {
   id: number;
   memberName: string;
   organizationName?: string;
-  profilePicture1?: string;
+  profilePicture?: string;
   // Add other relevant member fields you might want to display
 }
 
@@ -21,7 +21,7 @@ export interface ZoneRoleAssignment {
   memberId: number;
   memberName: string;
   organizationName?: string;
-  profilePicture1?: string;
+  profilePicture?: string;
   assignedAt: string; // ISO date string
 }
 

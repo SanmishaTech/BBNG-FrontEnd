@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoIcon, ChevronDownIcon } from "lucide-react";
@@ -21,7 +25,7 @@ export default function ZoneRolesInfo({ zoneId }: ZoneRolesInfoProps) {
   // Fetch zone roles information
   const { data, isLoading, error } = useQuery({
     queryKey: ["zoneRoles", zoneId],
-    queryFn: () => zoneId ? getZoneRoles(zoneId) : Promise.resolve(null),
+    queryFn: () => (zoneId ? getZoneRoles(zoneId) : Promise.resolve(null)),
     enabled: !!zoneId && zoneId > 0,
   });
 
@@ -32,10 +36,10 @@ export default function ZoneRolesInfo({ zoneId }: ZoneRolesInfoProps) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="ml-2 p-1 h-8 w-8" 
+        <Button
+          variant="outline"
+          size="sm"
+          className="ml-2 p-1 h-8 w-8"
           aria-label="View zone roles"
         >
           <InfoIcon className="h-4 w-4" />
@@ -58,22 +62,26 @@ export default function ZoneRolesInfo({ zoneId }: ZoneRolesInfoProps) {
           <div className="space-y-2">
             <div className="text-sm font-medium">Roles for {data.zoneName}</div>
             {data.roles.map((role) => (
-              <div 
-                key={role.assignmentId} 
+              <div
+                key={role.assignmentId}
                 className="flex items-start justify-between border-b pb-2 last:border-0 last:pb-0"
               >
                 <div>
                   <div className="text-sm font-medium">{role.roleType}</div>
-                  <div className="text-xs text-muted-foreground">{role.memberName}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {role.memberName}
+                  </div>
                   {role.organizationName && (
-                    <div className="text-xs text-muted-foreground">{role.organizationName}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {role.organizationName}
+                    </div>
                   )}
                 </div>
-                {role.profilePicture1 && (
+                {role.profilePicture && (
                   <div className="h-8 w-8 rounded-full overflow-hidden">
-                    <img 
-                      src={role.profilePicture1} 
-                      alt={role.memberName} 
+                    <img
+                      src={role.profilePicture}
+                      alt={role.memberName}
                       className="h-full w-full object-cover"
                     />
                   </div>
@@ -85,4 +93,4 @@ export default function ZoneRolesInfo({ zoneId }: ZoneRolesInfoProps) {
       </PopoverContent>
     </Popover>
   );
-} 
+}
