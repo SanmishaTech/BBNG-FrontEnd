@@ -69,8 +69,8 @@ const initialData = {
           icon: UsersRound,
         },
         {
-          name: "Thank You Slips",
-          url: "/dashboard/thankyou-slips",
+          name: "Done Deal",
+          url: "/dashboard/done-deal",
           icon: FileText,
         },
         {

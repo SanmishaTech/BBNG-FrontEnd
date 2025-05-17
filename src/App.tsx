@@ -437,7 +437,7 @@ const App = () => {
             
             {/* Thank You Slip Routes */}
             <Route
-              path="/dashboard/thankyou-slips"
+              path="/dashboard/done-deal"
               element={
                 <ProtectedRoute>
                   <ThankYouSlipList />
@@ -445,7 +445,7 @@ const App = () => {
               }
             />
             <Route
-              path="/dashboard/thankyou-slips/create"
+              path="/dashboard/done-deal/create"
               element={
                 <ProtectedRoute>
                   <DirectThankYouSlipForm />
