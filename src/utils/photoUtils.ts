@@ -3,7 +3,7 @@
  */
 
 const BACKEND_URL =
-  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/";
+  import.meta.env.VITE_BACKEND_URL || "http://15.207.30.113//";
 
 /**
  * Returns the first available photo URL from a member record
@@ -15,7 +15,7 @@ export const getBestMemberPhoto = (
     coverPhoto?: string | null;
     logo?: string | null;
   },
-  placeholder = "https://via.placeholder.com/100",
+  placeholder = "https://via.placeholder.com/100"
 ): string => {
   if (member.profilePicture) {
     return `${BACKEND_URL}/uploads/members/${member.profilePicture}`;

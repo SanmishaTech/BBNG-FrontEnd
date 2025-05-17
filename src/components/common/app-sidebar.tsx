@@ -43,55 +43,42 @@ const initialData = {
   roles: {
     super_admin: {
       projects: [
-
-        {
-          name: "Dashboard",
-          url: "/dashboard",
-          icon: UsersRound, 
-        },
         
-       
-      
         {
-          name: "Messages",
-          url: "/messages",
-          icon: MessageCircle,
-        },
-        {
-          name: "Chapter Meetings",
-          url: "/chaptermeetings",
-          icon: UsersRound,
-        },
-
-        {
-          name: "Chapter Visitors",
-          url: "/chapter-visitors",
-          icon: UsersRound,
-        },
-        {
-          name: "Done Deal",
-          url: "/dashboard/done-deal",
-          icon: FileText,
-        },
-        {
-          name: "Requirements",
-          url: "/requirements",
-          icon: BookOpen,
-        },
-        {
-          name: "View Requirements",
-          url: "/viewrequirements",
-          icon: BookOpen,
-        },
-        {
-          name: "One-to-One Meetings",
-          url: "/one-to-ones",
-          icon: BookOpen,
-        },
-        {
-          name: "References",
+          title: "References",
           url: "/references",
           icon: BookOpen,
+          isActive: false,
+          items: [
+            { title: "References", url: "/references" },
+          ],
+        },
+        {
+          title: "Done Deals",
+          url: "/dashboard/done-deal",
+          icon: FileText,
+          isActive: false,
+          items: [
+            { title: "Done Deals", url: "/dashboard/done-deal" },
+          ],
+        },
+        {
+          title: "One To Ones",
+          url: "/one-to-ones",
+          icon: BookOpen,
+          isActive: false,
+          items: [
+            { title: "One To Ones", url: "/one-to-ones" },
+          ],
+        },
+        {
+          title: "Requirements",
+          url: "/requirements",
+          icon: BookOpen,
+          isActive: false,
+          items: [
+            { title: "Requirements", url: "/requirements" },
+          ],
         }
       ],
       navMain: [
@@ -111,67 +98,60 @@ const initialData = {
     admin: {
       projects: [
         {
-          name: "Dashboard",
-          url: "/dashboard",
-          icon: UsersRound, 
+          title: "Master",
+          url: "#",
+          icon: SquareTerminal,
+          isActive: false,
+          items: [
+            { title: "Zone", url: "/zones" },
+            { title: "Location", url: "/location" },
+            { title: "Business Category", url: "/categories" },
+            { title: "Power Teams", url: "/powerteams" },
+            { title: "Messages", url: "/messages" },
+            { title: "Chapters", url: "/chapters" },  
+            { title: "Members", url: "/members" },
+            
+            { title: "Site Settings", url: "/site" },
+            { title: "Meetings", url: "/chaptermeetings" },
+            { title: "Trainings", url: "/trainings" },
+           ],
         },
         {
-          name: "Manage States",
-          url: "/states",
-          icon: UsersRound,
+          title: "References",
+          url: "/references",
+          icon: BookOpen,
+          isActive: false,
+          items: [
+            { title: "References", url: "/references" },
+          ],
         },
         {
-          name: "Manage Zones",
-          url: "/zones",
-          icon: UsersRound,
+          title: "Done Deals",
+          url: "/dashboard/done-deal",
+          icon: FileText,
+          isActive: false,
+          items: [
+            { title: "Done Deals", url: "/dashboard/done-deal" },
+          ],
         },
         {
-          name: "Manage Locations",
-          url: "/location",
-          icon: UsersRound,
+          title: "One To Ones",
+          url: "/one-to-ones",
+          icon: BookOpen,
+          isActive: false,
+          items: [
+            { title: "One To Ones", url: "/one-to-ones" },
+          ],
         },
         {
-          name: "Manage Chapters",
-          url: "/chapters",
-          icon: UsersRound,
-        },
-        {
-          name: "Manage Packages",
-          url: "/packages",
-          icon: UsersRound,
-        },
-        {
-          name: "Manage Members",
-          url: "/members",
-          icon: UsersRound,
-        },
-        {
-          name: "Manage Memberships",
-          url: "/memberships",
-          icon: UsersRound,
-        },
-        {
-          name: "Manage Categories",
-          url: "/categories",
-          icon: UsersRound,
-        },
-        {
-          name: "Manage Sub-Categories",
-          url: "/sub-categories",
-          icon: UsersRound,
-        },
-
-        {
-          name: "Manage Trainings",
-          url: "/trainings",
-          icon: UsersRound,
-        },
-        {
-          name: "Manage Messages",
-          url: "/messages",
-          icon: UsersRound,
-        },
-       
+          title: "Requirements",
+          url: "/requirements",
+          icon: BookOpen,
+          isActive: false,
+          items: [
+            { title: "Requirements", url: "/requirements" },
+          ],
+        }
       ],
 
       // navMain: [
@@ -330,7 +310,7 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavProjects projects={data.projects || []} />
+        <NavMain items={data.projects || []} />
         <NavMain items={data.navMain || []} />
       </SidebarContent>
       <SidebarFooter>

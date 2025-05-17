@@ -88,6 +88,8 @@ const Login = () => {
       localStorage.setItem("authToken", data.token);
       localStorage.setItem("refreshToken", data.accesstoken);
       localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("roles", JSON.stringify(data.user.accessibleChapters));
+
       
       // Store memberId from the nested structure if it exists
       if (data.user.member && data.user.member.id) {
