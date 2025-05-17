@@ -87,9 +87,9 @@ type BaseMemberFormValues = {
   specificAsk?: string;
   specificGive?: string;
   clients?: string;
-  profilePicture1?: File; // For new uploads
-  profilePicture2?: File; // For new uploads
-  profilePicture3?: File; // For new uploads
+  profilePicture?: File; // For new uploads
+  coverPhoto?: File; // For new uploads
+  logo?: File; // For new uploads
   email: string;
 };
 
@@ -153,9 +153,9 @@ const createMemberSchema = (mode: "create" | "edit") => {
     specificAsk: z.string().optional(),
     specificGive: z.string().optional(),
     clients: z.string().optional(),
-    profilePicture1: z.instanceof(File).optional(),
-    profilePicture2: z.instanceof(File).optional(),
-    profilePicture3: z.instanceof(File).optional(),
+    profilePicture: z.instanceof(File).optional(),
+    coverPhoto: z.instanceof(File).optional(),
+    logo: z.instanceof(File).optional(),
     email: z.string().email("Valid email is required"),
   });
 
@@ -176,13 +176,14 @@ const createMemberSchema = (mode: "create" | "edit") => {
 };
 
 // Environment variable for the API base URL (recommended)
-// const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000/";
+// const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://15.207.30.113/";
 // For this example, we'll use the hardcoded one if not available.
-const IMAGE_BASE_URL = "http://localhost:3000/"; // Replace with your actual image base URL
+const IMAGE_BASE_URL =
+  import.meta.env.VITE_BACKEND_URLND_URL || "http://15.207.30.113/"; // Replace with your actual image base URL
 
 export default function MemberForm({ mode }: MemberFormProps) {
   // const { id } = useParams<{ id: string }>();
-  const id = JSON.parse(localStorage.getItem("user"))?.id;
+  const id = JSON.parse(localStorage.getItem("user"))?.member?.id;
   console.log("ID from localStorage:", id);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -233,9 +234,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
       specificAsk: "",
       specificGive: "",
       clients: "",
-      profilePicture1: undefined,
-      profilePicture2: undefined,
-      profilePicture3: undefined,
+      profilePicture: undefined,
+      coverPhoto: undefined,
+      logo: undefined,
       email: "",
       ...(mode === "create" ? { password: "", verifyPassword: "" } : {}),
     } as FormValues,
@@ -249,15 +250,15 @@ export default function MemberForm({ mode }: MemberFormProps) {
     queryFn: async () => {
       const apiData = await get(`/api/members/${id}`);
       const {
-        profilePicture1, // Raw path from API
-        profilePicture2, // Raw path from API
-        profilePicture3, // Raw path from API
+        profilePicture, // Raw path from API
+        coverPhoto, // Raw path from API
+        logo, // Raw path from API
         chapter,
         ...restApiData
       } = apiData;
 
       // Process and validate image paths from API
-      const apiImagePaths = [profilePicture1, profilePicture2, profilePicture3];
+      const apiImagePaths = [profilePicture, coverPhoto, logo];
       const processedImagePaths = apiImagePaths.map((path) => {
         if (
           path &&
@@ -278,9 +279,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
         chapterId: chapter?.id || apiData.chapterId,
         dob: apiData.dob ? new Date(apiData.dob) : new Date(),
         // Form fields for new files should be undefined
-        profilePicture1: undefined,
-        profilePicture2: undefined,
-        profilePicture3: undefined,
+        profilePicture: undefined,
+        coverPhoto: undefined,
+        logo: undefined,
         mobile2: apiData.mobile2 || null,
         organizationEmail: apiData.organizationEmail || "",
         organizationWebsite: apiData.organizationWebsite || "",
@@ -954,11 +955,12 @@ export default function MemberForm({ mode }: MemberFormProps) {
               <div className="grid md:grid-cols-3 gap-6">
                 {[0, 1, 2].map((index) => {
                   // existingImageUrls is an array of (string | null)
+
                   // existingImageUrls[index] gives the relative path or null for the current slot
                   const relativeImagePath = existingImageUrls[index];
                   const fieldName = `profilePicture${
                     index + 1
-                  }` as keyof FormValues; // profilePicture1, profilePicture2, profilePicture3
+                  }` as keyof FormValues; // profilePicture, coverPhoto, logo
 
                   // Construct full URL for display only if a valid relative path exists
                   const displayUrl = relativeImagePath
