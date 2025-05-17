@@ -82,6 +82,18 @@ interface Member {
 
 const DirectThankYouSlipForm = () => {
   const navigate = useNavigate();
+
+  const userData = (() => {
+    const userStr = localStorage.getItem('user');
+    try {
+      return userStr ? JSON.parse(userStr) : null;
+    } catch (e) {
+      console.error("Error parsing user data from localStorage:", e);
+      return null;
+    }
+  })();
+  const loggedInUserMemberId = userData?.member?.id;
+
   const [loading, setLoading] = useState(true);
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
@@ -136,13 +148,21 @@ const DirectThankYouSlipForm = () => {
       setLoadingMembers(true);
       const response = await get(`/thankyou-slips/members/chapter/${chapterId}`);
       
-      if (response && response.members) {
-        setMembers(response.members);
+      if (response && Array.isArray(response.members)) {
+        let fetchedMembers = response.members;
+        if (loggedInUserMemberId) {
+          fetchedMembers = fetchedMembers.filter(
+            (member: Member) => member.id !== loggedInUserMemberId
+          );
+        }
+        setMembers(fetchedMembers);
       } else {
-        toast.error("Failed to load members");
+        setMembers([]); // Clear members if response is not as expected
+        toast.error("Failed to load members or unexpected format");
       }
     } catch (error) {
       console.error("Error loading members:", error);
+      setMembers([]); // Clear members on error
       toast.error("Failed to load members");
     } finally {
       setLoadingMembers(false);

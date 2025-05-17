@@ -372,12 +372,12 @@ const MemberList = () => {
                       </div>
                     </TableHead>
                      <TableHead
-                      onClick={() => handleSort("expiryDate")}
+                      onClick={() => handleSort("hoExpiryDate")}
                       className="cursor-pointer"
                     >
                       <div className="flex items-center">
-                        <span>Expiry</span>
-                        {sortBy === "expiryDate" && (
+                        <span>HO Status</span>
+                        {sortBy === "hoExpiryDate" && (
                           <span className="ml-1">
                             {sortOrder === "asc" ? (
                               <ChevronUp size={16} />
@@ -388,6 +388,24 @@ const MemberList = () => {
                         )}
                       </div>
                     </TableHead>
+                    <TableHead
+                      onClick={() => handleSort("venueExpiryDate")}
+                      className="cursor-pointer"
+                    >
+                      <div className="flex items-center">
+                        <span>Venue Status</span>
+                        {sortBy === "venueExpiryDate" && (
+                          <span className="ml-1">
+                            {sortOrder === "asc" ? (
+                              <ChevronUp size={16} />
+                            ) : (
+                              <ChevronDown size={16} />
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    </TableHead>
+                   
                     <TableHead>Actions</TableHead>
 
                   </TableRow>
@@ -406,27 +424,46 @@ const MemberList = () => {
                           <Badge variant="secondary">Inactive</Badge>
                         )}
                       </TableCell>
+                      {/* HO Status Column */}
                       <TableCell>
-                        {member.isActive ? (
-                          <div className="flex flex-col">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">{member.expiryDate ? formatDate(member.expiryDate) : 'N/A'}</span>
-                              {/* {member.expiryType && (
-                                <Badge variant="outline" className="w-fit">
-                                  {member.expiryType}
-                                </Badge>
-                              )} */}
-                            </div>
-                            {member.daysUntilExpiry && (
-                              <span className={`text-xs mt-1 ${member.daysUntilExpiry < 30 ? 'text-red-600 font-medium' : 'text-muted-foreground'}`}>
-                                {member.daysUntilExpiry} days left
-                              </span>
-                            )}
-                          </div>
+                        {member.hoExpiryDate ? (
+                          <Badge
+                            className={
+                              new Date(member.hoExpiryDate) >= new Date()
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }
+                          >
+                            {new Date(member.hoExpiryDate) >= new Date() ? "Active" : "Inactive"}
+                          </Badge>
                         ) : (
-                          <Badge variant="destructive" className="bg-red-500 hover:bg-red-600">Expired</Badge>
+                          <Badge className="bg-blue-100 text-blue-800">
+                            No Membership
+                          </Badge>
                         )}
                       </TableCell>
+                      
+                      {/* Venue Status Column */}
+                      <TableCell>
+                        {member.venueExpiryDate ? (
+                          <Badge
+                            className={
+                              new Date(member.venueExpiryDate) >= new Date()
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }
+                          >
+                            {new Date(member.venueExpiryDate) >= new Date() ? "Active" : "Inactive"}
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-blue-100 text-blue-800">
+                            No Membership
+                          </Badge>
+                        )}
+                      </TableCell>
+                      
+                      {/* Overall Status Column */}
+                       
                       <TableCell>
                         <div className="flex gap-2">
                           <Button

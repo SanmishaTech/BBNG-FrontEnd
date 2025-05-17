@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { get, del } from "@/services/apiService";
+import { get } from "@/services/apiService";
 import { format } from "date-fns";
-import { Pencil, Eye, Trash, Plus, Search } from "lucide-react";
+import { Pencil, Eye, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,17 +28,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { toast } from 'sonner';
 
 interface Reference {
@@ -118,17 +107,6 @@ const ReferenceList = () => {
       setSortOrder("asc");
     }
     setCurrentPage(1);
-  };
-
-  const handleDeleteReference = async (id: number) => {
-    try {
-      await del(`/references/${id}`);
-      toast.success("Reference deleted successfully");
-      loadReferences();
-    } catch (error) {
-      console.error("Error deleting reference:", error);
-      toast.error("Failed to delete reference");
-    }
   };
 
   const getStatusBadgeClass = (status: string) => {
@@ -253,30 +231,6 @@ const ReferenceList = () => {
                             <Pencil className="h-4 w-4" />
                           </Button>
                         </Link>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="outline" size="icon" className="text-red-500">
-                              <Trash className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Reference</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete this reference? This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDeleteReference(reference.id)}
-                                className="bg-red-500 hover:bg-red-600"
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -319,4 +273,4 @@ const ReferenceList = () => {
   );
 };
 
-export default ReferenceList; 
+export default ReferenceList;

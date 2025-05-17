@@ -314,11 +314,11 @@ const GivenReferences = () => {
             </Link>
             
             <AlertDialog>
-              <AlertDialogTrigger asChild>
+              {/* <AlertDialogTrigger asChild>
                 <Button variant="ghost" size="sm" className="text-red-500">
                   <Trash className="h-4 w-4" />
                 </Button>
-              </AlertDialogTrigger>
+              </AlertDialogTrigger> */}
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Delete Reference</AlertDialogTitle>

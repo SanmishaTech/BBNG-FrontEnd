@@ -306,13 +306,13 @@ function MembershipList({ memberId }: MembershipListProps) {
                               >
                                 <Edit size={16} />
                               </Button>
-                              <Button
+                             {/* <Button
                                 variant="destructive"
                                 size="sm"
                                 onClick={() => confirmDelete(membership.id)}
                               >
                                 <Trash2 size={16} />
-                              </Button>
+                              </Button> */}
                             </div>
                           </TableCell>
                         )}

@@ -1,13 +1,14 @@
-import { get, post, put, del, postupload, putupload } from './apiService';
+import { get, postupload, putupload, del } from './apiService';
 
 export interface MessageData {
   id: number;
   heading: string;
-  powerteam: string;
   message: string;
   attachment: string | null;
   createdAt: string;
   updatedAt: string;
+  chapterId?: number;
+  powerTeamId?: number;
 }
 
 export interface MessageListResponse {
@@ -26,7 +27,8 @@ export const getMessages = async (
   search: string = '',
   sortBy: string = 'createdAt',
   sortOrder: string = 'desc',
-  powerteam: string = ''
+  chapterId?: number,
+  powerTeamId?: number
 ): Promise<MessageListResponse> => {
   const queryParams = new URLSearchParams({
     page: page.toString(),
@@ -36,8 +38,11 @@ export const getMessages = async (
     search,
   });
 
-  if (powerteam) {
-    queryParams.append('powerteam', powerteam);
+  if (chapterId !== undefined) {
+    queryParams.append('chapterId', chapterId.toString());
+  }
+  if (powerTeamId !== undefined) {
+    queryParams.append('powerTeamId', powerTeamId.toString());
   }
 
   return get(`/messages?${queryParams.toString()}`);
@@ -51,9 +56,17 @@ export const getMessage = async (id: string): Promise<MessageData> => {
 };
 
 /**
- * Creates a new message with support for file attachment
+ * Creates a new message with support for file attachment.
+ * formData should include heading, message, and optionally an attachment file.
+ * chapterId or powerTeamId should be appended to formData by the calling component based on user role/selection.
  */
 export const createMessage = async (formData: FormData): Promise<MessageData> => {
+  // The calling component (e.g., MessageForm.tsx) will be responsible for appending
+  // 'chapterId' or 'powerTeamId' to the formData before calling this service.
+  // Example: 
+  // if (selectedChapterId) formData.append('chapterId', selectedChapterId.toString());
+  // else if (selectedPowerTeamId) formData.append('powerTeamId', selectedPowerTeamId.toString());
+  
   return postupload('/messages', formData);
 };
 

@@ -1,19 +1,27 @@
-import React, { useEffect, useState, useRef } from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
+import { useEffect, useState, useRef } from "react";
+import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { LoaderCircle, Upload, X, FileText, Paperclip } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { getMessage, createMessage, updateMessage } from "@/services/messageService";
-import Validate from "@/lib/Handlevalidation";
+import { getMessage, createMessage, updateMessage, MessageData } from "@/services/messageService"; 
+import { get } from "@/services/apiService"; 
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024; 
 const ACCEPTED_FILE_TYPES = [
   "application/pdf",
   "application/msword",
@@ -29,9 +37,6 @@ const messageFormSchema = z.object({
   heading: z.string()
     .min(1, "Heading is required")
     .max(255, "Heading must not exceed 255 characters"),
-  powerteam: z.string()
-    .min(1, "Power team is required")
-    .max(100, "Power team must not exceed 100 characters"),
   message: z.string()
     .min(1, "Message is required")
     .max(5000, "Message must not exceed 5000 characters"),
@@ -53,6 +58,9 @@ const messageFormSchema = z.object({
       { message: "Unsupported file type. Allowed: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, TXT" }
     ),
   removeAttachment: z.boolean().optional(),
+  targetType: z.enum(['chapter', 'powerTeam']).optional(), 
+  selectedChapterId: z.string().optional(), 
+  selectedPowerTeamId: z.string().optional(), 
 });
 
 type MessageFormInputs = z.infer<typeof messageFormSchema>;
@@ -70,6 +78,16 @@ interface AttachmentInfo {
   size: number;
 }
 
+interface Chapter {
+  id: number | string;
+  name: string;
+}
+
+interface PowerTeam {
+  id: number | string;
+  name: string;
+}
+
 const MessageForm = ({
   mode,
   messageId,
@@ -78,15 +96,25 @@ const MessageForm = ({
 }: MessageFormProps) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); 
   const [currentAttachment, setCurrentAttachment] = useState<AttachmentInfo | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Get user data from localStorage
+  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [powerTeams, setPowerTeams] = useState<PowerTeam[]>([]);
+  const [isFetchingDropdownData, setIsFetchingDropdownData] = useState(false);
+
   const userData = (() => {
     const userStr = localStorage.getItem('user');
-    return userStr ? JSON.parse(userStr) : null;
+    try {
+      return userStr ? JSON.parse(userStr) : null;
+    } catch (e) {
+      console.error("Error parsing user data from localStorage:", e);
+      return null;
+    }
   })();
+  const userRole = userData?.role;
+  const userMemberChapterId = userData?.member?.chapterId;
 
   const {
     register,
@@ -95,25 +123,76 @@ const MessageForm = ({
     setError,
     watch,
     reset,
+    control, 
     formState: { errors },
   } = useForm<MessageFormInputs>({
     resolver: zodResolver(messageFormSchema),
     defaultValues: {
       heading: "",
-      powerteam: "",
       message: "",
       removeAttachment: false,
+      targetType: 'chapter',
+      selectedChapterId: '',
+      selectedPowerTeamId: '',
     },
   });
 
   const selectedFile = watch("attachment");
+  const formTargetType = watch("targetType"); 
+  const formSelectedChapterId = watch("selectedChapterId");
+  const formSelectedPowerTeamId = watch("selectedPowerTeamId");
   const removeAttachment = watch("removeAttachment");
 
-  // Query for fetching message data in edit mode
-  const { isLoading: isFetchingMessage } = useQuery({
+  useEffect(() => {
+    if (userRole === 'admin') {
+      const fetchDropdownData = async () => {
+        setIsFetchingDropdownData(true);
+        try {
+          const [chaptersRes, powerTeamsRes] = await Promise.all([
+            get('/chapters'), 
+            get('/powerteams') 
+          ]);
+
+          if (Array.isArray(chaptersRes?.chapters)) {
+            setChapters(chaptersRes.chapters);
+          } else if (Array.isArray(chaptersRes?.data?.chapters)) { 
+            setChapters(chaptersRes.data.chapters);
+          } else if (Array.isArray(chaptersRes)) { 
+            setChapters(chaptersRes);
+          } else {
+            setChapters([]);
+            console.error("Unexpected format for chapters list or chapters array not found:", chaptersRes);
+            toast.error("Failed to load chapters: Unexpected format.");
+          }
+
+          if (Array.isArray(powerTeamsRes?.powerTeams)) {
+            setPowerTeams(powerTeamsRes.powerTeams);
+          } else if (Array.isArray(powerTeamsRes?.data?.powerTeams)) { 
+            setPowerTeams(powerTeamsRes.data.powerTeams);
+          } else if (Array.isArray(powerTeamsRes)) { 
+            setPowerTeams(powerTeamsRes);
+          } else {
+            setPowerTeams([]);
+            console.error("Unexpected format for power teams list or powerTeams array not found:", powerTeamsRes);
+            toast.error("Failed to load power teams: Unexpected format.");
+          }
+
+        } catch (error) {
+          toast.error("Failed to load chapters or power teams.");
+          console.error("Error fetching dropdown data:", error);
+          setChapters([]); 
+          setPowerTeams([]); 
+        }
+        setIsFetchingDropdownData(false);
+      };
+      fetchDropdownData();
+    }
+  }, [userRole]);
+
+  const { data: existingMessageData, isLoading: isFetchingMessage } = useQuery<MessageData, Error>({
     queryKey: ["message", messageId],
     queryFn: async () => {
-      if (!messageId) throw new Error("Message ID is required");
+      if (!messageId) throw new Error("Message ID is required for edit mode.");
       return getMessage(messageId);
     },
     enabled: mode === "edit" && !!messageId,
@@ -121,331 +200,299 @@ const MessageForm = ({
     refetchOnWindowFocus: false,
   });
 
-  // Handle successful message fetch
   useEffect(() => {
-    if (mode === "edit" && messageId) {
-      queryClient.fetchQuery({
-        queryKey: ["message", messageId],
-        queryFn: async () => {
-          return getMessage(messageId);
-        },
-      }).then((data) => {
-        setValue("heading", data.heading);
-        setValue("powerteam", data.powerteam);
-        setValue("message", data.message);
+    if (mode === "edit" && existingMessageData) {
+      setValue("heading", existingMessageData.heading);
+      setValue("message", existingMessageData.message);
 
-        // Parse attachment info
-        if (data.attachment) {
-          try {
-            const attachmentInfo = JSON.parse(data.attachment);
-            setCurrentAttachment({
-              originalname: attachmentInfo.originalname,
-              mimetype: attachmentInfo.mimetype,
-              size: attachmentInfo.size,
-            });
-          } catch (e) {
-            console.error("Error parsing attachment data:", e);
-          }
+      if (userRole === 'admin') {
+        if (existingMessageData.chapterId) {
+          setValue('targetType', 'chapter');
+          setValue('selectedChapterId', existingMessageData.chapterId.toString());
+        } else if (existingMessageData.powerTeamId) {
+          setValue('targetType', 'powerTeam');
+          setValue('selectedPowerTeamId', existingMessageData.powerTeamId.toString());
         }
-      }).catch((error) => {
-        toast.error(error.message || "Failed to fetch message details");
-        if (onSuccess) {
-          onSuccess();
-        } else {
-          navigate("/messages");
+      }
+
+      if (existingMessageData.attachment) {
+        try {
+          const attachmentInfo = JSON.parse(existingMessageData.attachment);
+          setCurrentAttachment({
+            originalname: attachmentInfo.originalname,
+            mimetype: attachmentInfo.mimetype,
+            size: attachmentInfo.size,
+          });
+        } catch (e) {
+          console.error("Error parsing attachment data:", e);
+          setCurrentAttachment(null); 
         }
-      });
+      }
     }
-  }, [messageId, mode, setValue, queryClient, navigate, onSuccess]);
+  }, [mode, existingMessageData, setValue, userRole]);
+  
+  const mutationOptions = {
+    onSuccess: (_data: MessageData) => { 
+      setIsLoading(false);
+      toast.success(`Message ${mode === 'create' ? 'created' : 'updated'} successfully!`);
+      queryClient.invalidateQueries({ queryKey: ['messages'] }); 
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        navigate("/messages"); 
+      }
+      reset(); 
+    },
+    onError: (error: any) => {
+      setIsLoading(false);
+      const errorMsg = error.response?.data?.errors?.message || error.response?.data?.message || error.message || "An unexpected error occurred.";
+      toast.error(errorMsg);
+      if (error.response?.data?.errors) {
+        Object.entries(error.response.data.errors).forEach(([key, value]) => {
+          setError(key as keyof MessageFormInputs, { type: 'manual', message: value as string });
+        });
+      }
+    },
+  };
 
-  // Handle form submission
+  const createMessageMutation = useMutation<MessageData, Error, FormData>({
+    mutationFn: createMessage, 
+    ...mutationOptions
+  });
+  const updateMessageMutation = useMutation<MessageData, Error, { id: string; formData: FormData }>({
+    mutationFn: (payload: { id: string; formData: FormData }) => updateMessage(payload.id, payload.formData),
+    ...mutationOptions
+  });
+
   const onSubmit: SubmitHandler<MessageFormInputs> = (data) => {
+    setIsLoading(true);
     const formData = new FormData();
     formData.append("heading", data.heading);
-    formData.append("powerteam", data.powerteam);
     formData.append("message", data.message);
     
-    // Handle file attachment
     if (data.attachment && data.attachment[0]) {
       formData.append("attachment", data.attachment[0]);
-      console.log("Adding attachment to form data:", data.attachment[0].name);
     }
     
-    // Handle attachment removal in edit mode
     if (mode === "edit" && data.removeAttachment) {
       formData.append("removeAttachment", "true");
     }
-    
-    // Add chapterId from the user data if creating a message
-    if (mode === "create") {
-      // Check if user has member data with chapterId
-      const chapterId = userData?.member?.chapterId || null;
-      
-      // Add chapterId to form data (will be null if no chapterId exists)
-      if (chapterId !== null) {
-        formData.append("chapterId", chapterId.toString());
-        console.log("Adding chapterId to form data:", chapterId);
-      } else {
-        console.log("No chapterId found in user data, setting to null");
-        formData.append("chapterId", "null");
-      }
-    }
 
-    // Log form data entries for debugging
-    console.log("Form data entries:");
-    for (const pair of formData.entries()) {
-      console.log(pair[0], pair[1] instanceof File ? `${pair[1].name} (${pair[1].size} bytes)` : pair[1]);
+    if (userRole === 'admin') {
+      if (formTargetType === 'chapter') {
+        if (!formSelectedChapterId) {
+          toast.error("Please select a chapter.");
+          setError('selectedChapterId', { type: 'manual', message: 'Chapter is required.' });
+          setIsLoading(false);
+          return;
+        }
+        formData.append('chapterId', formSelectedChapterId);
+      } else if (formTargetType === 'powerTeam') {
+        if (!formSelectedPowerTeamId) {
+          toast.error("Please select a power team.");
+          setError('selectedPowerTeamId', { type: 'manual', message: 'Power team is required.' });
+          setIsLoading(false);
+          return;
+        }
+        formData.append('powerTeamId', formSelectedPowerTeamId);
+      } else {
+        toast.error("Please select a target (chapter or power team).");
+        setIsLoading(false);
+        return; 
+      }
+    } else if (userRole === 'member') {
+      if (!userMemberChapterId) {
+        toast.error("Your chapter information is missing. Cannot send message.");
+        setIsLoading(false);
+        return;
+      }
+      formData.append('chapterId', userMemberChapterId.toString());
+    } else {
+      toast.error("You are not authorized to send messages.");
+      setIsLoading(false);
+      return;
     }
 
     if (mode === "create") {
       createMessageMutation.mutate(formData);
-    } else {
-      updateMessageMutation.mutate({ id: messageId!, formData });
+    } else if (mode === "edit" && messageId) {
+      updateMessageMutation.mutate({ id: messageId, formData });
     }
   };
 
-  // Mutation for creating a message
-  const createMessageMutation = useMutation({
-    mutationFn: (formData: FormData) => {
-      return createMessage(formData);
-    },
-    onSuccess: () => {
-      toast.success("Message created successfully");
-      queryClient.invalidateQueries({ queryKey: ["messages"] });
-      reset();
-      if (onSuccess) {
-        onSuccess();
-      } else {
-        navigate("/messages");
-      }
-    },
-    onError: (error: any) => {
-      Validate(error, setError);
-      if (error.errors?.message) {
-        toast.error(error.errors.message);
-      } else if (error.message) {
-        toast.error(error.message);
-      } else {
-        toast.error("Failed to create message");
-      }
-    },
-  });
-
-  // Mutation for updating a message
-  const updateMessageMutation = useMutation({
-    mutationFn: ({ id, formData }: { id: string; formData: FormData }) => {
-      return updateMessage(id, formData);
-    },
-    onSuccess: () => {
-      toast.success("Message updated successfully");
-      queryClient.invalidateQueries({ queryKey: ["messages"] });
-      if (messageId) {
-        queryClient.invalidateQueries({ queryKey: ["message", messageId] });
-      }
-      if (onSuccess) {
-        onSuccess();
-      } else {
-        navigate("/messages");
-      }
-    },
-    onError: (error: any) => {
-      Validate(error, setError);
-      if (error.errors?.message) {
-        toast.error(error.errors.message);
-      } else if (error.message) {
-        toast.error(error.message);
-      } else {
-        toast.error("Failed to update message");
-      }
-    },
-  });
-
-  const handleCancel = () => {
-    if (onSuccess) {
-      onSuccess();
-    } else {
-      navigate("/messages");
-    }
-  };
-
-  const handleRemoveAttachment = () => {
+  const handleFileDeselect = () => {
+    setValue("attachment", null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-    setValue("attachment", undefined);
-    setValue("removeAttachment", true);
-    setCurrentAttachment(null);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValue("removeAttachment", false);
-    
-    // Log file selection for debugging
-    if (e.target.files && e.target.files.length > 0) {
-      console.log("File selected:", e.target.files[0].name);
+    if (mode === "edit" && currentAttachment) {
+        setValue("removeAttachment", true);
     }
   };
 
-  // Combined loading state from fetch and mutations
-  const isFormLoading = isLoading || isFetchingMessage || createMessageMutation.isPending || updateMessageMutation.isPending;
-
-  // Register the file input with react-hook-form but also keep our local ref
-  const attachmentRegister = register("attachment", { onChange: handleFileChange });
+  const handleRemoveCurrentAttachment = () => {
+    setCurrentAttachment(null);
+    setValue("removeAttachment", true); 
+  };
 
   return (
-    <div className={className}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-7">
-        {/* Heading Field */}
-        <div className="grid gap-2 relative">
-          <Label htmlFor="heading">Heading</Label>
-          <Input
-            id="heading"
-            placeholder="Enter message heading"
-            {...register("heading")}
-            disabled={isFormLoading}
-          />
-          {errors.heading && (
-            <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
-              {errors.heading.message}
-            </span>
-          )}
-        </div>
+    <form onSubmit={handleSubmit(onSubmit)} className={`space-y-6 ${className || ''}`}>
+      {/* Heading Field */}
+      <div>
+        <Label htmlFor="heading">Heading</Label>
+        <Input id="heading" {...register("heading")} placeholder="Enter message heading" />
+        {errors.heading && <p className="text-sm text-red-500 mt-1">{errors.heading.message}</p>}
+      </div>
 
-        {/* Power Team Field */}
-        <div className="grid gap-2 relative">
-          <Label htmlFor="powerteam">Power Team</Label>
-          <Input
-            id="powerteam"
-            placeholder="Enter power team name"
-            {...register("powerteam")}
-            disabled={isFormLoading}
-          />
-          {errors.powerteam && (
-            <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
-              {errors.powerteam.message}
-            </span>
-          )}
-        </div>
-
-        {/* Message Field */}
-        <div className="grid gap-2 relative">
-          <Label htmlFor="message">Message</Label>
-          <Textarea
-            id="message"
-            placeholder="Enter your message"
-            {...register("message")}
-            disabled={isFormLoading}
-            rows={6}
-          />
-          {errors.message && (
-            <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
-              {errors.message.message}
-            </span>
-          )}
-        </div>
-
-        {/* Attachment Field */}
-        <div className="grid gap-2 relative">
-          <Label htmlFor="attachment">Attachment</Label>
-          
-          {/* Current attachment (edit mode) */}
-          {mode === "edit" && currentAttachment && !removeAttachment && (
-            <div className="flex items-center gap-2 p-2 border rounded-md mb-2">
-              <FileText className="h-5 w-5 text-blue-500" />
-              <span className="flex-1 text-sm truncate">{currentAttachment.originalname}</span>
-              <Button 
-                type="button" 
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8"
-                onClick={handleRemoveAttachment}
+      {/* Target Selection for Admin */}
+      {userRole === 'admin' && (
+        <div className="space-y-2">
+          <Label>Send To</Label>
+          <Controller
+            name="targetType"
+            control={control}
+            render={({ field }) => (
+              <RadioGroup
+                value={field.value || 'chapter'} 
+                onValueChange={(value) => {
+                  field.onChange(value as 'chapter' | 'powerTeam');
+                  setValue('selectedChapterId', ''); 
+                  setValue('selectedPowerTeamId', '');
+                }}
+                className="flex space-x-4"
               >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="chapter" id="r_chapter" />
+                  <Label htmlFor="r_chapter">Chapter</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="powerTeam" id="r_powerTeam" />
+                  <Label htmlFor="r_powerTeam">Power Team</Label>
+                </div>
+              </RadioGroup>
+            )}
+          />
+          {errors.targetType && <p className="text-sm text-red-500 mt-1">{errors.targetType.message}</p>}
+
+          {formTargetType === 'chapter' && (
+            <div>
+              <Label htmlFor="selectedChapterId">Chapter</Label>
+              <Controller
+                name="selectedChapterId"
+                control={control}
+                rules={{ required: formTargetType === 'chapter' ? 'Chapter is required' : false }}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value} disabled={isFetchingDropdownData}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={isFetchingDropdownData ? "Loading chapters..." : "Select a chapter"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {chapters.map((chapter) => (
+                        <SelectItem key={chapter.id} value={chapter.id.toString()}>
+                          {chapter.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.selectedChapterId && <p className="text-sm text-red-500 mt-1">{errors.selectedChapterId.message}</p>}
+            </div>
+          )}
+
+          {formTargetType === 'powerTeam' && (
+            <div>
+              <Label htmlFor="selectedPowerTeamId">Power Team</Label>
+              <Controller
+                name="selectedPowerTeamId"
+                control={control}
+                rules={{ required: formTargetType === 'powerTeam' ? 'Power Team is required' : false }}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value} disabled={isFetchingDropdownData}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={isFetchingDropdownData ? "Loading power teams..." : "Select a power team"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {powerTeams.map((pt) => (
+                        <SelectItem key={pt.id} value={pt.id.toString()}>
+                          {pt.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.selectedPowerTeamId && <p className="text-sm text-red-500 mt-1">{errors.selectedPowerTeamId.message}</p>}
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* Message Field */}
+      <div>
+        <Label htmlFor="message">Message</Label>
+        <Textarea id="message" {...register("message")} placeholder="Enter your message" rows={6} />
+        {errors.message && <p className="text-sm text-red-500 mt-1">{errors.message.message}</p>}
+      </div>
+
+      {/* Attachment Field */}
+      <div>
+        <Label htmlFor="attachment">Attachment (Optional)</Label>
+        <div className="mt-1 flex items-center space-x-2">
+          <Input
+            id="attachment-input"
+            type="file"
+            {...register("attachment")}
+            className="hidden"
+            ref={fileInputRef}
+            onChange={(e) => {
+              setValue("attachment", e.target.files);
+              if (mode === 'edit' && currentAttachment) {
+                  setCurrentAttachment(null); 
+                  setValue("removeAttachment", true); 
+              }
+            }}
+          />
+          <Button 
+            type="button" 
+            variant="outline"
+            onClick={() => document.getElementById('attachment-input')?.click()} 
+            className="flex items-center"
+          >
+            <Upload className="mr-2 h-4 w-4" /> Choose File
+          </Button>
+          {selectedFile && selectedFile[0] && (
+            <div className="flex items-center space-x-2 p-2 border rounded-md bg-gray-50">
+              <FileText className="h-5 w-5 text-gray-600" />
+              <span className="text-sm text-gray-700 truncate max-w-xs">{selectedFile[0].name}</span>
+              <Button type="button" variant="ghost" size="icon" onClick={handleFileDeselect} className="h-6 w-6">
                 <X className="h-4 w-4" />
               </Button>
             </div>
           )}
-          
-          {/* File input */}
-          {(!currentAttachment || removeAttachment || mode === "create") && (
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2">
-                <Input
-                  id="attachment"
-                  type="file"
-                  className="flex-1"
-                  disabled={isFormLoading}
-                  {...attachmentRegister}
-                  ref={(e) => {
-                    attachmentRegister.ref(e);
-                    fileInputRef.current = e;
-                  }}
-                />
-                {selectedFile?.[0] && (
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8"
-                    onClick={() => {
-                      if (fileInputRef.current) {
-                        fileInputRef.current.value = "";
-                      }
-                      setValue("attachment", undefined);
-                    }}
-                  >
+          {!selectedFile && currentAttachment && mode === 'edit' && (
+            <div className="flex items-center space-x-2 p-2 border rounded-md bg-gray-50">
+                <Paperclip className="h-5 w-5 text-gray-600" />
+                <span className="text-sm text-gray-700 truncate max-w-xs">{currentAttachment.originalname}</span>
+                <Button type="button" variant="ghost" size="icon" onClick={handleRemoveCurrentAttachment} className="h-6 w-6">
                     <X className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Accepted: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, TXT (Max size: 10MB)
-              </p>
+                </Button>
             </div>
           )}
-          
-          {errors.attachment && (
-            <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
-              {errors.attachment.message as string}
-            </span>
-          )}
         </div>
+        {errors.attachment && <p className="text-sm text-red-500 mt-1">{errors.attachment.message as string}</p>}
+        {removeAttachment && mode === 'edit' && currentAttachment && (
+            <p className="text-sm text-orange-600 mt-1">Current attachment will be removed upon saving.</p>
+        )}
+      </div>
 
-        {/* Submit and Cancel Buttons */}
-        <div className="justify-end flex gap-4">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={handleCancel}
-            disabled={isFormLoading}
-          >
-            Cancel
-          </Button>
-          <Button 
-            type="submit" 
-            disabled={isFormLoading}
-            className="flex items-center justify-center gap-2"
-          >
-            {isFormLoading ? (
-              <>
-                <LoaderCircle className="animate-spin h-4 w-4" />
-                Saving...
-              </>
-            ) : mode === "create" ? (
-              <>
-                <Upload className="h-4 w-4" />
-                Create
-              </>
-            ) : (
-              <>
-                <Upload className="h-4 w-4" />
-                Update
-              </>
-            )}
-          </Button>
-        </div>
-      </form>
-    </div>
+      {/* Submit Button */}
+      <Button type="submit" disabled={isLoading || isFetchingMessage || createMessageMutation.isPending || updateMessageMutation.isPending} className="w-full sm:w-auto">
+        {(isLoading || isFetchingMessage || createMessageMutation.isPending || updateMessageMutation.isPending) && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
+        {mode === "create" ? "Send Message" : "Update Message"}
+      </Button>
+    </form>
   );
 };
 
-export default MessageForm; 
+export default MessageForm;

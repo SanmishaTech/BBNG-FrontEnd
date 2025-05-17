@@ -68,7 +68,8 @@ import MembershipReport from "./modules/report/MembershipReport";
 import Dashboard from "./modules/Dashboard/dashboard";
  import ChapterVisitorList from "./modules/visitor/ChapterVisitorList";
  import SubCategories from "./modules/subCategory/subCategoryList"
-
+ import PowerTeamList from "./modules/powerteam/PowerTeamList";
+import PowerTeamForm from "./modules/powerteam/PowerTeamForm";
 
 import { OneToOneList, OneToOneForm } from "./modules/oneToOne";
 import MemberSearch from "./modules/member/MemberSearch";
@@ -185,6 +186,32 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
+            {/* PowerTeam Routes Start */}
+            <Route
+              path="/powerteams"
+              element={
+                <ProtectedRoute>
+                  <PowerTeamList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/powerteams/new"
+              element={
+                <ProtectedRoute>
+                  <PowerTeamForm mode="create" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/powerteams/edit/:id"
+              element={
+                <ProtectedRoute>
+                  <PowerTeamForm mode="edit" />
+                </ProtectedRoute>
+              }
+            />
+            {/* PowerTeam Routes End */}
             <Route
               path="/trainings"
               element={
