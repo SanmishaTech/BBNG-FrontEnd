@@ -204,23 +204,7 @@ const MessageList = () => {
                 />
               </div>
 
-              {/* Power Team Filter */}
-              <div className="w-48">
-                <Select
-                  value={powerteam}
-                  onValueChange={handlePowerteamChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Power Teams" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Power Teams</SelectItem>
-                    <SelectItem value="Team A">Team A</SelectItem>
-                    <SelectItem value="Team B">Team B</SelectItem>
-                    <SelectItem value="Team C">Team C</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+             
             </div>
 
             {/* Action Buttons */}

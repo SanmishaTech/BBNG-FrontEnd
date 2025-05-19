@@ -87,7 +87,7 @@ export const getSubCategoriesByCategoryId = async (categoryId: number): Promise<
         }
     }
 
-    console.log('[subCategoryService] Parsed subcategories (after potential frontend filter):', subcategories);
+    // console.log('[subCategoryService] Parsed subcategories (after potential frontend filter):', subcategories);
     return subcategories;
   } catch (error) {
     console.error('[subCategoryService] Error fetching subcategories by categoryId:', error);

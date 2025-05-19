@@ -91,13 +91,13 @@ const CreateCountry: React.FC<CreateCountryProps> = ({ isOpen, onClose }) => {
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <Label htmlFor="name">Region Name</Label>
+            <Label htmlFor="name">Region Name <span className="text-red-500">*</span></Label>
             <Input
               id="name"
               placeholder="Enter Region Name..."
               {...register("name")}
               disabled={!!newlyCreatedCountry || createCountryMutation.isPending}
-              className="mt-1"
+              className="mt-2"
             />
             {errors.name && (
               <span className="text-red-500 text-sm">

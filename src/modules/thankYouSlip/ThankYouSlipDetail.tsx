@@ -219,7 +219,7 @@ const ThankYouSlipDetail = () => {
                 <Banknote className="h-4 w-4 mr-2" />
                 Amount
               </div>
-              <p className="text-lg font-medium">{thankYouSlip.amount}</p>
+              <p className="text-lg font-medium">{"₹"+thankYouSlip.amount }</p>
             </div>
           </div>
 

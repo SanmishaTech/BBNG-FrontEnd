@@ -177,7 +177,7 @@ const CategoryForm = ({
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-7">
         {/* Category Name Field */}
         <div className="grid gap-2 relative">
-          <Label htmlFor="name">Category Name</Label>
+          <Label htmlFor="name">Category Name <span className="text-red-500">*</span></Label>
           <Input
             id="name"
             placeholder="Enter category name"
@@ -193,7 +193,7 @@ const CategoryForm = ({
 
         {/* Description Field */}
         <div className="grid gap-2 relative">
-          <Label htmlFor="description">Description</Label>
+          <Label htmlFor="description">Description <span className="text-red-500">*</span></Label>
           <Textarea
             id="description"
             placeholder="Enter category description"

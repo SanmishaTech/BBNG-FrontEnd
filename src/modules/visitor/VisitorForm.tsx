@@ -195,6 +195,15 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
       try {
         const userData = JSON.parse(userStr);
         setLoggedInUser(userData);
+        
+        // Debug the user data structure to identify the correct ID field
+        console.log('Current logged-in user data structure:', {
+          id: userData.member.id,
+          memberId: userData.member.id,
+          userId: userData.userId,
+          memberProfile: userData.memberProfile,
+          name: userData.name || userData.username
+        });
       } catch (e) {
         console.error("Failed to parse user data", e);
       }
@@ -240,21 +249,210 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
   // Get the currently selected chapter for queries
   const selectedChapter = form.watch("chapter");
 
-  // Fetch all members for the invited by dropdown
+  // Watch for changes to the selected chapter in the cross-chapter form
+  const selectedCrossChapter = form.watch("chapterId");
+  
+  // Reset invitedById when chapter changes to ensure proper filtering
+  useEffect(() => {
+    // Always clear the invitedById field when chapter selection changes
+    form.setValue("invitedById", null);
+    console.log(`Chapter selection changed to ${selectedCrossChapter}, resetting invitedById field`);
+  }, [selectedCrossChapter, form]);
+
+  // Fetch all members for the invited by dropdown, excluding the current user
   const { data: membersData } = useQuery<MemberData>({
-    queryKey: ["members"],
+    queryKey: ["members", loggedInUser?.id], // Include loggedInUser in the key to refetch when user changes
     queryFn: async () => {
       const response = await get(`/api/members?active=true`) as MemberData;
+      
       // Log the structure to understand member data
       if (response?.members?.length > 0) {
         console.log("Member data structure example:", response.members[0]);
       }
+      
+      // Filter out the current user from the members list
+      if (loggedInUser && response?.members) {
+        console.log('Filtering out current user from general members list');
+        
+        // Get current user IDs for comparison
+        const currentUserId = loggedInUser.member?.id;
+        const currentUserMemberId = loggedInUser.member?.id;
+        const currentUserProfileId = loggedInUser.memberProfile?.id;
+        
+        // Filter out the current user from the members list
+        const filteredMembers = response.members.filter((member: any) => {
+          const isCurrentUser = 
+            (currentUserId && Number(currentUserId) === Number(member.id)) ||
+            (currentUserMemberId && Number(currentUserMemberId) === Number(member.id)) ||
+            (currentUserProfileId && Number(currentUserProfileId) === Number(member.id));
+          
+          if (isCurrentUser) {
+            console.log(`EXCLUDED from general list: Current user ${member.memberName} (ID: ${member.id})`);
+          }
+          
+          // Keep members who are NOT the current user
+          return !isCurrentUser;
+        });
+        
+        return { ...response, members: filteredMembers };
+      }
+      
       return response;
-    }
+    },
+    enabled: !!loggedInUser // Only fetch once we have the logged-in user
   });
   
-  // Fetch members by chapter when a chapter is selected
-  const { data: chapterMembersData, refetch: refetchChapterMembers } = useQuery<MemberData>({
+  // Fetch members filtered by the selected cross-chapter
+  const { data: crossChapterMembersData } = useQuery<MemberData>({
+    queryKey: ["crossChapterMembers", selectedCrossChapter],
+    queryFn: async () => {
+      if (!selectedCrossChapter) {
+        return { members: [] } as MemberData;
+      }
+      
+      try {
+        console.log(`Fetching members for cross chapter ID: ${selectedCrossChapter}`);
+        
+        // Direct API call to get members by chapter ID
+        let members: Array<MemberData['members'][0]> = [];
+        try {
+          // Try to get members directly from the API with chapter filter
+          const chapResponse = await get(`/api/members?chapterId=${selectedCrossChapter}&active=true`) as MemberData;
+          if (chapResponse?.members?.length > 0) {
+            console.log(`SUCCESS: Found ${chapResponse.members.length} members via direct API call with chapterId=${selectedCrossChapter}`);
+            members = chapResponse.members;
+          }
+        } catch (e) {
+          console.log('Chapter-specific API call failed, falling back to all members:', e);
+        }
+        
+        // If direct chapter query failed, get all members
+        if (members.length === 0) {
+          const allResponse = await get(`/api/members?active=true`) as MemberData;
+          members = allResponse.members || [];
+          console.log(`Fetched ${members.length} total members, will filter client-side`);
+        }
+        
+        // Log a sample member to understand the data structure
+        if (members.length > 0) {
+          console.log('Example member data structure:', {
+            id: members[0].id,
+            name: members[0].memberName,
+            homeChapter: members[0].homeChapter,
+            memberships: members[0].memberships,
+            // Add any other fields that might be relevant
+          });
+          
+          // Print first 5 members with their chapter info
+          console.log('First 5 members with chapter info:');
+          members.slice(0, 5).forEach((m: any, i: number) => {
+            console.log(`Member ${i+1}: ${m.memberName} (ID: ${m.id})`, {
+              homeChapter: m.homeChapter,
+              memberships: m.memberships,
+              chapterId: m.chapterId
+            });
+          });
+        }
+        
+        // First identify the current user for exclusion
+        const currentUserId = loggedInUser?.member?.id;
+        const currentUserMemberId = loggedInUser?.member?.id;
+        console.log('Current user info for exclusion:', {
+          userId: currentUserId,
+          memberId: currentUserMemberId,
+          memberProfile: loggedInUser?.member?.id
+        });
+        
+        // FIXED APPROACH: 
+        // 1. Try multiple ways to find chapter membership
+        // 2. Exclude the current user
+        const filteredMembers = members.filter((member: any) => {
+          // FIRST: Always exclude the current user
+          const isCurrentUser = 
+            (currentUserId && Number(currentUserId) === Number(member.id)) ||
+            (currentUserMemberId && Number(currentUserMemberId) === Number(member.id)) ||
+            (loggedInUser?.member?.id && Number(loggedInUser.member.id) === Number(member.id));
+          
+          if (isCurrentUser) {
+            console.log(`EXCLUDED: Current user ${member.memberName} (ID: ${member.id})`);
+            return false;
+          }
+          
+          // SECOND: Check if this member belongs to the selected chapter
+          // a) Check homeChapter.id if it exists
+          const homeChapterMatch = member.homeChapter && 
+                                 Number(member.homeChapter.id) === Number(selectedCrossChapter);
+          
+          // b) Check memberships array if it exists
+          const membershipMatch = member.memberships && 
+                                Array.isArray(member.memberships) && 
+                                member.memberships.some((m: any) => 
+                                  Number(m.chapterId) === Number(selectedCrossChapter) || 
+                                  (m.chapter && Number(m.chapter.id) === Number(selectedCrossChapter)));
+          
+          // c) Check direct chapterId property
+          const directChapterMatch = member.chapterId && 
+                                   Number(member.chapterId) === Number(selectedCrossChapter);
+          
+          // Check if member belongs to the selected chapter through any method
+          const belongsToChapter = homeChapterMatch || membershipMatch || directChapterMatch;
+          
+          if (!belongsToChapter) {
+            // Skip this member as they don't belong to the selected chapter
+            return false;
+          }
+          
+          // Include this member as they belong to the chapter and aren't the current user
+          console.log(`INCLUDED: Member ${member.memberName} (ID: ${member.id}) from chapter ${selectedCrossChapter}`);
+          return true;
+        });
+        
+        console.log(`Found ${filteredMembers.length} members after filtering for chapter ID ${selectedCrossChapter}`);
+        
+        console.log(`Filtering complete. Found ${filteredMembers.length} valid members for chapter ID ${selectedCrossChapter}`);
+        
+        // If we found no members, add a fallback mechanism
+        if (filteredMembers.length === 0) {
+          console.log('WARNING: No members found for the selected chapter. This might indicate an issue with the data structure.');
+          
+          // Let's try a simpler approach as a fallback
+          const fallbackMembers = members.filter((member: any) => {
+            // First exclude current user
+            console.log("Loggedin user", loggedInUser)
+            const isCurrentUser = 
+              (currentUserId && Number(currentUserId) === Number(member.id)) ||
+              (currentUserMemberId && Number(currentUserMemberId) === Number(member.id)) ||
+              (loggedInUser?.member ?.id && Number(loggedInUser.member.id) === Number(member.id));
+            
+            if (isCurrentUser) return false;
+            
+            // Very simple check - just look at homeChapter.id
+            return member.homeChapter && Number(member.homeChapter.id) === Number(selectedCrossChapter);
+          });
+          
+          console.log(`Fallback filtering found ${fallbackMembers.length} members`);
+          
+          if (fallbackMembers.length > 0) {
+            // Use the fallback if it found any members
+            return { members: fallbackMembers } as MemberData;
+          }
+          
+          // If both approaches failed, return empty list
+          return { members: [] } as MemberData;
+        }
+        
+        // Return the successfully filtered members
+        return { members: filteredMembers } as MemberData;
+      } catch (error) {
+        console.error(`Error fetching members for chapter ID ${selectedCrossChapter}:`, error);
+        return { members: [] } as MemberData;
+      }
+    },
+    enabled: !!selectedCrossChapter
+  });
+
+  // Fetch members by chapter when a regular (non-cross) chapter is selected
+  const { refetch: refetchChapterMembers } = useQuery<MemberData>({
     queryKey: ["chapterMembers", selectedChapter],
     queryFn: async () => {
       if (!selectedChapter) {
@@ -263,7 +461,6 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
       
       // Try to fetch members filtered by chapter from the backend
       try {
-        // Try different API endpoint structures to see which one works
         console.log(`Fetching members for chapter: ${selectedChapter}`);
         
         // Try multiple endpoint patterns - we don't know exactly what the API expects
@@ -826,7 +1023,18 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  {membersData?.members?.map((member: any) => {
+                                  {/* Use the appropriately filtered members list */}
+                                  {(selectedCrossChapter ? 
+                                    (crossChapterMembersData?.members || []) : 
+                                    (membersData?.members || []))?.map((member: any) => {
+                                    // Add a final safety check to exclude the current user
+                                    if (loggedInUser && 
+                                        (Number(loggedInUser.member?.id) === Number(member.id) || 
+                                         Number(loggedInUser.member?.id) === Number(member.id))) {
+                                      console.log('Skipping current user in dropdown render');
+                                      return null;
+                                    }
+                                    // as we filter in the query functions
                                     // Debug output for each option to verify the types match
                                     const optionValue = member.id.toString();
                                     const isSelected =

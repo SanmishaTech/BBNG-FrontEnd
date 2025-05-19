@@ -225,7 +225,7 @@ const EditLocation = ({ locationId, isOpen, onClose }: EditLocationProps) => {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             <div className="grid grid-cols-2 gap-4">
               <div className="relative">
-                <Label className="mb-2" htmlFor="zoneId">Zone</Label>
+                <Label className="mb-2" htmlFor="zoneId">Zone <span className="text-red-500">*</span></Label>
                 <Select
                   defaultValue={locationData?.zoneId?.toString()}
                   onValueChange={(value) => setValue("zoneId", value)}
@@ -249,7 +249,7 @@ const EditLocation = ({ locationId, isOpen, onClose }: EditLocationProps) => {
               </div>
 
               <div className="relative">
-                <Label className="mb-2" htmlFor="location">Location Name</Label>
+                <Label className="mb-2" htmlFor="location">Location Name <span className="text-red-500">*</span></Label>
                 <Input
                   id="location"
                   placeholder="Enter location name"

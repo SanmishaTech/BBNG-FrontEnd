@@ -89,6 +89,7 @@ const CreateLocation: React.FC<CreateLocationProps> = ({ isOpen, onClose }) => {
             <div className="relative">
               <Label className="mb-2" htmlFor="zoneId">
                 Zone
+                <span className="text-red-500">*</span>
               </Label>
               <Select onValueChange={(value) => setValue("zoneId", value)}>
                 <SelectTrigger className="w-full">
@@ -116,6 +117,7 @@ const CreateLocation: React.FC<CreateLocationProps> = ({ isOpen, onClose }) => {
             <div className="relative ">
               <Label htmlFor="location" className="mb-2">
                 Location Name
+                <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="location"
