@@ -198,7 +198,7 @@ const PowerTeamForm: React.FC<PowerTeamFormProps> = ({ mode }) => {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>PowerTeam Name</FormLabel>
+                  <FormLabel>PowerTeam Name <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
                     <Input placeholder="Enter PowerTeam name" {...field} />
                   </FormControl>
@@ -212,7 +212,7 @@ const PowerTeamForm: React.FC<PowerTeamFormProps> = ({ mode }) => {
               name="categoryIds"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Categories</FormLabel>
+                  <FormLabel>Categories <span className="text-red-500">*</span></FormLabel>
                   <Popover open={isCategoryPopoverOpen} onOpenChange={setIsCategoryPopoverOpen}>
                     <PopoverTrigger asChild>
                       <FormControl>

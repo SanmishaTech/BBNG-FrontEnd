@@ -21,6 +21,7 @@ import {
   Form,
   FormControl,
   FormField,
+  FormDescription,
   FormItem,
   FormLabel,
   FormMessage,
@@ -48,20 +49,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Badge } from "@/components/ui/badge";
+// Removed Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList imports
+// Removed Popover, PopoverContent, PopoverTrigger imports
+// Removed Badge import
+import MultipleSelector, { Option } from "@/components/ui/multiselect"; // Added import
+import Validate from "@/lib/Handlevalidation";
 
 interface Chapter {
   id: number;
@@ -101,7 +93,7 @@ type BaseMemberFormValues = {
   memberName: string;
   chapterId: number;
   category: string;
-  businessCategory: string[];
+  businessCategory: number[]; // Frontend uses array for multiselect, backend expects string
   gender: string;
   dateOfBirth: Date | null;
   mobile1: string;
@@ -150,14 +142,12 @@ const createMemberSchema = (mode: "create" | "edit") => {
       .int()
       .min(1, "Chapter is required"),
     category: z.string().min(1, "Business category is required"),
-    businessCategory: z.array(z.string()).optional(),
-    gender: z.string().optional(),
-     dateOfBirth: z
-      .date()
-      .optional()
+    businessCategory: z.array(z.number()).optional(),
+    gender: z.string().min(1, "Gender is required"),
+    dateOfBirth: z
+      .date({ required_error: "Date of birth is required" })
       .refine(
         (date) => {
-          if (!date) return true; // Optional field, valid if not provided
           const today = new Date();
           const eighteenYearsAgo = new Date(
             today.getFullYear() - 18,
@@ -166,9 +156,8 @@ const createMemberSchema = (mode: "create" | "edit") => {
           );
           return date <= eighteenYearsAgo;
         },
-        { message: "Must be at least 18 years old" }
+        { message: "Member must be at least 18 years old" }
       ),
- 
     mobile1: z.string().regex(/^[0-9]{10}$/, "Valid mobile number is required"),
     mobile2: z
       .string()
@@ -239,9 +228,9 @@ const createMemberSchema = (mode: "create" | "edit") => {
 };
 
 // Environment variable for the API base URL (recommended)
-// const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000//";
+// const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000
 // For this example, we'll use the hardcoded one if not available.
-const IMAGE_BASE_URL = "http://localhost:3000//"; // Replace with your actual image base URL
+const IMAGE_BASE_URL = "http://localhost:3000"; // Replace with your actual image base URL
 
 export default function MemberForm({ mode }: MemberFormProps) {
   const { id } = useParams<{ id: string }>();
@@ -287,6 +276,10 @@ export default function MemberForm({ mode }: MemberFormProps) {
       enabled: !!selectedCategoryId,
     });
 
+  useEffect(() => {
+    console.log("Passs",subcategories)
+  }, [subcategories])
+
   const memberSchema = useMemo(() => createMemberSchema(mode), [mode]);
   type FormValues = z.infer<typeof memberSchema>;
 
@@ -326,7 +319,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
       businessCategory: visitorData?.businessCategory
         ? Array.isArray(visitorData.businessCategory)
           ? visitorData.businessCategory
-          : [visitorData.businessCategory]
+          : typeof visitorData.businessCategory === 'string' && visitorData.businessCategory.includes(',')
+            ? visitorData.businessCategory.split(',').map(Number)
+            : visitorData.businessCategory ? [Number(visitorData.businessCategory)] : []
         : [],
       gender: visitorData?.gender || "",
       dateOfBirth: visitorData?.dateOfBirth
@@ -416,7 +411,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
         businessCategory: apiData.businessCategory
           ? Array.isArray(apiData.businessCategory)
             ? apiData.businessCategory
-            : [apiData.businessCategory]
+            : typeof apiData.businessCategory === 'string' && apiData.businessCategory.includes(',')
+              ? apiData.businessCategory.split(',').map(Number)
+              : apiData.businessCategory ? [Number(apiData.businessCategory)] : []
           : [],
         dateOfBirth: apiData.dateOfBirth
           ? new Date(apiData.dateOfBirth)
@@ -444,6 +441,15 @@ export default function MemberForm({ mode }: MemberFormProps) {
             formData.append(key, value);
           } else if (value instanceof Date) {
             formData.append(key, value.toISOString().split("T")[0]);
+          } else if (Array.isArray(value)) {
+            // Handle arrays specially
+            if (key === "businessCategory") {
+              // Backend expects businessCategory as a comma-separated string
+              formData.append(key, value.join(','));
+            } else {
+              // For other arrays, use JSON stringify
+              formData.append(key, JSON.stringify(value));
+            }
           } else if (value !== null && value !== undefined) {
             formData.append(key, String(value));
           }
@@ -474,6 +480,15 @@ export default function MemberForm({ mode }: MemberFormProps) {
             formData.append(key, value);
           } else if (value instanceof Date) {
             formData.append(key, value.toISOString().split("T")[0]);
+          } else if (Array.isArray(value)) {
+            // Handle arrays specially
+            if (key === "businessCategory") {
+              // Backend expects businessCategory as a comma-separated string
+              formData.append(key, value.join(','));
+            } else {
+              // For other arrays, use JSON stringify
+              formData.append(key, JSON.stringify(value));
+            }
           } else if (value !== null && value !== undefined) {
             formData.append(key, String(value));
           }
@@ -504,18 +519,6 @@ export default function MemberForm({ mode }: MemberFormProps) {
   };
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
-
-  useEffect(() => {
-    if (categoriesData?.length && form.getValues().category) {
-      const categoryName = form.getValues().category;
-      const categoryObj = categoriesData.find(
-        (cat) => cat.name === categoryName,
-      );
-      if (categoryObj && !selectedCategoryId) {
-        setSelectedCategoryId(categoryObj.id);
-      }
-    }
-  }, [categoriesData, form, selectedCategoryId]);
 
   const [selectedChapterId, setSelectedChapterId] = useState<number | null>(
     null,
@@ -574,6 +577,32 @@ export default function MemberForm({ mode }: MemberFormProps) {
                           placeholder="Enter member's full name"
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="gender"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Gender <span className="text-red-500">*</span></FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        value={field.value} // Ensure value is controlled
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select gender" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="male">Male</SelectItem>
+                          <SelectItem value="female">Female</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -721,115 +750,52 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   control={form.control}
                   name="businessCategory"
                   render={({ field }) => {
-                    const selectedValues = field.value || [];
-                    const handleSelect = (currentValue: string) => {
-                      if (selectedValues.includes(currentValue)) {
-                        // Remove the value if it's already selected
-                        const newSelectedValues = selectedValues.filter(val => val !== currentValue);
-                        field.onChange(newSelectedValues);
-                      } else {
-                        // Add the value only if it doesn't exist yet (should never happen due to uniqueness check)
-                        if (!selectedValues.some(val => val === currentValue)) {
-                          const newSelectedValues = [...selectedValues, currentValue];
-                          field.onChange(newSelectedValues);
-                        }
-                      }
-                    };
+                    const subCategoryOptions: Option[] = useMemo(() => {
+                      if (!Array.isArray(subcategories)) return [];
+                      return subcategories.map((sub) => ({
+                        value: String(sub.id),
+                        label: sub.name,
+                      }));
+                    }, [subcategories]);
+
+                    const selectedOptions: Option[] = useMemo(() => {
+                      if (!field.value) return [];
+                      return subCategoryOptions.filter((option) =>
+                        field.value.includes(Number(option.value))
+                      );
+                    }, [field.value, subCategoryOptions]);
 
                     return (
                       <FormItem>
-                        <FormLabel>Business Subcategories</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                role="combobox"
-                                className={cn(
-                                  "w-full justify-between h-auto min-h-[2.5rem]",
-                                  !field.value?.length &&
-                                    "text-muted-foreground",
-                                )}
-                                disabled={
-                                  !selectedCategoryId || loadingSubcategories
-                                }
-                              >
-                                <div className="flex gap-1 flex-wrap items-center">
-                                  {selectedValues.length > 0
-                                    ? selectedValues.map((val) => (
-                                        <Badge
-                                          variant="secondary"
-                                          key={val}
-                                          className="mr-1 mb-1"
-                                          onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            handleSelect(val);
-                                          }}
-                                        >
-                                          {subcategories.find(
-                                            (sub) => sub.name === val,
-                                          )?.name || val}
-                                          <X
-                                            className="ml-1 h-3 w-3 cursor-pointer hover:text-destructive"
-                                            onClick={(e) => {
-                                              e.preventDefault();
-                                              e.stopPropagation();
-                                              handleSelect(val);
-                                            }}
-                                          />
-                                        </Badge>
-                                      ))
-                                    : "Select subcategories"}
-                                </div>
-                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                            <Command>
-                              <CommandInput placeholder="Search subcategories..." />
-                              <CommandList>
-                                <CommandEmpty>
-                                  No subcategory found.
-                                </CommandEmpty>
-                                <CommandGroup>
-                                  {loadingSubcategories ? (
-                                    <CommandItem disabled>
-                                      Loading subcategories...
-                                    </CommandItem>
-                                  ) : subcategories.length > 0 ? (
-                                    subcategories.map((subCategory) => (
-                                      <CommandItem
-                                        key={subCategory.id}
-                                        value={subCategory.name}
-                                        onSelect={() => {
-                                          handleSelect(subCategory.name);
-                                        }}
-                                      >
-                                        <Check
-                                          className={cn(
-                                            "mr-2 h-4 w-4",
-                                            selectedValues.includes(
-                                              subCategory.name,
-                                            )
-                                              ? "opacity-100"
-                                              : "opacity-0",
-                                          )}
-                                        />
-                                        {subCategory.name}
-                                      </CommandItem>
-                                    ))
-                                  ) : (
-                                    <CommandItem disabled>
-                                      No subcategories available
-                                    </CommandItem>
-                                  )}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
+                        <FormLabel>Business Subcategories <span className="text-red-500">*</span></FormLabel>
+                        <MultipleSelector
+                          options={subCategoryOptions}
+                          value={selectedOptions}
+                          placeholder={
+                            loadingSubcategories
+                              ? "Loading subcategories..."
+                              : selectedCategoryId
+                                ? "Select business subcategories"
+                                : "Select main category first"
+                          }
+                          emptyIndicator={
+                            <p className="text-center text-sm">
+                              {selectedCategoryId && !loadingSubcategories
+                                ? "No subcategories found for the selected main category."
+                                : !selectedCategoryId
+                                  ? "Please select a main category to see subcategories."
+                                  : "Searching..."}
+                            </p>
+                          }
+                          onChange={(selectedOpts: Option[]) => {
+                            const selectedIds = selectedOpts.map((opt) => 
+                              Number(opt.value)
+                            );
+                            field.onChange(selectedIds);
+                          }}
+                          disabled={!selectedCategoryId || loadingSubcategories}
+                          hidePlaceholderWhenSelected={false}
+                        />
                         <FormMessage />
                       </FormItem>
                     );
@@ -840,20 +806,32 @@ export default function MemberForm({ mode }: MemberFormProps) {
                 <FormField
                   control={form.control}
                   name="dateOfBirth"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Date of Birth</FormLabel>
-                      <Input
-                        type="date"
-                        value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
-                        onChange={(e) => {
-                          field.onChange(e.target.value ? new Date(e.target.value) : null);
-                        }}
-                        className="w-full"
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    // Calculate max date (18 years ago from today)
+                    const today = new Date();
+                    const maxDate = new Date(
+                      today.getFullYear() - 18,
+                      today.getMonth(),
+                      today.getDate()
+                    ).toISOString().split('T')[0];
+                    
+                    return (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Date of Birth <span className="text-red-500">*</span></FormLabel>
+                        <Input
+                          type="date"
+                          value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                          onChange={(e) => {
+                            field.onChange(e.target.value ? new Date(e.target.value) : null);
+                          }}
+                          max={maxDate}
+                          className="w-full"
+                        />
+                        <FormMessage />
+                        <FormDescription>Member must be at least 18 years old. If you wish to Not Provide a Dob enter DOB as 01-01-0001</FormDescription>
+                      </FormItem>
+                    );
+                  }}
                 />
                 <FormField
                   control={form.control}

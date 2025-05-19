@@ -259,7 +259,7 @@ const DirectThankYouSlipForm = () => {
                 name="date"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Date</FormLabel>
+                    <FormLabel>Date <span className="text-red-500">*</span></FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -299,7 +299,7 @@ const DirectThankYouSlipForm = () => {
                 name="chapterId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Select Chapter</FormLabel>
+                    <FormLabel>Select Chapter <span className="text-red-500">*</span></FormLabel>
                     <Select
                       value={field.value.toString()}
                       onValueChange={handleChapterChange}
@@ -328,7 +328,7 @@ const DirectThankYouSlipForm = () => {
                 name="toWhom"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>To Whom</FormLabel>
+                    <FormLabel>To Whom <span className="text-red-500">*</span></FormLabel>
                     <Dialog open={open} onOpenChange={setOpen}>
                       <DialogTrigger asChild>
                         <FormControl>
@@ -390,7 +390,7 @@ const DirectThankYouSlipForm = () => {
                 name="amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Amount</FormLabel>
+                    <FormLabel>Amount <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <Input placeholder="Amount" {...field} />
                     </FormControl>
@@ -408,7 +408,7 @@ const DirectThankYouSlipForm = () => {
                 name="narration"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Narration</FormLabel>
+                    <FormLabel>Narration <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="Describe the interaction or transaction"
@@ -430,7 +430,7 @@ const DirectThankYouSlipForm = () => {
                 name="testimony"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Testimony</FormLabel>
+                    <FormLabel>Testimony <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="Share your testimony about this experience"

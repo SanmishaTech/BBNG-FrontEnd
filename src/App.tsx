@@ -66,9 +66,10 @@ import MemberReport from "./modules/report/MemberReport";
 import TransactionReport from "./modules/report/TransactionReport";
 import MembershipReport from "./modules/report/MembershipReport";
 import Dashboard from "./modules/Dashboard/dashboard";
- import ChapterVisitorList from "./modules/visitor/ChapterVisitorList";
- import SubCategories from "./modules/subCategory/subCategoryList"
- import PowerTeamList from "./modules/powerteam/PowerTeamList";
+import ChapterPerformanceDashboard from "./modules/Dashboard/ChapterPerformanceDashboard";
+import ChapterVisitorList from "./modules/visitor/ChapterVisitorList";
+import SubCategories from "./modules/subCategory/subCategoryList"
+import PowerTeamList from "./modules/powerteam/PowerTeamList";
 import PowerTeamForm from "./modules/powerteam/PowerTeamForm";
 
 import { OneToOneList, OneToOneForm } from "./modules/oneToOne";
@@ -118,6 +119,14 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/chapter-performance"
+              element={
+                <ProtectedRoute>
+                  <ChapterPerformanceDashboard />
                 </ProtectedRoute>
               }
             />

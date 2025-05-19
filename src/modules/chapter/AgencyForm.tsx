@@ -301,7 +301,7 @@ export default function ChapterForm({ mode }: { mode: "create" | "edit" }) {
                 name="name"
                 render={({ field }) => (
                   <FormItem className="col-span-full">
-                    <FormLabel>Chapter Name</FormLabel>
+                    <FormLabel>Chapter Name <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <Input placeholder="Enter chapter name" {...field} />
                     </FormControl>
@@ -317,7 +317,7 @@ export default function ChapterForm({ mode }: { mode: "create" | "edit" }) {
                   name="zoneId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Zone</FormLabel>
+                      <FormLabel>Zone <span className="text-red-500">*</span></FormLabel>
                       <div className="flex items-center">
                         <Select
                           value={String(field.value)}
@@ -347,7 +347,7 @@ export default function ChapterForm({ mode }: { mode: "create" | "edit" }) {
                   name="locationId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Location</FormLabel>
+                      <FormLabel>Location <span className="text-red-500">*</span></FormLabel>
                       <Select
                         value={field.value ? String(field.value) : ""}
                         onValueChange={(v) =>
@@ -404,7 +404,7 @@ export default function ChapterForm({ mode }: { mode: "create" | "edit" }) {
                   name="meetingday"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Meeting Day</FormLabel>
+                      <FormLabel>Meeting Day <span className="text-red-500">*</span></FormLabel>
                       <Select
                         value={field.value || ""}
                         onValueChange={field.onChange}
@@ -451,7 +451,7 @@ export default function ChapterForm({ mode }: { mode: "create" | "edit" }) {
                 name="venue"
                 render={({ field }) => (
                   <FormItem className="col-span-full">
-                    <FormLabel>Meeting Venue</FormLabel>
+                    <FormLabel>Meeting Venue <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <Input placeholder="Enter venue address" {...field} />
                     </FormControl>

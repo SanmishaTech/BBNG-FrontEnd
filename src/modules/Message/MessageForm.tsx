@@ -339,8 +339,10 @@ const MessageForm = ({
     <form onSubmit={handleSubmit(onSubmit)} className={`space-y-6 ${className || ''}`}>
       {/* Heading Field */}
       <div>
-        <Label htmlFor="heading">Heading</Label>
-        <Input id="heading" {...register("heading")} placeholder="Enter message heading" />
+        <Label htmlFor="heading">Heading <span className="text-red-500">*</span></Label>
+        <Input
+        className="mt-2"
+        id="heading" {...register("heading")} placeholder="Enter message heading" />
         {errors.heading && <p className="text-sm text-red-500 mt-1">{errors.heading.message}</p>}
       </div>
 
@@ -376,7 +378,9 @@ const MessageForm = ({
 
           {formTargetType === 'chapter' && (
             <div>
-              <Label htmlFor="selectedChapterId">Chapter</Label>
+              <Label 
+                className="mb-2"
+              htmlFor="selectedChapterId">Chapter <span className="text-red-500">*</span></Label>
               <Controller
                 name="selectedChapterId"
                 control={control}
@@ -402,7 +406,9 @@ const MessageForm = ({
 
           {formTargetType === 'powerTeam' && (
             <div>
-              <Label htmlFor="selectedPowerTeamId">Power Team</Label>
+              <Label
+                className="mb-2"
+              htmlFor="selectedPowerTeamId">Power Team <span className="text-red-500">*</span></Label>
               <Controller
                 name="selectedPowerTeamId"
                 control={control}
@@ -430,8 +436,10 @@ const MessageForm = ({
       
       {/* Message Field */}
       <div>
-        <Label htmlFor="message">Message</Label>
-        <Textarea id="message" {...register("message")} placeholder="Enter your message" rows={6} />
+        <Label htmlFor="message">Message <span className="text-red-500">*</span></Label>
+        <Textarea
+          className="mt-2"
+          id="message" {...register("message")} placeholder="Enter your message" rows={6} />
         {errors.message && <p className="text-sm text-red-500 mt-1">{errors.message.message}</p>}
       </div>
 

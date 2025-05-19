@@ -347,7 +347,7 @@ const ReferenceForm = () => {
                     name="date"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
-                        <FormLabel>Date *</FormLabel>
+                        <FormLabel>Date <span className="text-red-500">*</span></FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
                             <FormControl>
@@ -408,7 +408,7 @@ const ReferenceForm = () => {
                     name="chapterId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Chapter *</FormLabel>
+                        <FormLabel>Chapter <span className="text-red-500">*</span></FormLabel>
                         <Select
                           onValueChange={(value) => {
                             // Update the chapterId value
@@ -447,7 +447,7 @@ const ReferenceForm = () => {
                     name="memberId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Member *</FormLabel>
+                        <FormLabel>Member <span className="text-red-500">*</span></FormLabel>
                         <div className="relative">
                           <Select
                             onValueChange={(value) => {
@@ -561,7 +561,7 @@ const ReferenceForm = () => {
                     name="nameOfReferral"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Name of Referral *</FormLabel>
+                        <FormLabel>Name of Referral <span className="text-red-500">*</span></FormLabel>
                         <FormControl>
                           <Input placeholder="Enter referral name" {...field} />
                         </FormControl>
@@ -576,7 +576,7 @@ const ReferenceForm = () => {
                     name="mobile1"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Mobile 1 *</FormLabel>
+                        <FormLabel>Mobile 1 <span className="text-red-500">*</span></FormLabel>
                         <FormControl>
                           <Input placeholder="Enter primary mobile number" {...field} />
                         </FormControl>

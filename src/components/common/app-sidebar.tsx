@@ -40,6 +40,22 @@ import { appName } from "@/config";
 
 // This is sample data.
 const initialData = {
+  // Navigation items for Office Bearers (OB)
+  obNavigation: [
+    {
+      title: "Office Bearers",
+      url: "#",
+      icon: UsersRound,
+      isActive: false,
+      items: [
+        { title: "Chapter Performance", url: "/chapter-performance" },
+         { title: "Members", url: "/members" },
+        { title: "Visitors", url: "/chapter-visitors" },
+        { title: "Meetings", url: "/chaptermeetings" },
+ 
+      ],
+    },
+  ],
   roles: {
     super_admin: {
       projects: [
@@ -78,6 +94,7 @@ const initialData = {
           isActive: false,
           items: [
             { title: "Requirements", url: "/requirements" },
+            { title: "View Requirements", url: "/viewrequirements" },
           ],
         }
       ],
@@ -150,6 +167,7 @@ const initialData = {
           isActive: false,
           items: [
             { title: "Requirements", url: "/requirements" },
+            { title: "View Requirements", url: "/viewrequirements" },
           ],
         }
       ],
@@ -222,10 +240,28 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     ...initialData,
     projects: [] as typeof initialData.roles.super_admin.projects,
     navMain: [] as typeof initialData.roles.admin.navMain,
+    obNav: [] as typeof initialData.obNavigation,
+    isOB: false,
   });
 
   React.useEffect(() => {
     const storedUser = localStorage.getItem("user");
+    const storedRoles = localStorage.getItem("roles");
+    let isUserOB = false;
+    
+    // Check if user is an OB from the roles data
+    if (storedRoles) {
+      try {
+        const parsedRoles = JSON.parse(storedRoles);
+        // Check if any role is "OB"
+        isUserOB = parsedRoles.some((roleObj: { role: string, chapters: number[] }) => 
+          roleObj.role === "OB" && roleObj.chapters && roleObj.chapters.length > 0
+        );
+      } catch (error) {
+        console.error("Failed to parse roles from localStorage", error);
+      }
+    }
+    
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
@@ -247,6 +283,8 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           projects: roleData?.projects || [],
           navMain: roleData?.navMain || [],
           user: parsedUser,
+          obNav: isUserOB ? initialData.obNavigation : [],
+          isOB: isUserOB
         }));
       } catch (error) {
         console.error("Failed to parse user from localStorage", error);
@@ -255,6 +293,8 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           ...prevData,
           projects: initialData.roles.super_admin.projects,
           navMain: initialData.roles.super_admin.navMain,
+          obNav: [],
+          isOB: false
         }));
       }
     } else {
@@ -263,6 +303,8 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         ...prevData,
         projects: initialData.roles.super_admin.projects,
         navMain: initialData.roles.super_admin.navMain,
+        obNav: [],
+        isOB: false
       }));
     }
   }, []);
@@ -310,6 +352,14 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
+        {data.isOB && (
+          <div className="mb-4">
+            <div className="px-4 py-2">
+              <h3 className="text-sm font-semibold text-muted-foreground">Office Bearer Menu</h3>
+            </div>
+            <NavMain items={data.obNav || []} />
+          </div>
+        )}
         <NavMain items={data.projects || []} />
         <NavMain items={data.navMain || []} />
       </SidebarContent>

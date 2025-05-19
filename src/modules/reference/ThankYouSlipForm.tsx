@@ -247,7 +247,7 @@ const ThankYouSlipForm = () => {
                   name="date"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Date *</FormLabel>
+                      <FormLabel>Date <span className="text-red-500">*</span></FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -290,7 +290,7 @@ const ThankYouSlipForm = () => {
                   name="amount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Amount *</FormLabel>
+                      <FormLabel>Amount <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <Input
                         
@@ -309,7 +309,7 @@ const ThankYouSlipForm = () => {
                     name="narration"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Narration *</FormLabel>
+                        <FormLabel>Narration <span className="text-red-500">*</span></FormLabel>
                         <FormControl>
                           <Textarea
                             placeholder="Enter narration"
@@ -333,7 +333,7 @@ const ThankYouSlipForm = () => {
                     name="testimony"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Testimony *</FormLabel>
+                        <FormLabel>Testimony <span className="text-red-500">*</span></FormLabel>
                         <FormControl>
                           <Textarea
                             placeholder="Enter testimony"

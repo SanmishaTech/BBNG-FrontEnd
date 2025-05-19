@@ -229,7 +229,7 @@ export default function ChapterMeetingForm({
                 name="meetingTitle"
                 render={({ field }) => (
                   <FormItem className="col-span-full">
-                    <FormLabel>Meeting Title</FormLabel>
+                    <FormLabel>Meeting Title <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <Input placeholder="Enter meeting title" {...field} />
                     </FormControl>
@@ -278,7 +278,7 @@ export default function ChapterMeetingForm({
                   name="meetingTime"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Meeting Time</FormLabel>
+                      <FormLabel>Meeting Time <span className="text-red-500">*</span></FormLabel>
                       <Select
                         value={field.value || ""}
                         onValueChange={field.onChange}
@@ -313,7 +313,7 @@ export default function ChapterMeetingForm({
                 name="meetingVenue"
                 render={({ field }) => (
                   <FormItem className="col-span-full">
-                    <FormLabel>Meeting Venue</FormLabel>
+                    <FormLabel>Meeting Venue <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <Input placeholder="Enter meeting venue" {...field} />
                     </FormControl>

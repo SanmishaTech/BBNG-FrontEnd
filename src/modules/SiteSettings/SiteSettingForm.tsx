@@ -57,7 +57,7 @@ const SiteSettingForm: React.FC<SiteSettingFormProps> = ({
     <form onSubmit={handleSubmit(onSubmit)} className={`space-y-8 ${className}`}>
       {/* Key Field */}
       <div className="grid gap-2 relative">
-        <Label htmlFor="key">Setting Key</Label>
+        <Label htmlFor="key">Setting Key <span className="text-red-500">*</span></Label>
         <Input
           id="key"
           type="text"
