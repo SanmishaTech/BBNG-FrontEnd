@@ -144,20 +144,18 @@ const createMemberSchema = (mode: "create" | "edit") => {
     category: z.string().min(1, "Business category is required"),
     businessCategory: z.array(z.number()).optional(),
     gender: z.string().min(1, "Gender is required"),
-    dateOfBirth: z
-      .date({ required_error: "Date of birth is required" })
-      .refine(
-        (date) => {
-          const today = new Date();
-          const eighteenYearsAgo = new Date(
-            today.getFullYear() - 18,
-            today.getMonth(),
-            today.getDate()
-          );
-          return date <= eighteenYearsAgo;
-        },
-        { message: "Member must be at least 18 years old" }
-      ),
+    dateOfBirth: z.date({ required_error: "Date of birth is required" }).refine(
+      (date) => {
+        const today = new Date();
+        const eighteenYearsAgo = new Date(
+          today.getFullYear() - 18,
+          today.getMonth(),
+          today.getDate()
+        );
+        return date <= eighteenYearsAgo;
+      },
+      { message: "Member must be at least 18 years old" }
+    ),
     mobile1: z.string().regex(/^[0-9]{10}$/, "Valid mobile number is required"),
     mobile2: z
       .string()
@@ -169,7 +167,7 @@ const createMemberSchema = (mode: "create" | "edit") => {
       .string()
       .regex(
         /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9A-Z]{1}Z[0-9A-Z]{1}$/,
-        "Invalid GST number format. Example: 27AAPFU0939F1ZV",
+        "Invalid GST number format. Example: 27AAPFU0939F1ZV"
       )
       .or(z.literal(""))
       .optional(),
@@ -228,9 +226,9 @@ const createMemberSchema = (mode: "create" | "edit") => {
 };
 
 // Environment variable for the API base URL (recommended)
-// const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000
+// const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://15.207.30.113
 // For this example, we'll use the hardcoded one if not available.
-const IMAGE_BASE_URL = "http://localhost:3000"; // Replace with your actual image base URL
+const IMAGE_BASE_URL = "http://15.207.30.113"; // Replace with your actual image base URL
 
 export default function MemberForm({ mode }: MemberFormProps) {
   const { id } = useParams<{ id: string }>();
@@ -246,7 +244,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
   const [visitorId, setVisitorId] = useState<string>("");
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
-    null,
+    null
   );
 
   const { data: categoriesData, isLoading: loadingCategories } = useQuery({
@@ -277,14 +275,14 @@ export default function MemberForm({ mode }: MemberFormProps) {
     });
 
   useEffect(() => {
-    console.log("Passs",subcategories)
-  }, [subcategories])
+    console.log("Passs", subcategories);
+  }, [subcategories]);
 
   const memberSchema = useMemo(() => createMemberSchema(mode), [mode]);
   type FormValues = z.infer<typeof memberSchema>;
 
   const [existingImageUrls, setExistingImageUrls] = useState<(string | null)[]>(
-    [null, null, null],
+    [null, null, null]
   );
 
   const { data: chapters = [], isLoading: loadingChapters } = useQuery<
@@ -319,9 +317,12 @@ export default function MemberForm({ mode }: MemberFormProps) {
       businessCategory: visitorData?.businessCategory
         ? Array.isArray(visitorData.businessCategory)
           ? visitorData.businessCategory
-          : typeof visitorData.businessCategory === 'string' && visitorData.businessCategory.includes(',')
-            ? visitorData.businessCategory.split(',').map(Number)
-            : visitorData.businessCategory ? [Number(visitorData.businessCategory)] : []
+          : typeof visitorData.businessCategory === "string" &&
+            visitorData.businessCategory.includes(",")
+          ? visitorData.businessCategory.split(",").map(Number)
+          : visitorData.businessCategory
+          ? [Number(visitorData.businessCategory)]
+          : []
         : [],
       gender: visitorData?.gender || "",
       dateOfBirth: visitorData?.dateOfBirth
@@ -392,7 +393,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
 
       if (categoriesData && apiData.category) {
         const categoryObj = categoriesData.find(
-          (cat) => cat.name === apiData.category,
+          (cat) => cat.name === apiData.category
         );
         if (categoryObj) {
           setSelectedCategoryId(categoryObj.id);
@@ -411,13 +412,14 @@ export default function MemberForm({ mode }: MemberFormProps) {
         businessCategory: apiData.businessCategory
           ? Array.isArray(apiData.businessCategory)
             ? apiData.businessCategory
-            : typeof apiData.businessCategory === 'string' && apiData.businessCategory.includes(',')
-              ? apiData.businessCategory.split(',').map(Number)
-              : apiData.businessCategory ? [Number(apiData.businessCategory)] : []
+            : typeof apiData.businessCategory === "string" &&
+              apiData.businessCategory.includes(",")
+            ? apiData.businessCategory.split(",").map(Number)
+            : apiData.businessCategory
+            ? [Number(apiData.businessCategory)]
+            : []
           : [],
-        dateOfBirth: apiData.dateOfBirth
-          ? new Date(apiData.dateOfBirth)
-          : null,
+        dateOfBirth: apiData.dateOfBirth ? new Date(apiData.dateOfBirth) : null,
         profilePicture: undefined,
         coverPhoto: undefined,
         logo: undefined,
@@ -445,7 +447,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
             // Handle arrays specially
             if (key === "businessCategory") {
               // Backend expects businessCategory as a comma-separated string
-              formData.append(key, value.join(','));
+              formData.append(key, value.join(","));
             } else {
               // For other arrays, use JSON stringify
               formData.append(key, JSON.stringify(value));
@@ -484,7 +486,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
             // Handle arrays specially
             if (key === "businessCategory") {
               // Backend expects businessCategory as a comma-separated string
-              formData.append(key, value.join(','));
+              formData.append(key, value.join(","));
             } else {
               // For other arrays, use JSON stringify
               formData.append(key, JSON.stringify(value));
@@ -521,7 +523,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
   const [selectedChapterId, setSelectedChapterId] = useState<number | null>(
-    null,
+    null
   );
 
   const { data: chapterRoles, isLoading: loadingChapterRoles } = useQuery({
@@ -570,7 +572,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="memberName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Member Name <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>
+                        Member Name <span className="text-red-500">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -586,7 +590,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="gender"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Gender <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>
+                        Gender <span className="text-red-500">*</span>
+                      </FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
@@ -612,7 +618,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="chapterId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Chapter <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>
+                        Chapter <span className="text-red-500">*</span>
+                      </FormLabel>
                       <Select
                         value={field.value ? String(field.value) : ""}
                         onValueChange={(v) => {
@@ -666,7 +674,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                                               .includes("secretary") ||
                                             role.role
                                               .toLowerCase()
-                                              .includes("president"),
+                                              .includes("president")
                                         );
 
                                       if (leadershipRoles.length === 0) {
@@ -691,7 +699,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                                                 "Unassigned"}
                                             </span>
                                           </div>
-                                        ),
+                                        )
                                       );
                                     })()}
                                   </div>
@@ -710,13 +718,16 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="category"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Business Category <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>
+                        Business Category{" "}
+                        <span className="text-red-500">*</span>
+                      </FormLabel>
                       <Select
                         value={field.value}
                         onValueChange={(value) => {
                           field.onChange(value);
                           const category = categoriesData?.find(
-                            (cat) => cat.name === value,
+                            (cat) => cat.name === value
                           );
                           setSelectedCategoryId(category?.id || null);
                         }}
@@ -767,7 +778,10 @@ export default function MemberForm({ mode }: MemberFormProps) {
 
                     return (
                       <FormItem>
-                        <FormLabel>Business Subcategories <span className="text-red-500">*</span></FormLabel>
+                        <FormLabel>
+                          Business Subcategories{" "}
+                          <span className="text-red-500">*</span>
+                        </FormLabel>
                         <MultipleSelector
                           options={subCategoryOptions}
                           value={selectedOptions}
@@ -775,20 +789,20 @@ export default function MemberForm({ mode }: MemberFormProps) {
                             loadingSubcategories
                               ? "Loading subcategories..."
                               : selectedCategoryId
-                                ? "Select business subcategories"
-                                : "Select main category first"
+                              ? "Select business subcategories"
+                              : "Select main category first"
                           }
                           emptyIndicator={
                             <p className="text-center text-sm">
                               {selectedCategoryId && !loadingSubcategories
                                 ? "No subcategories found for the selected main category."
                                 : !selectedCategoryId
-                                  ? "Please select a main category to see subcategories."
-                                  : "Searching..."}
+                                ? "Please select a main category to see subcategories."
+                                : "Searching..."}
                             </p>
                           }
                           onChange={(selectedOpts: Option[]) => {
-                            const selectedIds = selectedOpts.map((opt) => 
+                            const selectedIds = selectedOpts.map((opt) =>
                               Number(opt.value)
                             );
                             field.onChange(selectedIds);
@@ -813,22 +827,37 @@ export default function MemberForm({ mode }: MemberFormProps) {
                       today.getFullYear() - 18,
                       today.getMonth(),
                       today.getDate()
-                    ).toISOString().split('T')[0];
-                    
+                    )
+                      .toISOString()
+                      .split("T")[0];
+
                     return (
                       <FormItem className="flex flex-col">
-                        <FormLabel>Date of Birth <span className="text-red-500">*</span></FormLabel>
+                        <FormLabel>
+                          Date of Birth <span className="text-red-500">*</span>
+                        </FormLabel>
                         <Input
                           type="date"
-                          value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                          value={
+                            field.value
+                              ? new Date(field.value)
+                                  .toISOString()
+                                  .split("T")[0]
+                              : ""
+                          }
                           onChange={(e) => {
-                            field.onChange(e.target.value ? new Date(e.target.value) : null);
+                            field.onChange(
+                              e.target.value ? new Date(e.target.value) : null
+                            );
                           }}
                           max={maxDate}
                           className="w-full"
                         />
                         <FormMessage />
-                        <FormDescription>Member must be at least 18 years old. If you wish to Not Provide a Dob enter DOB as 01-01-0001</FormDescription>
+                        <FormDescription>
+                          Member must be at least 18 years old. If you wish to
+                          Not Provide a Dob enter DOB as 01-01-0001
+                        </FormDescription>
                       </FormItem>
                     );
                   }}
@@ -838,7 +867,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="mobile1"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Mobile 1 <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>
+                        Mobile 1 <span className="text-red-500">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="10-digit mobile" />
                       </FormControl>
@@ -877,7 +908,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
                 name="organizationName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Organization Name <span className="text-red-500">*</span></FormLabel>
+                    <FormLabel>
+                      Organization Name <span className="text-red-500">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="Enter organization name" />
                     </FormControl>
@@ -925,7 +958,10 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="organizationMobileNo"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Organization Mobile <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>
+                        Organization Mobile{" "}
+                        <span className="text-red-500">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="10-digit mobile" />
                       </FormControl>
@@ -975,7 +1011,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="orgAddressLine1"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Address Line 1 <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>
+                        Address Line 1 <span className="text-red-500">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="Building, Street" />
                       </FormControl>
@@ -1005,7 +1043,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="stateId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>State <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>
+                        State <span className="text-red-500">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Select
                           onValueChange={(value) =>
@@ -1040,7 +1080,10 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="orgLocation"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Organization Location <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>
+                        Organization Location{" "}
+                        <span className="text-red-500">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="City/Town" />
                       </FormControl>
@@ -1053,7 +1096,10 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="orgPincode"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Organization Pincode <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>
+                        Organization Pincode{" "}
+                        <span className="text-red-500">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="6-digit pincode" />
                       </FormControl>
@@ -1120,7 +1166,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
                 name="addressLine1"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Address Line 1 <span className="text-red-500">*</span></FormLabel>
+                    <FormLabel>
+                      Address Line 1 <span className="text-red-500">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="House No, Street" />
                     </FormControl>
@@ -1151,14 +1199,16 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="category"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Category <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>
+                        Category <span className="text-red-500">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Select
                           onValueChange={(value) => {
                             field.onChange(value);
                             // Find the category ID based on selected name
                             const categoryObj = categoriesData?.find(
-                              (cat) => cat.name === value,
+                              (cat) => cat.name === value
                             );
                             if (categoryObj) {
                               setSelectedCategoryId(categoryObj.id);
@@ -1193,7 +1243,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="location"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Location <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>
+                        Location <span className="text-red-500">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="City/Town" />
                       </FormControl>
@@ -1206,7 +1258,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="pincode"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Pincode <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>
+                        Pincode <span className="text-red-500">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="6-digit pincode" />
                       </FormControl>
@@ -1310,7 +1364,13 @@ export default function MemberForm({ mode }: MemberFormProps) {
                         field: { onChange, value, ...fieldProps },
                       }) => (
                         <FormItem>
-                          <FormLabel>{index === 0 ? `Profile Picture ` : index === 1 ? 'Cover Image' : 'Logo'}</FormLabel>
+                          <FormLabel>
+                            {index === 0
+                              ? `Profile Picture `
+                              : index === 1
+                              ? "Cover Image"
+                              : "Logo"}
+                          </FormLabel>
                           <div className="space-y-2">
                             {mode === "edit" && displayUrl && (
                               <div className="relative w-full aspect-square rounded-md overflow-hidden border border-dashed">
@@ -1382,7 +1442,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
+                    <FormLabel>
+                      Email <span className="text-red-500">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -1403,7 +1465,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password <span className="text-red-500">*</span></FormLabel>
+                        <FormLabel>
+                          Password <span className="text-red-500">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Input
                             type="password"
@@ -1420,7 +1484,10 @@ export default function MemberForm({ mode }: MemberFormProps) {
                     name="verifyPassword"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Confirm Password <span className="text-red-500">*</span></FormLabel>
+                        <FormLabel>
+                          Confirm Password{" "}
+                          <span className="text-red-500">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Input
                             type="password"
@@ -1453,8 +1520,8 @@ export default function MemberForm({ mode }: MemberFormProps) {
               {isLoading
                 ? "Saving..."
                 : mode === "create"
-                  ? "Create Member"
-                  : "Update Member"}
+                ? "Create Member"
+                : "Update Member"}
             </Button>
           </CardFooter>
         </form>
