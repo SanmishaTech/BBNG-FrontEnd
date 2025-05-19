@@ -1,22 +1,29 @@
 /**
  * API service for PowerTeam and Category related operations.
  */
-import axios from 'axios'; // Or your preferred HTTP client
-import { PowerTeam, PowerTeamInput, PaginatedPowerTeamResponse, Category, PaginatedCategoryResponse, SubCategory } from '../types/powerTeam.types';
+import axios from "axios"; // Or your preferred HTTP client
+import {
+  PowerTeam,
+  PowerTeamInput,
+  PaginatedPowerTeamResponse,
+  Category,
+  PaginatedCategoryResponse,
+  SubCategory,
+} from "../types/powerTeam.types";
 
-// --- Configuration --- 
+// --- Configuration ---
 // TODO: Replace with your actual API base URL and token retrieval logic
-const API_BASE_URL = 'http://localhost:3000/api'; // Adjust as per your setup
+const API_BASE_URL = "http://15.207.30.113/api"; // Adjust as per your setup
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
-apiClient.interceptors.request.use(config => {
-  const token = localStorage.getItem('authToken'); // Example: get token from local storage
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem("authToken"); // Example: get token from local storage
   if (token) {
     config.headers = config.headers || {}; // Ensure headers object exists
     config.headers.Authorization = `Bearer ${token}`;
@@ -30,12 +37,21 @@ apiClient.interceptors.request.use(config => {
  * Fetches a paginated list of categories.
  * @param params - Query parameters for pagination, search, sort.
  */
-export const getCategories = async (params?: { page?: number; limit?: number; search?: string; sortBy?: string; sortOrder?: 'asc' | 'desc' }): Promise<PaginatedCategoryResponse> => {
+export const getCategories = async (params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}): Promise<PaginatedCategoryResponse> => {
   try {
-    const response = await apiClient.get<PaginatedCategoryResponse>('/categories', { params });
+    const response = await apiClient.get<PaginatedCategoryResponse>(
+      "/categories",
+      { params }
+    );
     return response.data;
   } catch (error) {
-    console.error('Failed to fetch categories:', error);
+    console.error("Failed to fetch categories:", error);
     throw error;
   }
 };
@@ -59,17 +75,21 @@ export const getAllCategories = async (): Promise<Category[]> => {
       totalPages = response.totalPages;
       currentPage++;
     } while (currentPage <= totalPages);
-    
+
     return allCategories;
   } catch (error) {
-    console.error('Failed to fetch all categories:', error);
+    console.error("Failed to fetch all categories:", error);
     throw error;
   }
 };
 
 // Function to get all subcategories for a specific category ID
-export const getSubCategoriesByCategoryId = async (categoryId: number): Promise<SubCategory[]> => {
-  const response = await apiClient.get<SubCategory[]>(`/subcategories/category/${categoryId}`);
+export const getSubCategoriesByCategoryId = async (
+  categoryId: number
+): Promise<SubCategory[]> => {
+  const response = await apiClient.get<SubCategory[]>(
+    `/subcategories/category/${categoryId}`
+  );
   return response.data;
 };
 
@@ -79,12 +99,21 @@ export const getSubCategoriesByCategoryId = async (categoryId: number): Promise<
  * Fetches a paginated list of power teams.
  * @param params - Query parameters for pagination, search, sort.
  */
-export const getPowerTeams = async (params?: { page?: number; limit?: number; search?: string; sortBy?: string; sortOrder?: 'asc' | 'desc' }): Promise<PaginatedPowerTeamResponse> => {
+export const getPowerTeams = async (params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}): Promise<PaginatedPowerTeamResponse> => {
   try {
-    const response = await apiClient.get<PaginatedPowerTeamResponse>('/powerteams', { params });
+    const response = await apiClient.get<PaginatedPowerTeamResponse>(
+      "/powerteams",
+      { params }
+    );
     return response.data;
   } catch (error) {
-    console.error('Failed to fetch power teams:', error);
+    console.error("Failed to fetch power teams:", error);
     throw error;
   }
 };
@@ -107,12 +136,17 @@ export const getPowerTeamById = async (id: number): Promise<PowerTeam> => {
  * Creates a new power team.
  * @param powerTeamData - The data for the new power team.
  */
-export const createPowerTeam = async (powerTeamData: PowerTeamInput): Promise<PowerTeam> => {
+export const createPowerTeam = async (
+  powerTeamData: PowerTeamInput
+): Promise<PowerTeam> => {
   try {
-    const response = await apiClient.post<PowerTeam>('/powerteams', powerTeamData);
+    const response = await apiClient.post<PowerTeam>(
+      "/powerteams",
+      powerTeamData
+    );
     return response.data;
   } catch (error) {
-    console.error('Failed to create power team:', error);
+    console.error("Failed to create power team:", error);
     // Consider more specific error handling, e.g., for validation errors
     throw error;
   }
@@ -123,9 +157,15 @@ export const createPowerTeam = async (powerTeamData: PowerTeamInput): Promise<Po
  * @param id - The ID of the power team to update.
  * @param powerTeamData - The updated data for the power team.
  */
-export const updatePowerTeam = async (id: number, powerTeamData: Partial<PowerTeamInput>): Promise<PowerTeam> => {
+export const updatePowerTeam = async (
+  id: number,
+  powerTeamData: Partial<PowerTeamInput>
+): Promise<PowerTeam> => {
   try {
-    const response = await apiClient.put<PowerTeam>(`/powerteams/${id}`, powerTeamData);
+    const response = await apiClient.put<PowerTeam>(
+      `/powerteams/${id}`,
+      powerTeamData
+    );
     return response.data;
   } catch (error) {
     console.error(`Failed to update power team with ID ${id}:`, error);
@@ -137,9 +177,13 @@ export const updatePowerTeam = async (id: number, powerTeamData: Partial<PowerTe
  * Deletes a power team by its ID.
  * @param id - The ID of the power team to delete.
  */
-export const deletePowerTeam = async (id: number): Promise<{ message: string }> => {
+export const deletePowerTeam = async (
+  id: number
+): Promise<{ message: string }> => {
   try {
-    const response = await apiClient.delete<{ message: string }>(`/powerteams/${id}`);
+    const response = await apiClient.delete<{ message: string }>(
+      `/powerteams/${id}`
+    );
     return response.data;
   } catch (error) {
     console.error(`Failed to delete power team with ID ${id}:`, error);
