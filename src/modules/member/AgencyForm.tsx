@@ -103,7 +103,7 @@ type BaseMemberFormValues = {
   category: string;
   businessCategory: string[];
   gender: string;
-  dateOfBirth: Date;
+  dateOfBirth: Date | null;
   mobile1: string;
   mobile2: string | null;
   gstNo?: string;
@@ -152,9 +152,23 @@ const createMemberSchema = (mode: "create" | "edit") => {
     category: z.string().min(1, "Business category is required"),
     businessCategory: z.array(z.string()).optional(),
     gender: z.string().optional(),
-    dateOfBirth: mode === "edit" 
-      ? z.date().nullable().optional()
-      : z.date({ required_error: "Date of birth is required" }),
+     dateOfBirth: z
+      .date()
+      .optional()
+      .refine(
+        (date) => {
+          if (!date) return true; // Optional field, valid if not provided
+          const today = new Date();
+          const eighteenYearsAgo = new Date(
+            today.getFullYear() - 18,
+            today.getMonth(),
+            today.getDate()
+          );
+          return date <= eighteenYearsAgo;
+        },
+        { message: "Must be at least 18 years old" }
+      ),
+ 
     mobile1: z.string().regex(/^[0-9]{10}$/, "Valid mobile number is required"),
     mobile2: z
       .string()
@@ -225,9 +239,9 @@ const createMemberSchema = (mode: "create" | "edit") => {
 };
 
 // Environment variable for the API base URL (recommended)
-// const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://15.207.30.113//";
+// const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000//";
 // For this example, we'll use the hardcoded one if not available.
-const IMAGE_BASE_URL = "http://15.207.30.113//"; // Replace with your actual image base URL
+const IMAGE_BASE_URL = "http://localhost:3000//"; // Replace with your actual image base URL
 
 export default function MemberForm({ mode }: MemberFormProps) {
   const { id } = useParams<{ id: string }>();
@@ -315,7 +329,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
           : [visitorData.businessCategory]
         : [],
       gender: visitorData?.gender || "",
-      dateOfBirth: new Date(),
+      dateOfBirth: visitorData?.dateOfBirth
+        ? new Date(visitorData.dateOfBirth)
+        : null,
       mobile1: visitorData?.mobile1 || "",
       mobile2: visitorData?.mobile2 || null,
       gstNo: "",
@@ -404,7 +420,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
           : [],
         dateOfBirth: apiData.dateOfBirth
           ? new Date(apiData.dateOfBirth)
-          : new Date(),
+          : null,
         profilePicture: undefined,
         coverPhoto: undefined,
         logo: undefined,
