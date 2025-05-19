@@ -49,43 +49,35 @@ const initialData = {
       isActive: false,
       items: [
         { title: "Chapter Performance", url: "/chapter-performance" },
-         { title: "Members", url: "/members" },
+        { title: "Members", url: "/members" },
         { title: "Visitors", url: "/chapter-visitors" },
         { title: "Meetings", url: "/chaptermeetings" },
- 
       ],
     },
   ],
   roles: {
     super_admin: {
       projects: [
-        
         {
           title: "References",
           url: "/references",
           icon: BookOpen,
           isActive: false,
-          items: [
-            { title: "References", url: "/references" },
-          ],
+          items: [{ title: "References", url: "/references" }],
         },
         {
           title: "Done Deals",
           url: "/dashboard/done-deal",
           icon: FileText,
           isActive: false,
-          items: [
-            { title: "Done Deals", url: "/dashboard/done-deal" },
-          ],
+          items: [{ title: "Done Deals", url: "/dashboard/done-deal" }],
         },
         {
           title: "One To Ones",
           url: "/one-to-ones",
           icon: BookOpen,
           isActive: false,
-          items: [
-            { title: "One To Ones", url: "/one-to-ones" },
-          ],
+          items: [{ title: "One To Ones", url: "/one-to-ones" }],
         },
         {
           title: "Requirements",
@@ -96,7 +88,7 @@ const initialData = {
             { title: "Requirements", url: "/requirements" },
             { title: "View Requirements", url: "/viewrequirements" },
           ],
-        }
+        },
       ],
       navMain: [
         {
@@ -123,53 +115,19 @@ const initialData = {
             { title: "Zone", url: "/zones" },
             { title: "Location", url: "/location" },
             { title: "Business Category", url: "/categories" },
+            { title: "Sub Category", url: "/sub-categories" },
+            { title: "States", url: "/states" },
+            { title: "Memberships", url: "/memberships" },
             { title: "Power Teams", url: "/powerteams" },
             { title: "Messages", url: "/messages" },
-            { title: "Chapters", url: "/chapters" },  
+            { title: "Chapters", url: "/chapters" },
             { title: "Members", url: "/members" },
-            
+            { title: "Packages", url: "/packages" },
             { title: "Site Settings", url: "/site" },
             { title: "Meetings", url: "/chaptermeetings" },
             { title: "Trainings", url: "/trainings" },
-           ],
-        },
-        {
-          title: "References",
-          url: "/references",
-          icon: BookOpen,
-          isActive: false,
-          items: [
-            { title: "References", url: "/references" },
           ],
         },
-        {
-          title: "Done Deals",
-          url: "/dashboard/done-deal",
-          icon: FileText,
-          isActive: false,
-          items: [
-            { title: "Done Deals", url: "/dashboard/done-deal" },
-          ],
-        },
-        {
-          title: "One To Ones",
-          url: "/one-to-ones",
-          icon: BookOpen,
-          isActive: false,
-          items: [
-            { title: "One To Ones", url: "/one-to-ones" },
-          ],
-        },
-        {
-          title: "Requirements",
-          url: "/requirements",
-          icon: BookOpen,
-          isActive: false,
-          items: [
-            { title: "Requirements", url: "/requirements" },
-            { title: "View Requirements", url: "/viewrequirements" },
-          ],
-        }
       ],
 
       // navMain: [
@@ -179,9 +137,7 @@ const initialData = {
       //     icon: SquareTerminal,
       //     isActive: false,
       //     items: [
-           
-         
-             
+
       //     ],
       //   },
       // ],
@@ -191,7 +147,7 @@ const initialData = {
       navMain: [
         {
           title: "My Information",
-          url: "#", 
+          url: "#",
           icon: User,
           isActive: false,
           items: [
@@ -204,9 +160,9 @@ const initialData = {
               title: "My Memberships",
               url: "/memberships",
               icon: CreditCard,
-            }
+            },
           ],
-        }
+        },
       ],
     },
   },
@@ -248,20 +204,23 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const storedUser = localStorage.getItem("user");
     const storedRoles = localStorage.getItem("roles");
     let isUserOB = false;
-    
+
     // Check if user is an OB from the roles data
     if (storedRoles) {
       try {
         const parsedRoles = JSON.parse(storedRoles);
         // Check if any role is "OB"
-        isUserOB = parsedRoles.some((roleObj: { role: string, chapters: number[] }) => 
-          roleObj.role === "OB" && roleObj.chapters && roleObj.chapters.length > 0
+        isUserOB = parsedRoles.some(
+          (roleObj: { role: string; chapters: number[] }) =>
+            roleObj.role === "OB" &&
+            roleObj.chapters &&
+            roleObj.chapters.length > 0
         );
       } catch (error) {
         console.error("Failed to parse roles from localStorage", error);
       }
     }
-    
+
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
@@ -284,7 +243,7 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           navMain: roleData?.navMain || [],
           user: parsedUser,
           obNav: isUserOB ? initialData.obNavigation : [],
-          isOB: isUserOB
+          isOB: isUserOB,
         }));
       } catch (error) {
         console.error("Failed to parse user from localStorage", error);
@@ -294,7 +253,7 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           projects: initialData.roles.super_admin.projects,
           navMain: initialData.roles.super_admin.navMain,
           obNav: [],
-          isOB: false
+          isOB: false,
         }));
       }
     } else {
@@ -304,7 +263,7 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         projects: initialData.roles.super_admin.projects,
         navMain: initialData.roles.super_admin.navMain,
         obNav: [],
-        isOB: false
+        isOB: false,
       }));
     }
   }, []);
@@ -319,22 +278,16 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-             <div className="flex items-center gap-2  justify-between">
-             <a
-              className="flex items-center gap-2"
-              >
-                <ArrowUpCircleIcon className="h-5 w-5" />
-                <span className="text-base font-semibold">{appName}</span>
-              </a>
-              <a
-              className="flex items-center gap-2"
-              href="/member/search">
-                <Search className="h-5 w-5 mr-2" />
-               </a>
-              
-             </div>
+              <div className="flex items-center gap-2  justify-between">
+                <a className="flex items-center gap-2">
+                  <ArrowUpCircleIcon className="h-5 w-5" />
+                  <span className="text-base font-semibold">{appName}</span>
+                </a>
+                <a className="flex items-center gap-2" href="/member/search">
+                  <Search className="h-5 w-5 mr-2" />
+                </a>
+              </div>
             </SidebarMenuButton>
-            
           </SidebarMenuItem>
           {/* <SidebarMenuItem>
             <SidebarMenuButton
@@ -355,7 +308,9 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {data.isOB && (
           <div className="mb-4">
             <div className="px-4 py-2">
-              <h3 className="text-sm font-semibold text-muted-foreground">Office Bearer Menu</h3>
+              <h3 className="text-sm font-semibold text-muted-foreground">
+                Office Bearer Menu
+              </h3>
             </div>
             <NavMain items={data.obNav || []} />
           </div>
