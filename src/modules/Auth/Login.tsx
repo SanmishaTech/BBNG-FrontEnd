@@ -1,17 +1,35 @@
-import { useEffect } from "react"; // Removed useState as it's not needed for isLoading
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
-import { post } from "@/services/apiService";
+import { post, get, patch } from "@/services/apiService"; // Added patch
 import { appName, allowRegistration } from "@/config";
 import { LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
+
+// User object structure within LoginResponse and for localStorage
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  active: boolean;
+  lastLogin: string;
+  policyAccepted?: boolean; // Make optional as it might not always be there pre-login
+  policyAcceptedAt?: string; // Optional
+  member?: {
+    id: number;
+    memberName: string;
+  };
+  isMember: boolean;
+  accessibleChapters?: any[]; // Or a more specific type
+}
 
 // Type for API error response with field validation errors
 interface ApiErrorResponse {
@@ -27,33 +45,25 @@ interface ApiErrorResponse {
 interface LoginResponse {
   token: string;
   accesstoken: string;
-  user: {
-    id: number;
-    name: string;
-    email: string;
-    role: string;
-    active: boolean;
-    lastLogin: string;
-    member?: {
-      id: number;
-      memberName: string;
-      // Other member fields as needed
-    };
-    isMember: boolean;
-  };
+  user: User;
+  requiresPolicyAcceptance: boolean;
 }
-
-type LoginFormInputs = z.infer<typeof loginSchema>;
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address").min(1, "Email is required"),
-
   password: z.string().min(1, "Password is required"),
+  // agreedToPolicy removed as it's no longer part of the initial form
 });
 
+type LoginFormInputs = z.infer<typeof loginSchema>; // No longer needs agreedToPolicy here
+
 const Login = () => {
+  const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
+  const [policyText, setPolicyText] = useState("");
+  const [isPolicyLoading, setIsPolicyLoading] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient(); // Obtain queryClient
 
   // Get setError from useForm
   const {
@@ -80,25 +90,32 @@ const Login = () => {
     any, // Changed to 'any' to access enhanced error properties
     LoginFormInputs
   >({
-    mutationFn: async (loginData: LoginFormInputs) => {
+    mutationFn: async (loginData: LoginFormInputs) => { // agreedToPolicy removed from input
       return await post("/auth/login", loginData);
     },
     onSuccess: (data) => {
       console.log("Login successful:", data);
+      console.log('[Login.tsx] Login API Response Data:', data);
+      console.log('[Login.tsx] Access Token from data:', data.accesstoken, 'Type:', typeof data.accesstoken);
       localStorage.setItem("authToken", data.token);
-      localStorage.setItem("refreshToken", data.accesstoken);
+      localStorage.setItem("refreshToken", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-      localStorage.setItem("roles", JSON.stringify(data.user.accessibleChapters));
+      localStorage.setItem("roles", JSON.stringify(data.user.accessibleChapters || [])); // Handle if accessibleChapters is undefined
 
-      
       // Store memberId from the nested structure if it exists
       if (data.user.member && data.user.member.id) {
         localStorage.setItem("memberId", data.user.member.id.toString());
       }
-      
+
+      if (data.requiresPolicyAcceptance) {
+        console.log("Login successful, policy acceptance required. Fetching policy...");
+        fetchPolicyMutation.mutate(); // This will open the modal on its own success
+      } else {
+        console.log("Login successful, policy already accepted or not required. Navigating to dashboard.");
+        navigate("/dashboard");
+        toast.success("Login successful!");
+      }
       // queryClient.invalidateQueries(...) // Consider invalidating relevant queries
-      navigate("/dashboard");
-      toast.success("Login successful!");
     },
     onError: (error: ApiErrorResponse) => {
       // Handle field-specific validation errors (map to form fields)
@@ -139,105 +156,186 @@ const Login = () => {
     },
   });
 
+  const fetchPolicyMutation = useMutation<
+    { policyText: string }, // Expected success response type
+    ApiErrorResponse, // Error type
+    void // Input type for this mutation (not needed)
+  >({
+    mutationFn: async (): Promise<{ policyText: string }> => { // Ensure return type matches expected
+      setIsPolicyLoading(true);
+      return await get("/auth/policy-text");
+                                                 // If 'post' is strictly for POST, you'll need a 'get' helper from apiService
+    },
+    onSuccess: (data) => {
+      setPolicyText(data.policyText);
+      setIsPolicyModalOpen(true);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to load policy.");
+      console.error("Policy fetch error:", error);
+    },
+    onSettled: () => {
+      setIsPolicyLoading(false);
+    },
+  });
+
+  const acceptPolicyMutation = useMutation<
+    { message: string; user: User }, // Expected success response from PATCH /auth/accept-policy
+    ApiErrorResponse,
+    void // No variables needed for this mutation
+  >({
+    mutationFn: async () => {
+      // Using 'patch' now. This assumes apiService.patch exists and handles PATCH requests.
+      return await patch("/auth/accept-policy", {}); 
+    },
+    onSuccess: (data) => {
+      setIsPolicyModalOpen(false);
+      toast.success(data.message || "Policy accepted!");
+
+      // Update user in localStorage with the new policyAccepted status
+      const storedUserData = localStorage.getItem('user');
+      if (storedUserData) {
+        try {
+          const currentUser: User = JSON.parse(storedUserData);
+          const updatedUser = { ...currentUser, policyAccepted: data.user.policyAccepted, policyAcceptedAt: data.user.policyAcceptedAt };
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+        } catch (e) {
+          console.error("Failed to update user data in localStorage after policy acceptance:", e);
+        }
+      }
+      navigate("/dashboard");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to accept policy. Please try again.");
+      console.error("Accept policy error:", error);
+    },
+  });
+
   const onSubmit: SubmitHandler<LoginFormInputs> = (data) => {
-    // Optionally log data being sent: console.log("Submitting:", data);
-    loginMutation.mutate(data);
+    // All checks for admin/policy status are now done by the backend.
+    // Frontend just submits login credentials.
+    console.log('onSubmit: Submitting login data to backend:', data);
+    loginMutation.mutate(data); // agreedToPolicy is no longer part of LoginFormInputs or sent here
   };
 
-  const isLoading = loginMutation.isPending;
+  const handleAgreeAndLogin = () => {
+    // User agrees to policy after successful initial authentication.
+    // Call the mutation to record policy acceptance on the backend.
+    console.log("Policy modal: User agreed. Calling acceptPolicyMutation.");
+    acceptPolicyMutation.mutate();
+    // Modal will be closed by acceptPolicyMutation.onSuccess
+  };
+
+  const handleDisagree = () => {
+    setIsPolicyModalOpen(false);
+    toast.info("Policy agreement is required to log in.");
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    localStorage.removeItem('roles');
+    localStorage.removeItem('memberId');
+    queryClient.clear(); // Clear react-query cache
+    setIsPolicyModalOpen(false);
+    toast.error("Policy agreement is required. You have been logged out.");
+    navigate('/');
+  };
+
+  const isLoading = loginMutation.isPending || isPolicyLoading;
 
   return (
-    // When submitting, RHF first runs Zod validation. If that passes, onSubmit is called.
-    // If Zod fails, its errors show up in the `errors` object immediately.
-    // If Zod passes but the server returns validation errors, our `onError` handler
-    // calls `setError`, which also updates the `errors` object.
-    <form className="p-6 md:p-8" onSubmit={handleSubmit(onSubmit)}>
-      <div className="flex flex-col gap-6">
-        {/* Header */}
-        <div className="flex flex-col items-center text-center">
-          <h1 className="text-2xl font-bold">Welcome back</h1>
-          <p className="text-balance text-muted-foreground">
-            Login to your {appName} account
-          </p>
-        </div>
-
-        {/* Email Field */}
-        <div className="grid gap-2 relative pb-3">
-          {" "}
-          {/* Added pb-3 for error spacing */}
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="m@example.com"
-            {...register("email")} // RHF validation triggers on change/blur
-            required
-            disabled={isLoading}
-            aria-invalid={errors.email ? "true" : "false"} // Accessibility
-          />
-          {/* Display RHF errors (client OR server-set) */}
-          {errors.email && (
-            <p className="text-destructive text-xs absolute -bottom-1 left-0">
-              {" "}
-              {/* Adjusted positioning */}
-              {errors.email.message}
-            </p>
-          )}
-        </div>
-
-        {/* Password Field */}
-        <div className="grid gap-2 relative pb-3">
-          {" "}
-          {/* Added pb-3 for error spacing */}
-          <Label htmlFor="password">Password</Label>
-          <PasswordInput
-            id="password"
-            placeholder="Enter your password"
-            {...register("password")} // RHF validation triggers on change/blur
-            required
-            disabled={isLoading}
-            aria-invalid={errors.password ? "true" : "false"} // Accessibility
-          />
-          {/* Display RHF errors (client OR server-set) */}
-          {errors.password && (
-            <p className="text-destructive text-xs absolute -bottom-1 left-0">
-              {" "}
-              {/* Adjusted positioning */}
-              {errors.password.message}
-            </p>
-          )}
-           <a
-              href="/forgot-password"
-              tabIndex={isLoading ? -1 : 0} // Prevent tabbing when disabled
-              className="ml-auto text-sm underline-offset-2 hover:underline"
-            >
-              Forgot your password?
-            </a>
-        </div>
-
-        {/* Submit Button */}
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? (
-            <>
-              <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-              Logging in...
-            </>
-          ) : (
-            "Login"
-          )}
-        </Button>
-
-        {/* Registration Link */}
-        {/* {allowRegistration && (
-          <div className="text-center text-sm">
-            Don't have an account?{" "}
-            <a href="/register" className="underline underline-offset-4">
-              Register
-            </a>
+    <>
+      {/* Policy Modal */}
+      {isPolicyModalOpen && (
+        <div className="fixed inset-0 bg-transparent  bg-opacity-75 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-card text-card-foreground p-6 sm:p-8 rounded-xl shadow-2xl max-w-lg w-full border">
+            <h2 className="text-3xl font-bold mb-6 text-center">Our Policy</h2>
+            <div className="max-h-120 overflow-y-auto mb-8 text-sm text-muted-foreground whitespace-pre-wrap p-6 border rounded-lg bg-background">
+              {policyText || "Loading policy..."}
+            </div>
+            <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4">
+              <Button variant="outline" onClick={handleDisagree} disabled={isPolicyLoading || loginMutation.isPending} className="w-full sm:w-auto">
+                Disagree
+              </Button>
+              <Button onClick={handleAgreeAndLogin} disabled={isPolicyLoading || loginMutation.isPending || !policyText} className="w-full sm:w-auto">
+                {loginMutation.isPending ? (
+                  <LoaderCircle className="animate-spin mr-2" size={16} />
+                ) : null}
+                Agree & Continue
+              </Button>
+            </div>
           </div>
-        )} */}
-      </div>
-    </form>
+        </div>
+      )}
+
+      {/* Login Form using Shadcn UI structure */}
+      <form className="p-6 md:p-8" onSubmit={handleSubmit(onSubmit)}>
+        {/* ... rest of your form JSX ... no changes needed below this line for this step, just ensure it's within the fragment <></> */}
+        {/* Header */}
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col items-center text-center">
+            <h1 className="text-2xl font-bold">Welcome back</h1>
+            <p className="text-balance text-muted-foreground">
+              Login to your {appName} account
+            </p>
+          </div>
+
+          {/* Email Field */}
+          <div className="grid gap-2 relative pb-3">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="m@example.com"
+              {...register("email")}
+              required
+              disabled={isLoading}
+              aria-invalid={errors.email ? "true" : "false"}
+            />
+            {errors.email && (
+              <p className="text-destructive text-xs absolute -bottom-1 left-0">
+                {errors.email.message}
+              </p>
+            )}
+          </div>
+
+          {/* Password Field */}
+          <div className="grid gap-2 relative pb-3">
+            <Label htmlFor="password">Password</Label>
+            <PasswordInput
+              id="password"
+              placeholder="Enter your password"
+              {...register("password")}
+              required
+              disabled={isLoading}
+              aria-invalid={errors.password ? "true" : "false"}
+            />
+            {errors.password && (
+              <p className="text-destructive text-xs absolute -bottom-1 left-0">
+                {errors.password.message}
+              </p>
+            )}
+          </div>
+
+          {/* Submit Button */}
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? (
+              <LoaderCircle className="animate-spin mr-2" size={16} />
+            ) : null}
+            Login
+          </Button>
+
+          {/* Registration Link */}
+          {allowRegistration && (
+            <p className="text-center text-sm">
+              Don&apos;t have an account?{" "}
+              <a href="/register" className="font-semibold hover:underline">
+                Register
+              </a>
+            </p>
+          )}
+        </div>
+      </form>
+    </>
   );
 };
 

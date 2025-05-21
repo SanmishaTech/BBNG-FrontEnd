@@ -121,16 +121,16 @@ const initialData = {
             { title: "Location", url: "/location" },
             { title: "Business Category", url: "/categories" },
             { title: "Sub Category", url: "/sub-categories" },
-            { title: "Power Teams", url: "/powerteams" },
-            { title: "Messages", url: "/messages" },
+            { title: "Packages", url: "/packages" },
             { title: "Chapters", url: "/chapters" },
             { title: "Members", url: "/members" },
-            { title: "Memberships", url: "/memberships" },
-
-            { title: "Packages", url: "/packages" },
-            { title: "Site Settings", url: "/site" },
+            { title: "Power Teams", url: "/powerteams" },
             { title: "Meetings", url: "/chaptermeetings" },
             { title: "Trainings", url: "/trainings" },
+            { title: "Site Settings", url: "/site" },
+            { title: "Messages", url: "/messages" },
+            
+
           ],
         },
       ],
@@ -321,7 +321,9 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
               <div className="flex items-center gap-2  justify-between">
-                <a className="flex items-center gap-2">
+                <a 
+                href="/dashboard"
+                className="flex items-center gap-2">
                   <ArrowUpCircleIcon className="h-5 w-5" />
                   <span className="text-base font-semibold">{appName}</span>
                 </a>
