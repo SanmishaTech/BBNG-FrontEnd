@@ -148,7 +148,6 @@ const initialData = {
       // ],
     },
     member: {
-      projects: [],
       projects: [
         {
           title: "References",
