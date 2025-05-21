@@ -23,10 +23,17 @@ import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import CustomPagination from "@/components/common/custom-pagination";
 import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar"
+import membershipicon from "@/images/membership.svg"
+import {
   Loader,
   ChevronUp,
   ChevronDown,
   Edit,
+  UsersRound,
   Trash2,
   Filter,
   Download,
@@ -46,7 +53,7 @@ import {
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 import { formatDate } from "@/lib/formatter";
-
+ 
 // Fetch members with pagination and filters
 const fetchMembers = async (
   page: number,
@@ -466,6 +473,15 @@ const MemberList = () => {
                        
                       <TableCell>
                         <div className="flex gap-2">
+                        <Button
+                          className="cursor-pointer bg-purple-100"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => navigate(`/memberships?memberId=${member.id}`)}
+                            >
+                          <UsersRound  size={16}/>
+                            
+                          </Button>
                           <Button
                             variant="outline"
                             size="sm"
@@ -473,7 +489,7 @@ const MemberList = () => {
                           >
                             <Edit size={16} />
                           </Button>
-
+                           
                           <Button
                             variant="destructive"
                             size="sm"
@@ -490,20 +506,8 @@ const MemberList = () => {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent className="w-56">
                               <DropdownMenuGroup>
-                                <DropdownMenuItem
-                                  onClick={() => handleChangeStatus(member.id)}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    {member.isActive ? (
-                                      <XCircle className="h-4 w-4" />
-                                    ) : (
-                                      <CheckCircle className="h-4 w-4" />
-                                    )}
-                                    <span>
-                                      Set Login {member.isActive ? "Inactive" : "Active"}
-                                    </span>
-                                  </div>
-                                </DropdownMenuItem>
+                               
+                               
                               </DropdownMenuGroup>
                             </DropdownMenuContent>
                           </DropdownMenu>

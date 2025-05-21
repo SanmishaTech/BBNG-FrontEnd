@@ -124,8 +124,9 @@ const ZoneList = () => {
       toast.success("Region deleted successfully");
       queryClient.invalidateQueries(["zones"]);
     },
-    onError: () => {
-      toast.error("Failed to delete region");
+    onError: (error: any) => {
+      console.log(error)
+      toast.error(error?.message || "Failed to delete region");
     },
   });
 

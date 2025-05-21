@@ -289,7 +289,18 @@ export default function MemberForm({ mode }: MemberFormProps) {
     Chapter[]
   >({
     queryKey: ["chapters"],
-    queryFn: () => get("/chapters").then((r) => r.chapters),
+    queryFn: () => get("/chapters").then((response) => {
+      // Ensure response and response.chapters are as expected
+      const rawChapters = response?.chapters;
+      if (Array.isArray(rawChapters)) {
+        return rawChapters.map(chapter => ({
+          ...chapter,
+          // Ensure chapter.zones is always an array
+          zones: Array.isArray(chapter.zones) ? chapter.zones : [],
+        }));
+      }
+      return []; // Return empty array if data is not in expected format
+    }),
   });
 
   const visitorData = useMemo(() => {
@@ -434,37 +445,39 @@ export default function MemberForm({ mode }: MemberFormProps) {
   });
 
   const createMutation = useMutation<any, Error, MemberFormValues>({
-    mutationFn: (data: MemberFormValues) => {
+    mutationFn: async (data: MemberFormValues) => {
       const formData = new FormData();
-      for (const key in data) {
-        if (Object.prototype.hasOwnProperty.call(data, key)) {
-          const value = (data as any)[key];
-          if (value instanceof File) {
-            formData.append(key, value);
-          } else if (value instanceof Date) {
-            formData.append(key, value.toISOString().split("T")[0]);
-          } else if (Array.isArray(value)) {
-            // Handle arrays specially
-            if (key === "businessCategory") {
-              // Backend expects businessCategory as a comma-separated string
-              formData.append(key, value.join(","));
-            } else {
-              // For other arrays, use JSON stringify
-              formData.append(key, JSON.stringify(value));
-            }
-          } else if (value !== null && value !== undefined) {
-            formData.append(key, String(value));
-          }
+
+      Object.keys(data).forEach((key) => {
+        const value = data[key as keyof MemberFormValues];
+        if (key === "businessCategory" && Array.isArray(value)) {
+          formData.append(key, value.join(","));
+        } else if (value instanceof File) {
+          formData.append(key, value);
+        } else if (value !== null && value !== undefined) {
+          formData.append(key, String(value));
         }
-      }
-      return postupload("/api/members", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
       });
+
+      return postupload("/api/members", formData);
     },
-    onSuccess: () => {
+    onSuccess: (responseData) => {
       queryClient.invalidateQueries({ queryKey: ["members"] });
-      toast.success("Member created successfully");
-      navigate("/members");
+      toast.success("Member created successfully!");
+      const memberId = responseData?.data?.id || responseData?.id;
+
+      if (memberId) {
+        navigate(`/memberships/add?memberId=${memberId}`);
+      } else {
+        console.error(
+          "Created member ID not found in response, navigating to members list.",
+          responseData
+        );
+        toast.error(
+          "Could not retrieve new member ID. Please add membership manually."
+        );
+        navigate("/members");
+      }
     },
     onError: (error: any) => {
       Validate(error, form.setError);
