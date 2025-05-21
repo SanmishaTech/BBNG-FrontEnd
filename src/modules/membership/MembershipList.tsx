@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,11 +21,13 @@ import {
   Trash2,
   Search,
   PlusCircle,
+  ArrowLeft,
+  FileText // Added for invoice button
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import CustomPagination from "@/components/common/custom-pagination";
 import { Separator } from "@/components/ui/separator";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { format } from "date-fns";
 import {
   Dialog,
@@ -34,6 +36,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger
 } from "@/components/ui/dialog";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
 
@@ -42,20 +45,54 @@ interface MembershipListProps {
 }
 
 // Define the component as a regular named function
-function MembershipList({ memberId }: MembershipListProps) {
+function MembershipList({ memberId: propMemberId }: MembershipListProps) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAdmin } = useRoleAccess();
+  
+  // Parse memberId from URL query parameters
+  const [memberId, setMemberId] = useState<number | undefined>(propMemberId);
+  const [memberName, setMemberName] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
   const [recordsPerPage, setRecordsPerPage] = useState(10);
   const [sortBy, setSortBy] = useState("invoiceDate");
   const [sortOrder, setSortOrder] = useState("desc");
   const [search, setSearch] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [membershipToDelete, setMembershipToDelete] = useState<number | null>(
-    null
-  );
+  const [membershipToDelete, setMembershipToDelete] = useState<number | null>(null);
+  const [isDownloadingInvoice, setIsDownloadingInvoice] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Effect to handle URL memberId parameter
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const memberIdParam = params.get("memberId");
+    console.log("memberIdParam", memberIdParam);
+    
+    if (memberIdParam) {
+      const parsedMemberId = parseInt(memberIdParam, 10);
+      console.log("parsedMemberId", parsedMemberId);
+      
+      if (!isNaN(parsedMemberId)) {
+        setMemberId(parsedMemberId);
+        // Fetch member name for display
+        get(`/api/members/${parsedMemberId}`).then((response) => {
+          if (response && response.memberName) {
+            setMemberName(response.memberName);
+          }
+        }).catch(error => {
+          console.error("Error fetching member details:", error);
+        });
+      }
+    } else {
+      // If no memberId in URL and no prop memberId, reset to undefined
+      if (!propMemberId) {
+        setMemberId(undefined);
+        setMemberName("");
+      }
+    }
+  }, [location.search, propMemberId]);
 
   // Build the API endpoint based on whether we have a memberId
   const apiEndpoint = memberId
@@ -296,23 +333,125 @@ function MembershipList({ memberId }: MembershipListProps) {
                         </TableCell>
                         {isAdmin && (
                           <TableCell>
-                            <div className="justify-end flex gap-2">
+                            <div className="flex items-center justify-end gap-1">
                               <Button
                                 variant="outline"
-                                size="sm"
+                                size="icon"
                                 onClick={() =>
                                   navigate(`/memberships/${membership.id}/edit`)
                                 }
+                                title="Edit Membership"
                               >
-                                <Edit size={16} />
+                                <Edit className="h-4 w-4" />
                               </Button>
-                             {/* <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => confirmDelete(membership.id)}
-                              >
-                                <Trash2 size={16} />
-                              </Button> */}
+                              {membership.invoiceNumber && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={async () => {
+                                    if (isDownloadingInvoice === membership.id) return; // Prevent multiple clicks
+                                    setIsDownloadingInvoice(membership.id);
+                                    try {
+                                      const token = localStorage.getItem("authToken"); // Assumes token is stored with key 'token'
+                                      if (!token) {
+                                        toast.error("Authentication token not found. Please log in again.");
+                                        return;
+                                      }
+                                      const response = await fetch(`/api/memberships/invoice/${membership.invoiceNumber}.pdf`, {
+                                        headers: {
+                                          Authorization: `Bearer ${token}`,
+                                        },
+                                      });
+
+                                      if (!response.ok) {
+                                        let errorMsgString = `Failed to download invoice. Status: ${response.status}`;
+                                        try {
+                                          const errorData = await response.json(); // errorData is an object
+                                          if (typeof errorData.message === 'string') {
+                                            errorMsgString = errorData.message;
+                                          } else if (typeof errorData.error === 'string') {
+                                            errorMsgString = errorData.error;
+                                          } else if (errorData.message) {
+                                            errorMsgString = JSON.stringify(errorData.message);
+                                          } else if (errorData.error) {
+                                            errorMsgString = JSON.stringify(errorData.error);
+                                          } // Keep original if no better message found
+                                        } catch (e) { /* ignore if error response is not JSON, errorMsgString remains the status message */ }
+                                        toast.error(errorMsgString);
+                                        throw new Error(errorMsgString);
+                                      }
+
+                                      const blob = await response.blob();
+                                      // Check if the server responded with an error in JSON format instead of a PDF
+                                      if (blob.type === 'application/json') {
+                                          try {
+                                              const errorText = await blob.text();
+                                              const errorData = JSON.parse(errorText);
+                                              toast.error(errorData.message || "Failed to download invoice: Server returned an error.");
+                                          } catch (e) {
+                                              toast.error("Failed to download invoice: Received an unexpected error format from server.");
+                                          }
+                                          return;
+                                      }
+
+                                      const url = window.URL.createObjectURL(blob);
+                                      const a = document.createElement("a");
+                                      a.href = url;
+                                      a.download = `${membership.invoiceNumber}.pdf`;
+                                      document.body.appendChild(a);
+                                      a.click();
+                                      document.body.removeChild(a); // Clean up
+                                      window.URL.revokeObjectURL(url);
+                                    } catch (error) {
+                                      console.error("Download invoice error:", error);
+                                      // Avoid duplicate generic toasts if a specific one was already shown by response check
+                                      const errorMessage = error instanceof Error ? error.message : String(error);
+                                      if (!errorMessage.includes("Failed to download invoice")) {
+                                         toast.error("An unexpected error occurred while downloading the invoice: " + errorMessage);
+                                      }
+                                    } finally {
+                                      setIsDownloadingInvoice(null);
+                                    }
+                                  }}
+                                  title="View Invoice"
+                                  disabled={isDownloadingInvoice === membership.id}
+                                >
+                                  {isDownloadingInvoice === membership.id ? (
+                                    <Loader className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <FileText className="h-4 w-4 text-blue-600 hover:text-blue-800" />
+                                  )}
+                                </Button>
+                              )}
+                              <Dialog open={showConfirmation && membershipToDelete === membership.id} onOpenChange={(isOpen) => { if (!isOpen) { setShowConfirmation(false); setMembershipToDelete(null); } }}>
+                                <DialogTrigger asChild>
+                                  <Button
+                                    variant="destructive"
+                                    size="icon"
+                                    onClick={() => confirmDelete(membership.id)}
+                                    title="Delete Membership"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Confirm Deletion</DialogTitle>
+                                    <DialogDescription>
+                                      Are you sure you want to delete membership record {membership.invoiceNumber ? `for invoice ${membership.invoiceNumber}` : `ID ${membership.id}`}? This action cannot be undone.
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  <DialogFooter>
+                                    <Button variant="outline" onClick={() => { setShowConfirmation(false); setMembershipToDelete(null); }} disabled={isDeleting}>
+                                      Cancel
+                                    </Button>
+                                    <Button onClick={handleDelete} variant="destructive" disabled={isDeleting}>
+                                      {isDeleting ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                      Delete
+                                    </Button>
+                                  </DialogFooter>
+                                </DialogContent>
+                              </Dialog>
                             </div>
                           </TableCell>
                         )}

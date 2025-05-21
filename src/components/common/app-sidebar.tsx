@@ -62,27 +62,31 @@ const initialData = {
           title: "References",
           url: "/references",
           icon: BookOpen,
+          groupLabel: "References",
           isActive: false,
-          items: [{ title: "References", url: "/references" }],
+          items: [],
         },
         {
           title: "Done Deals",
           url: "/dashboard/done-deal",
           icon: FileText,
+          groupLabel: "Done Deals",
           isActive: false,
-          items: [{ title: "Done Deals", url: "/dashboard/done-deal" }],
+          items: [],
         },
         {
           title: "One To Ones",
           url: "/one-to-ones",
+          groupLabel: "One To Ones",
           icon: BookOpen,
           isActive: false,
-          items: [{ title: "One To Ones", url: "/one-to-ones" }],
+          items: [],
         },
         {
           title: "Requirements",
           url: "/requirements",
           icon: BookOpen,
+          groupLabel: "Requirements",
           isActive: false,
           items: [
             { title: "Requirements", url: "/requirements" },
@@ -112,16 +116,17 @@ const initialData = {
           icon: SquareTerminal,
           isActive: false,
           items: [
-            { title: "Zone", url: "/zones" },
+            { title: "States", url: "/states" },
+            { title: "Region", url: "/zones" },
             { title: "Location", url: "/location" },
             { title: "Business Category", url: "/categories" },
             { title: "Sub Category", url: "/sub-categories" },
-            { title: "States", url: "/states" },
-            { title: "Memberships", url: "/memberships" },
             { title: "Power Teams", url: "/powerteams" },
             { title: "Messages", url: "/messages" },
             { title: "Chapters", url: "/chapters" },
             { title: "Members", url: "/members" },
+            { title: "Memberships", url: "/memberships" },
+
             { title: "Packages", url: "/packages" },
             { title: "Site Settings", url: "/site" },
             { title: "Meetings", url: "/chaptermeetings" },
@@ -206,18 +211,22 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     let isUserOB = false;
 
     // Check if user is an OB from the roles data
-    if (storedRoles) {
+    if (storedRoles && storedRoles !== "undefined" && storedRoles.trim() !== "") {
       try {
         const parsedRoles = JSON.parse(storedRoles);
-        // Check if any role is "OB"
-        isUserOB = parsedRoles.some(
-          (roleObj: { role: string; chapters: number[] }) =>
-            roleObj.role === "OB" &&
-            roleObj.chapters &&
-            roleObj.chapters.length > 0
-        );
+        // Check if any role is "OB" and validate parsedRoles is an array
+        if (Array.isArray(parsedRoles)) {
+          isUserOB = parsedRoles.some(
+            (roleObj: { role: string; chapters: number[] }) =>
+              roleObj.role === "OB" &&
+              roleObj.chapters &&
+              roleObj.chapters.length > 0
+          );
+        }
       } catch (error) {
         console.error("Failed to parse roles from localStorage", error);
+        // Clear invalid data from localStorage
+        localStorage.removeItem("roles");
       }
     }
 
@@ -307,16 +316,11 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         {data.isOB && (
           <div className="mb-4">
-            <div className="px-4 py-2">
-              <h3 className="text-sm font-semibold text-muted-foreground">
-                Office Bearer Menu
-              </h3>
-            </div>
-            <NavMain items={data.obNav || []} />
+            <NavMain items={data.obNav || []} groupLabel="Office Bearer Menu" />
           </div>
         )}
-        <NavMain items={data.projects || []} />
-        <NavMain items={data.navMain || []} />
+        <NavMain items={data.projects || []} groupLabel="Services" />
+        <NavMain items={data.navMain || []} groupLabel="Management" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

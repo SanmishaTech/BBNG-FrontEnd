@@ -374,7 +374,7 @@ const App = () => {
               }
             />
             <Route
-              path="/memberships/:id/edit"
+              path="/memberships/:memberId/edit"
               element={
                 <ProtectedRoute roles={['admin']}>
                   <EditMembership />
