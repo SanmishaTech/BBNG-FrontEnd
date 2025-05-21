@@ -149,23 +149,53 @@ const initialData = {
     },
     member: {
       projects: [],
-      navMain: [
+      projects: [
         {
-          title: "My Information",
-          url: "#",
-          icon: User,
+          title: "References",
+          url: "/references",
+          icon: BookOpen,
+          groupLabel: "References",
+          isActive: false,
+          items: [],
+        },
+        {
+          title: "Done Deals",
+          url: "/dashboard/done-deal",
+          icon: FileText,
+          groupLabel: "Done Deals",
+          isActive: false,
+          items: [],
+        },
+        {
+          title: "One To Ones",
+          url: "/one-to-ones",
+          groupLabel: "One To Ones",
+          icon: BookOpen,
+          isActive: false,
+          items: [],
+        },
+        {
+          title: "Requirements",
+          url: "/requirements",
+          icon: BookOpen,
+          groupLabel: "Requirements",
           isActive: false,
           items: [
-            {
-              title: "My Profile",
-              url: "/profile",
-              icon: UserCircle,
-            },
-            {
-              title: "My Memberships",
-              url: "/memberships",
-              icon: CreditCard,
-            },
+            { title: "Requirements", url: "/requirements" },
+            { title: "View Requirements", url: "/viewrequirements" },
+          ],
+        },
+      ],
+      navMain: [
+        {
+          title: "Reports",
+          url: "#",
+          icon: PieChart,
+          isActive: false,
+          items: [
+            { title: "Member Report", url: "/memberreports" },
+            { title: "Transaction Report", url: "/transactionreports" },
+            { title: "Membership Report", url: "/membershipreports" },
           ],
         },
       ],
@@ -211,7 +241,11 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     let isUserOB = false;
 
     // Check if user is an OB from the roles data
-    if (storedRoles && storedRoles !== "undefined" && storedRoles.trim() !== "") {
+    if (
+      storedRoles &&
+      storedRoles !== "undefined" &&
+      storedRoles.trim() !== ""
+    ) {
       try {
         const parsedRoles = JSON.parse(storedRoles);
         // Check if any role is "OB" and validate parsedRoles is an array
