@@ -2,20 +2,18 @@
  * Utility functions for handling member photos
  */
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://15.207.30.113";
 
 /**
  * Returns the first available photo URL from a member record
  * Falls back to a seeded picsum.photos URL if no photos are available
  */
-export const getBestMemberPhoto = (
-  member: {
-    id: string | number;
-    profilePicture?: string | null;
-    coverPhoto?: string | null;
-    logo?: string | null;
-  }
-): string => {
+export const getBestMemberPhoto = (member: {
+  id: string | number;
+  profilePicture?: string | null;
+  coverPhoto?: string | null;
+  logo?: string | null;
+}): string => {
   if (member.profilePicture) {
     return `${BACKEND_URL}/${member.profilePicture}`;
   }
