@@ -6,29 +6,29 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
 /**
  * Returns the first available photo URL from a member record
- * Falls back to a placeholder if no photos are available
+ * Falls back to a seeded picsum.photos URL if no photos are available
  */
 export const getBestMemberPhoto = (
   member: {
+    id: string | number;
     profilePicture?: string | null;
     coverPhoto?: string | null;
     logo?: string | null;
-  },
-  placeholder = "https://via.placeholder.com/100"
+  }
 ): string => {
   if (member.profilePicture) {
-    return `${BACKEND_URL}/uploads/members/${member.profilePicture}`;
+    return `${BACKEND_URL}/${member.profilePicture}`;
   }
 
   if (member.coverPhoto) {
-    return `${BACKEND_URL}/uploads/members/${member.coverPhoto}`;
+    return `${BACKEND_URL}/${member.coverPhoto}`;
   }
 
   if (member.logo) {
-    return `${BACKEND_URL}/uploads/members/${member.logo}`;
+    return `${BACKEND_URL}/${member.logo}`;
   }
 
-  return placeholder;
+  return `https://picsum.photos/seed/${member.id}/200`;
 };
 
 /**

@@ -64,6 +64,7 @@ const MemberSearch = () => {
           id: member.id.toString(),
           member: member,
           name: member.memberName,
+          role: member?.users?.role,
           profilePicture,
           coverPhoto,
           email: member.email,

@@ -2,7 +2,6 @@ import ProfileHeader from "./ProfileHeader";
 import Infosection from "./Infosection";
 import Friendsection from "./Friendsection";
 import Photosection from "./Photosection";
-import PostComposer from "./PostComposer";
 import Post from "./Post";
 import { useState, useEffect } from "react";
 import { MemberData } from "@/types/member";
@@ -10,6 +9,7 @@ import * as apiService from "@/services/apiService";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { getBestMemberPhoto } from "@/utils/photoUtils";
+import { Button } from "@/components/ui/button";
 
 const Index = ({ memberId }: { memberId?: string }) => {
   const navigate = useNavigate();
@@ -45,20 +45,12 @@ const Index = ({ memberId }: { memberId?: string }) => {
       const memberData: MemberData = {
         id: member.id.toString(),
         name: member.memberName,
-        profilePicture: getBestMemberPhoto(
-          member,
-          "https://via.placeholder.com/100",
-        ),
+        profilePicture: getBestMemberPhoto(member),
         // For cover photo, prefer the second picture but fall back to any available if needed
         coverPhoto: member.coverPhoto
-          ? `${import.meta.env.VITE_BACKEND_URL}/uploads/members/${member.coverPhoto}`
-          : member.profilePicture || member.logo
-            ? getBestMemberPhoto(
-                member,
-                "https://images.unsplash.com/photo-1614850523459-c2f4c699c6b2?auto=format&fit=crop&w=1470&h=400",
-              )
-            : "https://images.unsplash.com/photo-1614850523459-c2f4c699c6b2?auto=format&fit=crop&w=1470&h=400",
-        email: member.email,
+          && `${import.meta.env.VITE_BACKEND_URL}/${member.coverPhoto}`,
+         
+         email: member.email,
         phone: member.mobile1,
         designation: member.businessCategory || "",
         department: member.category || "",
@@ -114,70 +106,26 @@ const Index = ({ memberId }: { memberId?: string }) => {
 
   const fetchMemberActivities = async (id: string) => {
     try {
-      // You can fetch recent activities from the API if available
-      // For now, we'll use static data
-
-      // For actual implementation, would look like:
-      // const response = await apiService.get(`/members/${id}/activities`);
-      // setRecentActivities(response.activities);
-
-      // Fetch real member references as activities
-      try {
-        const referencesResponse = await apiService.get(`/references`, {
-          memberId: id,
-        });
-        if (referencesResponse && referencesResponse.references) {
-          const referenceActivities = referencesResponse.references.map(
-            (ref: any) => ({
-              id: ref.id,
-              user: {
-                name: ref.fromMemberName || ref.toMemberName,
-                // Try to get avatar from the referenced member if available
-                avatar:
-                  ref.fromMember?.profilePicture || ref.toMember?.profilePicture
-                    ? getBestMemberPhoto(
-                        ref.fromMember || ref.toMember,
-                        "https://via.placeholder.com/100",
-                      )
-                    : "https://via.placeholder.com/100",
-              },
-              time: new Date(ref.createdAt).toLocaleDateString(),
-              content: ref.testimonial || "Provided a reference",
-              likes: Math.floor(Math.random() * 20) + 1,
-              comments: Math.floor(Math.random() * 5),
-              shares: Math.floor(Math.random() * 3),
-              type: "reference",
-            }),
-          );
-
-          setRecentActivities(referenceActivities);
-          return;
-        }
-      } catch (error) {
-        console.error("Error fetching references:", error);
+      // Fetch received testimonials using the new dedicated endpoint
+      const response = await apiService.get(`/api/members/${id}/received-testimonials`);
+      
+      if (response && Array.isArray(response)) {
+        // The response is already an array of formatted testimonials.
+        // Ensure 'time' is usable by the Post component (e.g., convert ISO string to Date string if needed)
+        const activities = response.map((testimonial: any) => ({
+          ...testimonial,
+          time: new Date(testimonial.time).toLocaleDateString(), // Format time for display
+        }));
+        setRecentActivities(activities);
+      } else {
+        // Handle cases where response is not as expected (e.g., empty or error)
+        setRecentActivities([]); 
+        console.warn("Received testimonials response was not an array or was empty:", response);
       }
-
-      // Fallback mock data if no references found
-      const mockActivities = [
-        {
-          id: 1,
-          user: {
-            name: "Recent Activity",
-            avatar: "https://via.placeholder.com/100",
-          },
-          time: new Date().toLocaleDateString(),
-          content: "New member joined BBNG Platform",
-          likes: 5,
-          comments: 2,
-          shares: 0,
-          type: "activity",
-        },
-      ];
-
-      setRecentActivities(mockActivities);
     } catch (error) {
-      console.error("Error fetching member activities:", error);
-      setRecentActivities([]);
+      console.error("Error fetching received testimonials:", error);
+      setRecentActivities([]); // Clear activities on error
+      // Optionally, set an error state to display to the user
     }
   };
 
@@ -203,29 +151,30 @@ const Index = ({ memberId }: { memberId?: string }) => {
           <p className="text-gray-600 mb-6">
             Sorry, we couldn't find the member you're looking for.
           </p>
-          <button
+          <Button
+            variant="ghost"
             onClick={goBackToSearch}
             className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-md transition duration-200"
           >
             Back to Member Search
-          </button>
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[hsl(var(--fb-bg))]">
-      <div className="w-full max-w-[1200px] mx-auto">
+    <div className="min-h-screen w-full bg-[hsl(var(--fb-bg))]">
+      <div className="w-full w-[1200px] mx-auto">
         {/* Back Button */}
-        <div className="pt-4 px-4">
-          <button
-            onClick={goBackToSearch}
-            className="flex items-center text-blue-600 hover:text-blue-800 font-medium"
+        {/* <div className="top-20 left-2 z-50 p-2">
+        <Button
+             onClick={goBackToSearch}
+            className="flex items-center hover:text-blue-800 font-medium"
           >
             ← Back to Search
-          </button>
-        </div>
+          </Button>
+        </div> */}
 
         {/* Profile Header */}
         <ProfileHeader memberData={memberData} />
@@ -235,13 +184,13 @@ const Index = ({ memberId }: { memberId?: string }) => {
           {/* Left Sidebar */}
           <div className="md:w-[360px]">
             <Infosection memberData={memberData} />
-            <Photosection memberData={memberData} />
-            <Friendsection memberData={memberData} />
+            {/* <Photosection memberData={memberData} /> */}
+            {/* <Friendsection memberData={memberData} /> */}
           </div>
 
           {/* Main Feed */}
+          
           <div className="flex-1">
-            <PostComposer />
             {recentActivities.map((activity) => (
               <Post key={activity.id} {...activity} />
             ))}

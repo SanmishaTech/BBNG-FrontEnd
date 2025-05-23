@@ -41,7 +41,12 @@ import { getCategories } from "@/services/categoryService";
 import { getSubCategoriesByCategoryId } from "@/services/subCategoryService";
 import { cn } from "@/lib/utils";
 // import MembershipStatusAlert from "@/components/common/membership-status-alert";
-import { Info, Check, ChevronsUpDown, X } from "lucide-react";
+import {
+  Info,
+  Check,
+  ChevronsUpDown,
+  X,
+} from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -93,7 +98,7 @@ type BaseMemberFormValues = {
   memberName: string;
   chapterId: number;
   category: string;
-  businessCategory: number[]; // Frontend uses array for multiselect, backend expects string
+  businessCategory: number[]; 
   gender: string;
   dateOfBirth: Date | null;
   mobile1: string;
@@ -142,71 +147,124 @@ const createMemberSchema = (mode: "create" | "edit") => {
       .int()
       .min(1, "Chapter is required"),
     category: z.string().min(1, "Business category is required"),
-    businessCategory: z.array(z.number()).optional(),
+    businessCategory: z.any().optional(), // Revert to standard optional array
     gender: z.string().min(1, "Gender is required"),
-    dateOfBirth: z.date({ required_error: "Date of birth is required" }).refine(
-      (date) => {
-        const today = new Date();
-        const eighteenYearsAgo = new Date(
-          today.getFullYear() - 18,
-          today.getMonth(),
-          today.getDate()
-        );
-        return date <= eighteenYearsAgo;
+    dateOfBirth: z.preprocess(
+      (arg) => {
+        if (!arg || arg === "") return null; // Handle empty string or falsy to null
+        if (typeof arg === 'string') {
+            const d = new Date(arg);
+            return Number.isNaN(d.getTime()) ? null : d; // Ensure valid date, else null
+        }
+        return arg;
       },
-      { message: "Member must be at least 18 years old" }
+      z.date({ invalid_type_error: "Invalid date format for Date of Birth" })
+        .nullable() // Allows null
+        .refine(
+          (date) => {
+            if (mode === "create") {
+              return date !== null; // Required in create mode
+            }
+            return true; // Optional in edit mode (already nullable)
+          },
+          {
+            message: "Date of birth is required",
+          }
+        )
+        .refine(
+          (date) => {
+            if (!date) return true; // Skip age validation if null
+            const today = new Date();
+            const eighteenYearsAgo = new Date(
+              today.getFullYear() - 18,
+              today.getMonth(),
+              today.getDate()
+            );
+            return date <= eighteenYearsAgo;
+          },
+          { message: "Must be at least 18 years old" }
+        )
     ),
-    mobile1: z.string().regex(/^[0-9]{10}$/, "Valid mobile number is required"),
-    mobile2: z
+    mobile1: z
       .string()
-      .regex(/^[0-9]{10}$/, "Valid mobile number is required")
-      .or(z.literal(""))
-      .transform((val) => (val === "" ? null : val))
-      .nullable(),
-    gstNo: z
+      .min(10, "Mobile number must be 10 digits")
+      .max(10, "Mobile number must be 10 digits"),
+     mobile2: z // Type: string | null
       .string()
-      .regex(
-        /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9A-Z]{1}Z[0-9A-Z]{1}$/,
-        "Invalid GST number format. Example: 27AAPFU0939F1ZV"
-      )
-      .or(z.literal(""))
-      .optional(),
+      .min(10, "Mobile number must be 10 digits")
+      .max(10, "Mobile number must be 10 digits")
+       .nullable()
+      .or(z.literal("")), // Allows empty string, effectively making it nullable
+      gstNo: z.preprocess( // Type: string | undefined
+        (val) => (val === "" || val === null ? undefined : val),
+        z
+          .string()
+          .regex(
+            /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9A-Z]{1}Z[0-9A-Z]{1}$/,
+            "Invalid GST number format. Example: 27AAPFU0939F1ZV"
+          )
+          .optional()
+      ),
     organizationName: z.string().min(1, "Organization name is required"),
-    businessTagline: z.string().optional(),
+    businessTagline: z.preprocess((val) => (val === "" || val === null ? undefined : val), 
+      z.string().optional()
+    ),
     organizationMobileNo: z
       .string()
-      .regex(/^[0-9]{10}$/, "Valid mobile number is required"),
-    organizationLandlineNo: z.string().optional(),
-    organizationEmail: z
-      .string()
-      .email("Invalid email address")
-      .or(z.literal(""))
-      .optional(),
+      .min(10, "Mobile number must be 10 digits")
+      .max(10, "Mobile number must be 10 digits"),
+     organizationLandlineNo: z.preprocess((val) => (val === "" || val === null ? undefined : val), 
+      z.string().optional()
+    ),
+    organizationEmail: z.preprocess((val) => (val === "" || val === null ? undefined : val), 
+      z.string().email("Invalid email address").optional()
+    ),
     orgAddressLine1: z.string().min(1, "Address is required"),
-    orgAddressLine2: z.string().optional(),
+    orgAddressLine2: z.preprocess((val) => (val === "" || val === null ? undefined : val), 
+      z.string().optional()
+    ),
     orgLocation: z.string().min(1, "Location is required"),
-    orgPincode: z.string().regex(/^[0-9]{6}$/, "Invalid pincode"),
-    organizationWebsite: z
+    orgPincode: z
       .string()
-      .url("Invalid URL")
-      .or(z.literal(""))
-      .optional(),
-    organizationDescription: z.string().optional(),
+      .length(6, "Pincode must be 6 digits")
+      .regex(/^\d{6}$/, "Invalid pincode format"),
+    organizationWebsite: z.preprocess((val) => (val === "" || val === null ? undefined : val), 
+      z.string().url("Invalid URL").optional()
+    ),
+    organizationDescription: z.preprocess((val) => (val === "" || val === null ? undefined : val), 
+      z.string().optional()
+    ),
     addressLine1: z.string().min(1, "Address is required"),
     location: z.string().min(1, "Location is required"),
-    addressLine2: z.string().optional(),
-    pincode: z.string().regex(/^[0-9]{6}$/, "Invalid pincode"),
-    specificAsk: z.string().optional(),
-    specificGive: z.string().optional(),
-    clients: z.string().optional(),
-    profilePicture: z.instanceof(File).optional(),
-    coverPhoto: z.instanceof(File).optional(),
-    logo: z.instanceof(File).optional(),
-    email: z.string().email("Valid email is required"),
-    stateId: z
-      .number({ required_error: "State is required" })
-      .int()
-      .min(1, "State is required"),
+    addressLine2: z.preprocess((val) => (val === "" || val === null ? undefined : val), 
+      z.string().optional()
+    ),
+    pincode: z
+      .string()
+      .length(6, "Pincode must be 6 digits")
+      .regex(/^\d{6}$/, "Invalid pincode format"),
+    specificAsk: z.preprocess((val) => (val === "" || val === null ? undefined : val), 
+      z.string().optional()
+    ),
+    specificGive: z.preprocess((val) => (val === "" || val === null ? undefined : val), 
+      z.string().optional()
+    ),
+    clients: z.preprocess((val) => (val === "" || val === null ? undefined : val), 
+      z.string().optional()
+    ),
+    profilePicture: z.preprocess((val) => (val === null ? undefined : val), 
+      z.instanceof(File).optional()
+    ),
+    coverPhoto: z.preprocess((val) => (val === null ? undefined : val), 
+      z.instanceof(File).optional()
+    ),
+    logo: z.preprocess((val) => (val === null ? undefined : val), 
+      z.instanceof(File).optional()
+    ),
+    email: z.string().email("Invalid email format"),
+    stateId: z.preprocess((val) => (val === null || val === "" || Number.isNaN(Number(val)) || Number(val) === 0 ? undefined : Number(val)), 
+      z.number().int().positive().optional()
+    ),
   });
 
   if (mode === "create") {
@@ -526,6 +584,11 @@ export default function MemberForm({ mode }: MemberFormProps) {
   });
 
   const onSubmit: SubmitHandler<FormValues> = (data) => {
+    console.log("Form errors:", form.formState.errors);
+    if (Object.keys(form.formState.errors).length > 0) {
+      toast.error("Please correct the form errors before submitting.");
+      return;
+    }
     if (mode === "create") {
       createMutation.mutate(data as CreateMemberFormValues);
     } else {
@@ -773,6 +836,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                 <FormField
                   control={form.control}
                   name="businessCategory"
+
                   render={({ field }) => {
                     const subCategoryOptions: Option[] = useMemo(() => {
                       if (!Array.isArray(subcategories)) return [];
@@ -792,10 +856,10 @@ export default function MemberForm({ mode }: MemberFormProps) {
                     return (
                       <FormItem>
                         <FormLabel>
-                          Business Subcategories{" "}
-                          <span className="text-red-500">*</span>
+                          Business Subcategories
                         </FormLabel>
                         <MultipleSelector
+                          className="min-w-full"
                           options={subCategoryOptions}
                           value={selectedOptions}
                           placeholder={
@@ -815,9 +879,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
                             </p>
                           }
                           onChange={(selectedOpts: Option[]) => {
-                            const selectedIds = selectedOpts.map((opt) =>
-                              Number(opt.value)
-                            );
+                            const selectedIds = selectedOpts
+                              .map((opt) => Number(opt.value))
+                              .filter(id => !Number.isNaN(id)); 
                             field.onChange(selectedIds);
                           }}
                           disabled={!selectedCategoryId || loadingSubcategories}
@@ -1156,8 +1220,10 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   <FormItem>
                     <FormLabel>Organization Description (Optional)</FormLabel>
                     <FormControl>
-                      <Input
+                      <Textarea
                         {...field}
+                        max={500}
+                        maxLength={500}
                         value={field.value || ""}
                         placeholder="Briefly describe the organization"
                       />
@@ -1206,50 +1272,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   </FormItem>
                 )}
               />
-              <div className="grid md:grid-cols-2 gap-4 md:gap-6">
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Category <span className="text-red-500">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Select
-                          onValueChange={(value) => {
-                            field.onChange(value);
-                            // Find the category ID based on selected name
-                            const categoryObj = categoriesData?.find(
-                              (cat) => cat.name === value
-                            );
-                            if (categoryObj) {
-                              setSelectedCategoryId(categoryObj.id);
-                            }
-                          }}
-                          value={field.value}
-                          disabled={loading || loadingCategories}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select a category" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {categoriesData?.map((category: Category) => (
-                              <SelectItem
-                                key={category.id}
-                                value={category.name}
-                              >
-                                {category.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              
               <div className="grid md:grid-cols-2 gap-4 md:gap-6">
                 <FormField
                   control={form.control}
@@ -1354,88 +1377,101 @@ export default function MemberForm({ mode }: MemberFormProps) {
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-3 gap-6">
-                {[0, 1, 2].map((index) => {
-                  const relativeImagePath = existingImageUrls[index];
-                  const fieldName = `profilePicture${
-                    index + 1
-                  }` as keyof FormValues;
-
+                {[ // Define an array for image field configuration
+                  { name: "profilePicture", label: "Profile Picture" },
+                  { name: "coverPhoto", label: "Cover Photo" },
+                  { name: "logo", label: "Logo" },
+                ].map((imageField, index) => {
+                  const fieldName = imageField.name as keyof FormValues;
+                  const relativeImagePath = existingImageUrls[index]; // Assuming existingImageUrls aligns with this order
+                  console.log("Relative path",relativeImagePath)
                   const displayUrl = relativeImagePath
-                    ? `${IMAGE_BASE_URL}/${
-                        relativeImagePath.startsWith("/")
-                          ? relativeImagePath.substring(1)
-                          : relativeImagePath
-                      }`
+                    ? relativeImagePath.startsWith("http")
+                      ? relativeImagePath
+                      : `${IMAGE_BASE_URL}/${relativeImagePath.replace(/^\/+/, "")}`
                     : null;
+                  console.log("display url",displayUrl)
+                  const currentFile = form.watch(fieldName) as File | undefined;
+                  console.log('Current file for', fieldName, ':', currentFile); // Added log for currentFile
 
                   return (
                     <FormField
-                      key={fieldName}
                       control={form.control}
                       name={fieldName}
-                      render={({
-                        field: { onChange, value, ...fieldProps },
-                      }) => (
-                        <FormItem>
-                          <FormLabel>
-                            {index === 0
-                              ? `Profile Picture `
-                              : index === 1
-                              ? "Cover Image"
-                              : "Logo"}
-                          </FormLabel>
-                          <div className="space-y-2">
-                            {mode === "edit" && displayUrl && (
-                              <div className="relative w-full aspect-square rounded-md overflow-hidden border border-dashed">
-                                <img
-                                  src={displayUrl}
-                                  alt={`Current Profile ${index + 1}`}
-                                  className="object-cover w-full h-full"
-                                  onError={(e) => {
-                                    (
-                                      e.target as HTMLImageElement
-                                    ).style.display = "none";
-                                    const parent = (
-                                      e.target as HTMLImageElement
-                                    ).parentElement;
-                                    if (parent) {
-                                      const placeholderText =
-                                        document.createElement("span");
-                                      placeholderText.textContent =
-                                        "Image not found";
-                                      placeholderText.className =
-                                        "flex items-center justify-center w-full h-full text-xs text-gray-500";
-                                      parent.appendChild(placeholderText);
-                                    }
-                                  }}
-                                />
-                              </div>
-                            )}
-                            <FormControl>
+                      key={fieldName}
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col items-center">
+                          <FormLabel className="mb-2">{imageField.label}</FormLabel>
+                          <FormControl>
+                            <div className="w-40 h-40 border rounded-md flex items-center justify-center overflow-hidden relative group">
                               <Input
                                 type="file"
-                                accept="image/jpeg,image/png,image/webp"
+                                accept="image/jpeg,image/png"
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                 onChange={(e) => {
                                   const file = e.target.files?.[0];
-                                  onChange(file || undefined);
-                                }}
-                                {...fieldProps}
-                                className="w-full"
-                              />
-                            </FormControl>
-                            {value && (
-                              <p className="text-xs text-gray-600 truncate">
-                                Selected:{" "}
-                                {(() => {
-                                  if (value instanceof File) {
-                                    return value.name;
+                                  if (file) {
+                                    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                                      form.setError(fieldName, {
+                                        type: "manual",
+                                        message: "File size exceeds 5MB.",
+                                      });
+                                      e.target.value = ""; // Clear the input
+                                    } else {
+                                      field.onChange(file);
+                                    }
+                                  } else {
+                                    field.onChange(undefined); // Handle case where selection is cancelled
                                   }
-                                  return String(value);
-                                })()}
-                              </p>
-                            )}
-                          </div>
-                          <FormMessage />
+                                }}
+                              />
+                              {(currentFile || displayUrl) ? (
+                                <img
+                                  src={displayUrl}
+                                  alt={imageField.label}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="text-xs text-muted-foreground">
+                                  Click to upload
+                                </div>
+                              )}
+                              {(currentFile || displayUrl) && (
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="icon"
+                                  className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity z-20 w-6 h-6"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    field.onChange(undefined); // Clear the file
+                                    // If there was an existing image, we might need to tell the backend to remove it
+                                    // This depends on your backend API design for updates
+                                    if (relativeImagePath) {
+                                      // Potentially set a flag like form.setValue(`remove_${fieldName}`, true);
+                                      // Or handle this in the FormData preparation
+                                      setExistingImageUrls(prev => {
+                                        const newUrls = [...prev];
+                                        newUrls[index] = null;
+                                        return newUrls;
+                                      });
+                                    }
+                                    const fileInput = e.currentTarget.parentElement?.querySelector('input[type="file"]') as HTMLInputElement;
+                                    if (fileInput) fileInput.value = "";
+                                  }}
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </FormControl>
+                          <FormMessage className="mt-1" />
+                          {form.formState.errors[fieldName] && (
+                            <p className="text-xs text-red-500 mt-1">
+                              {form.formState.errors[fieldName]?.message?.toString()}
+                            </p>
+                          )}
                         </FormItem>
                       )}
                     />

@@ -201,9 +201,9 @@ const ThankYouSlipDetail = () => {
             <div className="space-y-2">
               <div className="flex items-center text-sm text-muted-foreground">
                 <User className="h-4 w-4 mr-2" />
-                {slipType === "given" ? "To Whom" : "Received By"}
+                {slipType === "given" ?   "Received By": "From Whom"}
               </div>
-              <p className="text-lg font-medium">{thankYouSlip.toWhomMember?.memberName || thankYouSlip.toWhom}</p>
+              <p className="text-lg font-medium">{slipType === "given" ? thankYouSlip.toWhomMember?.memberName || thankYouSlip.toWhom:thankYouSlip?.fromMember?.memberName}</p>
             </div>
 
             <div className="space-y-2">

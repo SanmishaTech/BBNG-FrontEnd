@@ -90,17 +90,26 @@ const Login = () => {
     any, // Changed to 'any' to access enhanced error properties
     LoginFormInputs
   >({
-    mutationFn: async (loginData: LoginFormInputs) => { // agreedToPolicy removed from input
+    mutationFn: async (loginData: LoginFormInputs) => {
+      // agreedToPolicy removed from input
       return await post("/auth/login", loginData);
     },
     onSuccess: (data) => {
       console.log("Login successful:", data);
-      console.log('[Login.tsx] Login API Response Data:', data);
-      console.log('[Login.tsx] Access Token from data:', data.accesstoken, 'Type:', typeof data.accesstoken);
-      localStorage.setItem("authToken", data.token);
+      console.log("[Login.tsx] Login API Response Data:", data);
+      console.log(
+        "[Login.tsx] Access Token from data:",
+        data.accesstoken,
+        "Type:",
+        typeof data.accesstoken
+      );
+      localStorage.setItem("authToken", data.token || data.accesstoken);
       localStorage.setItem("refreshToken", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-      localStorage.setItem("roles", JSON.stringify(data.user.accessibleChapters || [])); // Handle if accessibleChapters is undefined
+      localStorage.setItem(
+        "roles",
+        JSON.stringify(data.user.accessibleChapters || [])
+      ); // Handle if accessibleChapters is undefined
 
       // Store memberId from the nested structure if it exists
       if (data.user.member && data.user.member.id) {
@@ -108,10 +117,14 @@ const Login = () => {
       }
 
       if (data.requiresPolicyAcceptance) {
-        console.log("Login successful, policy acceptance required. Fetching policy...");
+        console.log(
+          "Login successful, policy acceptance required. Fetching policy..."
+        );
         fetchPolicyMutation.mutate(); // This will open the modal on its own success
       } else {
-        console.log("Login successful, policy already accepted or not required. Navigating to dashboard.");
+        console.log(
+          "Login successful, policy already accepted or not required. Navigating to dashboard."
+        );
         navigate("/dashboard");
         toast.success("Login successful!");
       }
@@ -124,15 +137,24 @@ const Login = () => {
         if (error.errors && Array.isArray(error.errors)) {
           error.errors.forEach((fieldError) => {
             // Only process if we have a path and message
-            if (fieldError.path && fieldError.message && Array.isArray(fieldError.path)) {
+            if (
+              fieldError.path &&
+              fieldError.message &&
+              Array.isArray(fieldError.path)
+            ) {
               // Get the field name (last item in the path array or the first item if single-level)
-              const fieldName = fieldError.path[fieldError.path.length - 1] || fieldError.path[0];
-              
+              const fieldName =
+                fieldError.path[fieldError.path.length - 1] ||
+                fieldError.path[0];
+
               // Set the error on the specific field if it matches our form fields
-              if (typeof fieldName === 'string' && (fieldName === 'email' || fieldName === 'password')) {
+              if (
+                typeof fieldName === "string" &&
+                (fieldName === "email" || fieldName === "password")
+              ) {
                 setError(fieldName as keyof LoginFormInputs, {
-                  type: 'server',
-                  message: fieldError.message
+                  type: "server",
+                  message: fieldError.message,
                 });
               }
             }
@@ -141,16 +163,16 @@ const Login = () => {
         }
         return false; // No field-specific errors to handle
       };
-      
+
       // First try to handle field-specific validation errors
       const hadFieldErrors = handleValidationErrors();
-      
+
       // If we didn't have field-specific errors OR we want to show both field and general errors
       if (!hadFieldErrors || error.status === 401) {
         // Use our improved error message from apiService
         toast.error(error.message || "An error occurred during login.");
       }
-      
+
       // Log detailed error information for debugging
       console.error("Login error details:", error);
     },
@@ -161,10 +183,11 @@ const Login = () => {
     ApiErrorResponse, // Error type
     void // Input type for this mutation (not needed)
   >({
-    mutationFn: async (): Promise<{ policyText: string }> => { // Ensure return type matches expected
+    mutationFn: async (): Promise<{ policyText: string }> => {
+      // Ensure return type matches expected
       setIsPolicyLoading(true);
       return await get("/auth/policy-text");
-                                                 // If 'post' is strictly for POST, you'll need a 'get' helper from apiService
+      // If 'post' is strictly for POST, you'll need a 'get' helper from apiService
     },
     onSuccess: (data) => {
       setPolicyText(data.policyText);
@@ -186,27 +209,36 @@ const Login = () => {
   >({
     mutationFn: async () => {
       // Using 'patch' now. This assumes apiService.patch exists and handles PATCH requests.
-      return await patch("/auth/accept-policy", {}); 
+      return await patch("/auth/accept-policy", {});
     },
     onSuccess: (data) => {
       setIsPolicyModalOpen(false);
       toast.success(data.message || "Policy accepted!");
 
       // Update user in localStorage with the new policyAccepted status
-      const storedUserData = localStorage.getItem('user');
+      const storedUserData = localStorage.getItem("user");
       if (storedUserData) {
         try {
           const currentUser: User = JSON.parse(storedUserData);
-          const updatedUser = { ...currentUser, policyAccepted: data.user.policyAccepted, policyAcceptedAt: data.user.policyAcceptedAt };
-          localStorage.setItem('user', JSON.stringify(updatedUser));
+          const updatedUser = {
+            ...currentUser,
+            policyAccepted: data.user.policyAccepted,
+            policyAcceptedAt: data.user.policyAcceptedAt,
+          };
+          localStorage.setItem("user", JSON.stringify(updatedUser));
         } catch (e) {
-          console.error("Failed to update user data in localStorage after policy acceptance:", e);
+          console.error(
+            "Failed to update user data in localStorage after policy acceptance:",
+            e
+          );
         }
       }
       navigate("/dashboard");
     },
     onError: (error) => {
-      toast.error(error.message || "Failed to accept policy. Please try again.");
+      toast.error(
+        error.message || "Failed to accept policy. Please try again."
+      );
       console.error("Accept policy error:", error);
     },
   });
@@ -214,7 +246,7 @@ const Login = () => {
   const onSubmit: SubmitHandler<LoginFormInputs> = (data) => {
     // All checks for admin/policy status are now done by the backend.
     // Frontend just submits login credentials.
-    console.log('onSubmit: Submitting login data to backend:', data);
+    console.log("onSubmit: Submitting login data to backend:", data);
     loginMutation.mutate(data); // agreedToPolicy is no longer part of LoginFormInputs or sent here
   };
 
@@ -229,15 +261,15 @@ const Login = () => {
   const handleDisagree = () => {
     setIsPolicyModalOpen(false);
     toast.info("Policy agreement is required to log in.");
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
-    localStorage.removeItem('roles');
-    localStorage.removeItem('memberId');
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
+    localStorage.removeItem("roles");
+    localStorage.removeItem("memberId");
     queryClient.clear(); // Clear react-query cache
     setIsPolicyModalOpen(false);
     toast.error("Policy agreement is required. You have been logged out.");
-    navigate('/');
+    navigate("/");
   };
 
   const isLoading = loginMutation.isPending || isPolicyLoading;
@@ -253,10 +285,21 @@ const Login = () => {
               {policyText || "Loading policy..."}
             </div>
             <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4">
-              <Button variant="outline" onClick={handleDisagree} disabled={isPolicyLoading || loginMutation.isPending} className="w-full sm:w-auto">
+              <Button
+                variant="outline"
+                onClick={handleDisagree}
+                disabled={isPolicyLoading || loginMutation.isPending}
+                className="w-full sm:w-auto"
+              >
                 Disagree
               </Button>
-              <Button onClick={handleAgreeAndLogin} disabled={isPolicyLoading || loginMutation.isPending || !policyText} className="w-full sm:w-auto">
+              <Button
+                onClick={handleAgreeAndLogin}
+                disabled={
+                  isPolicyLoading || loginMutation.isPending || !policyText
+                }
+                className="w-full sm:w-auto"
+              >
                 {loginMutation.isPending ? (
                   <LoaderCircle className="animate-spin mr-2" size={16} />
                 ) : null}
