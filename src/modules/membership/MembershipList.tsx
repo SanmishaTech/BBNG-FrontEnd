@@ -39,7 +39,7 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
-
+import { Calendar } from "@/components/ui/calendar"
 interface MembershipListProps {
   memberId?: number; // Optional member ID for filtering
 }
@@ -334,7 +334,7 @@ function MembershipList({ memberId: propMemberId }: MembershipListProps) {
                         {isAdmin && (
                           <TableCell>
                             <div className="flex items-center justify-end gap-1">
-                              {/* <Button
+                              <Button
                                 variant="outline"
                                 size="icon"
                                 onClick={() =>
@@ -343,7 +343,7 @@ function MembershipList({ memberId: propMemberId }: MembershipListProps) {
                                 title="Edit Membership"
                               >
                                 <Edit className="h-4 w-4" />
-                              </Button> */}
+                              </Button>
                               {membership.invoiceNumber && (
                                 <Button
                                   variant="ghost"

@@ -2,12 +2,14 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { get, post } from "@/services/apiService";
 import { format } from "date-fns";
-import { ArrowLeft, Calendar, User, Users, MessageSquare } from "lucide-react";
+import { ArrowLeft, Calendar as CalendarIcon, User, Users, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { DatetimePicker } from "@/components/ui/datetime-picker";
+import { cn } from "@/lib/utils";
+import { DatePickerWithInput } from "@/components/ui/date-picker-input";
+
 import {
   Card,
   CardContent,
@@ -222,13 +224,11 @@ const OneToOneForm = () => {
                 <Label htmlFor="date" className="text-base font-medium">
                   Meeting Date <span className="text-red-500">*</span>
                 </Label>
-                <DatetimePicker
-                  value={formData.date ? new Date(formData.date) : new Date()}
-                  className="w-full"
-                  onChange={(date) => handleChange("date", format(date as Date, "yyyy-MM-dd"))}
-                  format={[
-                    ["months", "days", "years"]
-                  ]}
+                <DatePickerWithInput
+                  value={formData.date ? new Date(formData.date) : undefined}
+                  onChange={(date) => {
+                    handleChange("date", date ? format(date, "yyyy-MM-dd") : "");
+                  }}
                 />
               </div>
               </div>

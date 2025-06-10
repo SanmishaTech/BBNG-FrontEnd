@@ -52,8 +52,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { DatetimePicker } from "@/components/ui/datetime-picker";
+import { DatePickerWithInput } from "@/components/ui/date-picker-input";
+
 import { format } from "date-fns";
 import {
   Card,
@@ -1264,11 +1264,9 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
                           <FormLabel>Invoice Date</FormLabel>
-                          <DatetimePicker
+                          <DatePickerWithInput
                             value={field.value}
-                            className="w-full"
                             onChange={field.onChange}
-                            format={([["days", "months", "years"], []])}
                           />
                           <FormMessage />
                         </FormItem>
@@ -1281,12 +1279,9 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
                           <FormLabel>Package Start Date</FormLabel>
-                          <DatetimePicker
-                            key={watchedPackageId ? `startdate-${watchedPackageId}` : 'startdate-default'}
+                          <DatePickerWithInput
                             value={field.value}
-                            className="w-full"
                             onChange={field.onChange}
-                            format={([["days", "months", "years"], []])}
                           />
                           <FormMessage />
                         </FormItem>
@@ -1568,9 +1563,8 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                         render={({ field }) => (
                           <FormItem className="flex flex-col">
                             <FormLabel>Payment Date *</FormLabel>
-                            <DatetimePicker
-                              format={([["days", "months", "years"], []])}
-                                value={field.value}
+                            <DatePickerWithInput
+                              value={field.value}
                               onChange={field.onChange}
                             />
                             <FormMessage />
@@ -1617,11 +1611,10 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                             control={form.control}
                             name="chequeDate"
                             render={({ field }) => (
-                              <FormItem>
+                              <FormItem className="flex flex-col">
                                 <FormLabel>Cheque Date</FormLabel>
-                                <DatetimePicker
-                                  format={([["days", "months", "years"], []])}
-                                  value={field.value || new Date()}
+                                <DatePickerWithInput
+                                  value={field.value}
                                   onChange={field.onChange}
                                 />
                                 <FormMessage />
