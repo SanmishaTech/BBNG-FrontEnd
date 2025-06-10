@@ -247,7 +247,7 @@ const ReferenceDetail = () => {
                 <div>
                   <CardTitle className="text-2xl">Reference: {reference.nameOfReferral}</CardTitle>
                   <CardDescription>
-                    Created on {format(new Date(reference.createdAt), "MMMM dd, yyyy")}
+                    Created on {format(new Date(reference.createdAt), "Mdd/MM/yyyy")}
                     {reference.giver && reference.receiver && (
                       <div className="mt-1 font-medium">
                         <span className="text-blue-600">{reference.giver.memberName}</span> → <span className="text-green-600">{reference.receiver.memberName}</span>
@@ -288,7 +288,7 @@ const ReferenceDetail = () => {
                     <div>
                       <dt className="text-sm text-gray-600">Date</dt>
                       <dd className="font-medium">
-                        {format(new Date(reference.date), "MMMM dd, yyyy")}
+                        {format(new Date(reference.date), "Mdd/MM/yyyy")}
                       </dd>
                     </div>
                     <div>
@@ -403,7 +403,7 @@ const ReferenceDetail = () => {
             </CardContent>
             <CardFooter className="flex justify-between border-t pt-6">
               <div className="text-sm text-gray-500">
-                Last updated: {format(new Date(reference.updatedAt), "MMMM dd, yyyy")}
+                Last updated: {format(new Date(reference.updatedAt), "Mdd/MM/yyyy")}
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => navigate("/references")}>
