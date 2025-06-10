@@ -7,19 +7,24 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { 
+import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage
+  FormMessage,
 } from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronsUpDown, Check, Calendar as CalendarIcon, ArrowLeft } from "lucide-react";
+import {
+  ChevronsUpDown,
+  Check,
+  Calendar as CalendarIcon,
+  ArrowLeft,
+} from "lucide-react";
 import {
   Command,
   CommandInput,
@@ -40,7 +45,13 @@ import {
 } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useNavigate, useParams } from "react-router-dom";
 
 interface AddMembershipProps {
@@ -48,27 +59,47 @@ interface AddMembershipProps {
 }
 
 // Helper functions for location-based determinations
-const MAHARASHTRA_KEYWORDS = ['maharashtra', 'mumbai', 'pune', 'nagpur', 'thane', 'nashik', 'aurangabad', 'solapur', 'navi mumbai'];
+const MAHARASHTRA_KEYWORDS = [
+  "maharashtra",
+  "mumbai",
+  "pune",
+  "nagpur",
+  "thane",
+  "nashik",
+  "aurangabad",
+  "solapur",
+  "navi mumbai",
+];
 
 /**
  * Determines if a member is from Maharashtra based on GST number or location data
  */
 const isMemberFromMaharashtra = (memberData: any): boolean => {
   if (!memberData) return false;
-  
+
   console.log("Member data for GST check:", {
     hasGstNo: !!memberData.gstNo,
     gstNo: memberData.gstNo,
-    memberName: memberData.memberName
+    memberName: memberData.memberName,
   });
-  
+
   // First priority: Check GST number - if it starts with 27, it's Maharashtra
   if (memberData.gstNo) {
     const gstNumber = memberData.gstNo.trim();
-    console.log("GST number after trim:", gstNumber, "length:", gstNumber.length);
+    console.log(
+      "GST number after trim:",
+      gstNumber,
+      "length:",
+      gstNumber.length
+    );
     if (gstNumber.length >= 2) {
       const stateCode = gstNumber.substring(0, 2);
-      console.log("Extracted state code:", stateCode, "Is Maharashtra:", stateCode === "27");
+      console.log(
+        "Extracted state code:",
+        stateCode,
+        "Is Maharashtra:",
+        stateCode === "27"
+      );
       if (stateCode === "27") {
         return true;
       } else {
@@ -77,25 +108,29 @@ const isMemberFromMaharashtra = (memberData: any): boolean => {
       }
     }
   }
-  
+
   // Fall back to location-based checks if GST number is not available or invalid
-  
+
   // Check the chapter's location
   if (memberData.chapter?.location?.location) {
-    const chapterLocationName = memberData.chapter.location.location.toLowerCase();
-    if (MAHARASHTRA_KEYWORDS.some(keyword => chapterLocationName.includes(keyword))) {
+    const chapterLocationName =
+      memberData.chapter.location.location.toLowerCase();
+    if (
+      MAHARASHTRA_KEYWORDS.some((keyword) =>
+        chapterLocationName.includes(keyword)
+      )
+    ) {
       return true;
     }
   }
-  
+
   // Then check string fields
-  const locationStrings = [
-    memberData.location,
-    memberData.orgLocation
-  ].filter(Boolean).map(loc => loc.toLowerCase());
-  
-  return locationStrings.some(location => 
-    MAHARASHTRA_KEYWORDS.some(keyword => location.includes(keyword))
+  const locationStrings = [memberData.location, memberData.orgLocation]
+    .filter(Boolean)
+    .map((loc) => loc.toLowerCase());
+
+  return locationStrings.some((location) =>
+    MAHARASHTRA_KEYWORDS.some((keyword) => location.includes(keyword))
   );
 };
 
@@ -128,7 +163,7 @@ const formSchema = z.object({
   ),
   paymentDate: z.date().nullable().optional(),
   paymentMode: z.string().nullable().optional(),
-  
+
   // Cheque details
   chequeNumber: z.string().optional().nullable(),
   chequeDate: z.preprocess(
@@ -136,10 +171,10 @@ const formSchema = z.object({
     z.date().optional().nullable()
   ),
   bankName: z.string().optional().nullable(),
-  
+
   // Bank transfer details
   neftNumber: z.string().optional().nullable(),
-  
+
   // UPI details
   utrNumber: z.string().optional().nullable(),
 });
@@ -151,11 +186,11 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
   const [paymentDateOpen, setPaymentDateOpen] = useState(false);
   const [packagePopoverOpen, setPackagePopoverOpen] = useState(false);
   const [memberPopoverOpen, setMemberPopoverOpen] = useState(false);
-  
+
   const { memberId: urlMemberId } = useParams<{ memberId?: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  
+
   // Initialize form with default values
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -211,12 +246,17 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
       try {
         const response = await get(`/api/members/${selectedMemberId}`);
         console.log("Loaded member data:", response);
-        
+
         // Force a recalculation of GST rates based on the loaded data
         setTimeout(() => {
           if (response) {
             const isFromMaha = isMemberFromMaharashtra(response);
-            console.log("Member Maharashtra check (on load):", isFromMaha, "GST number:", response.gstNo);
+            console.log(
+              "Member Maharashtra check (on load):",
+              isFromMaha,
+              "GST number:",
+              response.gstNo
+            );
             if (isFromMaha) {
               form.setValue("cgstRate", 9);
               form.setValue("sgstRate", 9);
@@ -228,7 +268,7 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
             }
           }
         }, 100);
-        
+
         return response;
       } catch (error) {
         console.error("Error loading member data:", error);
@@ -244,17 +284,17 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
       // Force evaluation of the GST number check
       const stateCode = memberData.gstNo?.substring(0, 2);
       const isGSTFromMaha = stateCode === "27";
-      
+
       const isFromMaharashtra = isMemberFromMaharashtra(memberData);
-      console.log("GST determination result:", { 
+      console.log("GST determination result:", {
         isFromMaharashtra,
         memberName: memberData.memberName,
         gstNo: memberData.gstNo,
         stateCode,
         isGSTFromMaha,
-        fullCheck: isFromMaharashtra
+        fullCheck: isFromMaharashtra,
       });
-      
+
       if (isFromMaharashtra) {
         // For Maharashtra members: CGST 9%, SGST 9%, IGST 0%
         form.setValue("cgstRate", 9);
@@ -273,10 +313,12 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
 
   // Update form when a package is selected
   const watchPackageId = form.watch("packageId");
-  
+
   useEffect(() => {
     if (watchPackageId) {
-      const selectedPackage = packages.find((pkg: any) => pkg.id === watchPackageId);
+      const selectedPackage = packages.find(
+        (pkg: any) => pkg.id === watchPackageId
+      );
       if (selectedPackage) {
         form.setValue("basicFees", selectedPackage.basicFees);
       }
@@ -309,9 +351,7 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
       navigate(`/members/${memberId}`);
     },
     onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message || "Failed to add membership"
-      );
+      toast.error(error?.response?.data?.message || "Failed to add membership");
       console.error("Failed to add membership:", error);
     },
   });
@@ -326,14 +366,14 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
     const cgstRate = form.getValues("cgstRate") || 0;
     const sgstRate = form.getValues("sgstRate") || 0;
     const igstRate = form.getValues("igstRate") || 0;
-    
+
     const cgstAmount = (basicFees * cgstRate) / 100;
     const sgstAmount = (basicFees * sgstRate) / 100;
     const igstAmount = (basicFees * igstRate) / 100;
-    
+
     const totalGst = cgstAmount + sgstAmount + igstAmount;
     const totalFees = basicFees + totalGst;
-    
+
     console.log("Calculated totals:", {
       basicFees,
       cgstRate,
@@ -343,21 +383,21 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
       sgstAmount,
       igstAmount,
       totalGst,
-      totalFees
+      totalFees,
     });
-    
+
     return {
       basicFees,
       cgstAmount,
-      sgstAmount, 
+      sgstAmount,
       igstAmount,
       totalGst,
-      totalFees
+      totalFees,
     };
   };
 
   const totals = calculateTotals();
-  
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
@@ -370,7 +410,7 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
     const cgstRate = form.getValues("cgstRate");
     const sgstRate = form.getValues("sgstRate");
     const igstRate = form.getValues("igstRate");
-    
+
     if (cgstRate && sgstRate) {
       return "Maharashtra GST (CGST + SGST)";
     } else if (igstRate) {
@@ -382,30 +422,30 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
   // Get a simple display location for the member's location
   const getDisplayLocation = (memberData: any): string => {
     if (!memberData) return "N/A";
-    
+
     // Check chapter's location first
     if (memberData.chapter?.location?.location) {
       return memberData.chapter.location.location;
     }
-    
+
     // Then fall back to string fields
     if (memberData.orgLocation) {
       return memberData.orgLocation;
     }
-    
+
     if (memberData.location) {
       return memberData.location;
     }
-    
+
     return "N/A";
   };
 
   return (
     <div className="container mx-auto py-6">
       <div className="flex items-center mb-6">
-        <Button 
-          variant="ghost" 
-          size="sm" 
+        <Button
+          variant="ghost"
+          size="sm"
           className="mr-2"
           onClick={() => navigate(-1)}
         >
@@ -474,7 +514,8 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                                       : "opacity-0"
                                   )}
                                 />
-                                {member.memberName} - {member.organizationName || "No Business"}
+                                {member.memberName} -{" "}
+                                {member.organizationName || "No Business"}
                               </CommandItem>
                             ))}
                           </CommandGroup>
@@ -505,10 +546,12 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                     ) : (
                       <div className="flex flex-col gap-1">
                         <div>
-                          <strong>Name:</strong> {memberData?.memberName || "N/A"}
+                          <strong>Name:</strong>{" "}
+                          {memberData?.memberName || "N/A"}
                         </div>
                         <div>
-                          <strong>Business:</strong> {memberData?.organizationName || "N/A"}
+                          <strong>Business:</strong>{" "}
+                          {memberData?.organizationName || "N/A"}
                         </div>
                         <div>
                           <strong>Location:</strong>{" "}
@@ -527,16 +570,26 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                               (State Code: {memberData.gstNo.substring(0, 2)})
                             </span>
                           )}
-                          <button 
+                          <button
                             type="button"
                             className="ml-2 text-xs text-blue-600 underline"
                             onClick={() => {
                               // This is just for testing - would normally be done through proper API call
-                              const testData = {...memberData, gstNo: "27ABCDE1234F1Z8"};
-                              console.log("Testing with modified member data:", testData);
+                              const testData = {
+                                ...memberData,
+                                gstNo: "27ABCDE1234F1Z8",
+                              };
+                              console.log(
+                                "Testing with modified member data:",
+                                testData
+                              );
                               const result = isMemberFromMaharashtra(testData);
                               console.log("Test result:", result);
-                              alert(`Test result: Would a member with GST "27ABCDE1234F1Z8" be from Maharashtra? ${result ? "Yes" : "No"}`);
+                              alert(
+                                `Test result: Would a member with GST "27ABCDE1234F1Z8" be from Maharashtra? ${
+                                  result ? "Yes" : "No"
+                                }`
+                              );
                             }}
                           >
                             Test with 27ABCDE1234F1Z8
@@ -554,34 +607,41 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                             </span>
                           )}
                           <div className="mt-1 text-xs text-gray-500">
-                            Debug Info: 
-                            GST Number: "{memberData?.gstNo || "none"}", 
-                            First 2 digits: "{memberData?.gstNo?.substring(0, 2) || "none"}",
-                            BasicFees: {form.getValues("basicFees") || 0},
-                            CGST: {form.getValues("cgstRate") || 0}%,
-                            SGST: {form.getValues("sgstRate") || 0}%,
-                            IGST: {form.getValues("igstRate") || 0}%
+                            Debug Info: GST Number: "
+                            {memberData?.gstNo || "none"}", First 2 digits: "
+                            {memberData?.gstNo?.substring(0, 2) || "none"}",
+                            BasicFees: {form.getValues("basicFees") || 0}, CGST:{" "}
+                            {form.getValues("cgstRate") || 0}%, SGST:{" "}
+                            {form.getValues("sgstRate") || 0}%, IGST:{" "}
+                            {form.getValues("igstRate") || 0}%
                           </div>
                           <div className="mt-1 text-xs text-gray-500">
-                            Test: Would "27ABCDE1234F1Z8" be Maharashtra? {
-                              (() => {
-                                const testGst = "27ABCDE1234F1Z8";
-                                return testGst.substring(0, 2) === "27" ? "Yes" : "No" 
-                              })()
-                            }
+                            Test: Would "27ABCDE1234F1Z8" be Maharashtra?{" "}
+                            {(() => {
+                              const testGst = "27ABCDE1234F1Z8";
+                              return testGst.substring(0, 2) === "27"
+                                ? "Yes"
+                                : "No";
+                            })()}
                           </div>
                         </div>
                         <div className="flex gap-4">
                           <div>
                             <strong>HO Expiry:</strong>{" "}
                             {memberData?.hoExpiryDate
-                              ? format(new Date(memberData.hoExpiryDate), "PPP")
+                              ? format(
+                                  new Date(memberData.hoExpiryDate),
+                                  "dd/MM/yyyy"
+                                )
                               : "None"}
                           </div>
                           <div>
                             <strong>Venue Expiry:</strong>{" "}
                             {memberData?.venueExpiryDate
-                              ? format(new Date(memberData.venueExpiryDate), "PPP")
+                              ? format(
+                                  new Date(memberData.venueExpiryDate),
+                                  "dd/MM/yyyy"
+                                )
                               : "None"}
                           </div>
                         </div>
@@ -608,7 +668,10 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                           <FormItem>
                             <FormLabel>Invoice Number</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter invoice number" {...field} />
+                              <Input
+                                placeholder="Enter invoice number"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -622,7 +685,10 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                         render={({ field }) => (
                           <FormItem className="flex flex-col">
                             <FormLabel>Invoice Date</FormLabel>
-                            <Popover open={invoiceDateOpen} onOpenChange={setInvoiceDateOpen}>
+                            <Popover
+                              open={invoiceDateOpen}
+                              onOpenChange={setInvoiceDateOpen}
+                            >
                               <PopoverTrigger asChild>
                                 <FormControl>
                                   <Button
@@ -633,7 +699,7 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                                     )}
                                   >
                                     {field.value ? (
-                                      format(field.value, "PPP")
+                                      format(field.value, "dd/MM/yyyy")
                                     ) : (
                                       <span>Select date</span>
                                     )}
@@ -641,7 +707,10 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                                   </Button>
                                 </FormControl>
                               </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0" align="start">
+                              <PopoverContent
+                                className="w-auto p-0"
+                                align="start"
+                              >
                                 <Calendar
                                   mode="single"
                                   selected={field.value}
@@ -710,7 +779,8 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                                               : "opacity-0"
                                           )}
                                         />
-                                        {pkg.packageName} ({pkg.periodMonths} month
+                                        {pkg.packageName} ({pkg.periodMonths}{" "}
+                                        month
                                         {pkg.periodMonths > 1 ? "s" : ""})
                                         {pkg.isVenueFee ? " - Venue Fee" : ""}
                                       </CommandItem>
@@ -741,7 +811,12 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                                 {...field}
                                 onChange={(e) => {
                                   field.onChange(e.target.valueAsNumber || 0);
-                                  form.trigger(["basicFees", "cgstRate", "sgstRate", "igstRate"]);
+                                  form.trigger([
+                                    "basicFees",
+                                    "cgstRate",
+                                    "sgstRate",
+                                    "igstRate",
+                                  ]);
                                 }}
                               />
                             </FormControl>
@@ -756,13 +831,16 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                         <div className="p-2 mb-2 bg-blue-50 text-blue-700 text-sm rounded border border-blue-200">
                           {isMemberFromMaharashtra(memberData) ? (
                             <>
-                              <strong>Maharashtra GST Schema:</strong> Based on GST number (starts with 27) or location, 
-                              applying split GST with CGST (9%) and SGST (9%) for a total of 18% GST.
+                              <strong>Maharashtra GST Schema:</strong> Based on
+                              GST number (starts with 27) or location, applying
+                              split GST with CGST (9%) and SGST (9%) for a total
+                              of 18% GST.
                             </>
                           ) : (
                             <>
-                              <strong>Interstate GST Schema:</strong> Based on GST number (not starting with 27) or location outside Maharashtra,
-                              applying IGST (18%) directly.
+                              <strong>Interstate GST Schema:</strong> Based on
+                              GST number (not starting with 27) or location
+                              outside Maharashtra, applying IGST (18%) directly.
                             </>
                           )}
                         </div>
@@ -781,7 +859,9 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                                     {...field}
                                     value={field.value || ""}
                                     readOnly
-                                    className={!field.value ? "bg-gray-100" : ""}
+                                    className={
+                                      !field.value ? "bg-gray-100" : ""
+                                    }
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -803,7 +883,9 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                                     {...field}
                                     value={field.value || ""}
                                     readOnly
-                                    className={!field.value ? "bg-gray-100" : ""}
+                                    className={
+                                      !field.value ? "bg-gray-100" : ""
+                                    }
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -825,7 +907,9 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                                     {...field}
                                     value={field.value || ""}
                                     readOnly
-                                    className={!field.value ? "bg-gray-100" : ""}
+                                    className={
+                                      !field.value ? "bg-gray-100" : ""
+                                    }
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -856,7 +940,9 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                                 <SelectContent>
                                   <SelectItem value="cash">Cash</SelectItem>
                                   <SelectItem value="card">Card</SelectItem>
-                                  <SelectItem value="netbanking">Net Banking</SelectItem>
+                                  <SelectItem value="netbanking">
+                                    Net Banking
+                                  </SelectItem>
                                   <SelectItem value="upi">UPI</SelectItem>
                                   <SelectItem value="cheque">Cheque</SelectItem>
                                 </SelectContent>
@@ -873,7 +959,10 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                           render={({ field }) => (
                             <FormItem className="flex flex-col">
                               <FormLabel>Payment Date</FormLabel>
-                              <Popover open={paymentDateOpen} onOpenChange={setPaymentDateOpen}>
+                              <Popover
+                                open={paymentDateOpen}
+                                onOpenChange={setPaymentDateOpen}
+                              >
                                 <PopoverTrigger asChild>
                                   <FormControl>
                                     <Button
@@ -884,7 +973,7 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                                       )}
                                     >
                                       {field.value ? (
-                                        format(field.value, "PPP")
+                                        format(field.value, "dd/MM/yyyy")
                                       ) : (
                                         <span>Select payment date</span>
                                       )}
@@ -892,7 +981,10 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                                     </Button>
                                   </FormControl>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
+                                <PopoverContent
+                                  className="w-auto p-0"
+                                  align="start"
+                                >
                                   <Calendar
                                     mode="single"
                                     selected={field.value || undefined}
@@ -912,8 +1004,10 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                         {/* Conditional payment method fields */}
                         {form.watch("paymentMode") === "cheque" && (
                           <div className="space-y-4 p-4 border rounded-md">
-                            <h3 className="text-sm font-medium">Cheque Details</h3>
-                            
+                            <h3 className="text-sm font-medium">
+                              Cheque Details
+                            </h3>
+
                             {/* Cheque Number */}
                             <FormField
                               control={form.control}
@@ -922,9 +1016,9 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                                 <FormItem>
                                   <FormLabel>Cheque Number</FormLabel>
                                   <FormControl>
-                                    <Input 
-                                      placeholder="Enter cheque number" 
-                                      {...field} 
+                                    <Input
+                                      placeholder="Enter cheque number"
+                                      {...field}
                                       value={field.value || ""}
                                     />
                                   </FormControl>
@@ -932,7 +1026,7 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                                 </FormItem>
                               )}
                             />
-                            
+
                             {/* Cheque Date */}
                             <FormField
                               control={form.control}
@@ -947,11 +1041,12 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                                           variant={"outline"}
                                           className={cn(
                                             "w-full pl-3 text-left font-normal",
-                                            !field.value && "text-muted-foreground"
+                                            !field.value &&
+                                              "text-muted-foreground"
                                           )}
                                         >
                                           {field.value ? (
-                                            format(field.value, "PPP")
+                                            format(field.value, "dd/MM/yyyy")
                                           ) : (
                                             <span>Select cheque date</span>
                                           )}
@@ -959,7 +1054,10 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                                         </Button>
                                       </FormControl>
                                     </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
+                                    <PopoverContent
+                                      className="w-auto p-0"
+                                      align="start"
+                                    >
                                       <Calendar
                                         mode="single"
                                         selected={field.value || undefined}
@@ -974,7 +1072,7 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                                 </FormItem>
                               )}
                             />
-                            
+
                             {/* Bank Name */}
                             <FormField
                               control={form.control}
@@ -983,9 +1081,9 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                                 <FormItem>
                                   <FormLabel>Bank Name</FormLabel>
                                   <FormControl>
-                                    <Input 
-                                      placeholder="Enter bank name" 
-                                      {...field} 
+                                    <Input
+                                      placeholder="Enter bank name"
+                                      {...field}
                                       value={field.value || ""}
                                     />
                                   </FormControl>
@@ -995,11 +1093,13 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                             />
                           </div>
                         )}
-                        
+
                         {form.watch("paymentMode") === "netbanking" && (
                           <div className="space-y-4 p-4 border rounded-md">
-                            <h3 className="text-sm font-medium">Net Banking Details</h3>
-                            
+                            <h3 className="text-sm font-medium">
+                              Net Banking Details
+                            </h3>
+
                             {/* NEFT Number */}
                             <FormField
                               control={form.control}
@@ -1008,9 +1108,9 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                                 <FormItem>
                                   <FormLabel>NEFT Number</FormLabel>
                                   <FormControl>
-                                    <Input 
-                                      placeholder="Enter NEFT number" 
-                                      {...field} 
+                                    <Input
+                                      placeholder="Enter NEFT number"
+                                      {...field}
                                       value={field.value || ""}
                                     />
                                   </FormControl>
@@ -1020,11 +1120,11 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                             />
                           </div>
                         )}
-                        
+
                         {form.watch("paymentMode") === "upi" && (
                           <div className="space-y-4 p-4 border rounded-md">
                             <h3 className="text-sm font-medium">UPI Details</h3>
-                            
+
                             {/* UTR Number */}
                             <FormField
                               control={form.control}
@@ -1033,9 +1133,9 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                                 <FormItem>
                                   <FormLabel>UTR Number</FormLabel>
                                   <FormControl>
-                                    <Input 
-                                      placeholder="Enter UTR number" 
-                                      {...field} 
+                                    <Input
+                                      placeholder="Enter UTR number"
+                                      {...field}
                                       value={field.value || ""}
                                     />
                                   </FormControl>
@@ -1086,7 +1186,7 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
                   {/* Footer */}
                   <div className="flex justify-end space-x-2 mt-6">
                     <Button
-                      type="button" 
+                      type="button"
                       variant="outline"
                       onClick={() => navigate(-1)}
                     >
@@ -1111,4 +1211,4 @@ const AddMembership: React.FC<AddMembershipProps> = ({ onSuccess }) => {
   );
 };
 
-export default AddMembership; 
+export default AddMembership;

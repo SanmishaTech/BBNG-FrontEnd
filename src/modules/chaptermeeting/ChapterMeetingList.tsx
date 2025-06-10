@@ -102,7 +102,7 @@ const ChapterMeetingList = () => {
 
   const formatDate = (dateString: string) => {
     try {
-      return format(new Date(dateString), "PPP");
+      return format(new Date(dateString), "dd/MM/yyyy");
     } catch (e) {
       return dateString;
     }
@@ -210,7 +210,9 @@ const ChapterMeetingList = () => {
                             variant="outline"
                             size="sm"
                             onClick={() =>
-                              navigate(`/chaptermeetings/${meeting.id}/visitors/add`)
+                              navigate(
+                                `/chaptermeetings/${meeting.id}/visitors/add`
+                              )
                             }
                             title="Add Visitors"
                             className="bg-blue-50 hover:bg-blue-100"
@@ -221,7 +223,9 @@ const ChapterMeetingList = () => {
                             variant="outline"
                             size="sm"
                             onClick={() =>
-                              navigate(`/chaptermeetings/${meeting.id}/attendance`)
+                              navigate(
+                                `/chaptermeetings/${meeting.id}/attendance`
+                              )
                             }
                             title="Edit Attendance"
                             className="bg-green-50 hover:bg-green-100"

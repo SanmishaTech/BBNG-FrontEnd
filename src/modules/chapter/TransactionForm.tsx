@@ -44,7 +44,10 @@ import { CalendarIcon } from "lucide-react";
 // Schema Definition
 const numberOptional = () =>
   z
-    .preprocess((v) => (v === "" || v === null ? undefined : Number(v)), z.number().nonnegative())
+    .preprocess(
+      (v) => (v === "" || v === null ? undefined : Number(v)),
+      z.number().nonnegative()
+    )
     .optional();
 
 const transactionSchema = z.object({
@@ -118,7 +121,10 @@ export default function TransactionForm({ mode }: { mode: "create" | "edit" }) {
   // Create mutation
   const createMutation = useMutation({
     mutationFn: (data: TransactionFormInputs) => {
-      return post(`/transactionRoutes/chapters/${chapterId}/transactions`, data);
+      return post(
+        `/transactionRoutes/chapters/${chapterId}/transactions`,
+        data
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions", chapterId] });
@@ -129,8 +135,8 @@ export default function TransactionForm({ mode }: { mode: "create" | "edit" }) {
       // Check for negative balance errors
       if (error.response?.data?.errors?.message?.includes("negative")) {
         // Redirect with error message in state
-        navigate(`/chapters/${chapterId}/transactions`, { 
-          state: { error: error.response.data.errors.message } 
+        navigate(`/chapters/${chapterId}/transactions`, {
+          state: { error: error.response.data.errors.message },
         });
       } else {
         toast.error(error.message || "Failed to create transaction");
@@ -152,8 +158,8 @@ export default function TransactionForm({ mode }: { mode: "create" | "edit" }) {
       // Check for negative balance errors
       if (error.response?.data?.errors?.message?.includes("negative")) {
         // Redirect with error message in state
-        navigate(`/chapters/${chapterId}/transactions`, { 
-          state: { error: error.response.data.errors.message } 
+        navigate(`/chapters/${chapterId}/transactions`, {
+          state: { error: error.response.data.errors.message },
         });
       } else {
         toast.error(error.message || "Failed to update transaction");
@@ -174,7 +180,6 @@ export default function TransactionForm({ mode }: { mode: "create" | "edit" }) {
           ? Number(transaction.gstAmount)
           : undefined,
       });
-
     }
   }, [transaction, reset, mode]);
 
@@ -226,7 +231,7 @@ export default function TransactionForm({ mode }: { mode: "create" | "edit" }) {
                           }`}
                         >
                           {field.value ? (
-                            format(field.value, "PPP")
+                            format(field.value, "dd/MM/yyyy")
                           ) : (
                             <span>Pick a date</span>
                           )}
@@ -251,59 +256,55 @@ export default function TransactionForm({ mode }: { mode: "create" | "edit" }) {
               )}
             />
 
-           
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <FormField
-      control={form.control}
-      name="accountType"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Account Type</FormLabel>
-          <Select
-            onValueChange={field.onChange}
-            value={field.value}
-          >
-            <FormControl>
-              <SelectTrigger className="w-[350px]">
-                <SelectValue placeholder="Select account type" />
-              </SelectTrigger>
-            </FormControl>
-            <SelectContent>
-              <SelectItem value="cash">Cash</SelectItem>
-              <SelectItem value="bank">Bank</SelectItem>
-            </SelectContent>
-          </Select>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+              <FormField
+                control={form.control}
+                name="accountType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Account Type</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="w-[350px]">
+                          <SelectValue placeholder="Select account type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="cash">Cash</SelectItem>
+                        <SelectItem value="bank">Bank</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-    <FormField
-      control={form.control}
-      name="transactionType"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Transaction Type</FormLabel>
-          <Select
-            onValueChange={field.onChange}
-            defaultValue={field.value}
-          >
-            <FormControl>
-            <SelectTrigger className="w-[350px]">
-            <SelectValue placeholder="Select transaction type" />
-              </SelectTrigger>
-            </FormControl>
-            <SelectContent>
-              <SelectItem value="credit">Receipt</SelectItem>
-              <SelectItem value="debit">Payment</SelectItem>
-            </SelectContent>
-          </Select>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+              <FormField
+                control={form.control}
+                name="transactionType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Transaction Type</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-[350px]">
+                          <SelectValue placeholder="Select transaction type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="credit">Receipt</SelectItem>
+                        <SelectItem value="debit">Payment</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-    {/* {isCredit && (
+              {/* {isCredit && (
       <FormField
         control={form.control}
         name="hasInvoice"
@@ -329,131 +330,126 @@ export default function TransactionForm({ mode }: { mode: "create" | "edit" }) {
         )}
       />
     )} */}
-  </div>
+            </div>
 
-  <FormField
-    control={form.control}
-    name="amount"
-    render={({ field }) => (
-      <FormItem>
-        <FormLabel>Amount</FormLabel>
-        <FormControl>
-          <Input
-            type="number"
-            step="0.01"
-            placeholder="Enter amount"
-            {...field}
-            onChange={(e) => {
-              const value = e.target.value
-                ? parseFloat(e.target.value)
-                : 0;
-              field.onChange(value);
-            }}
-            value={field.value || ""}
-          />
-        </FormControl>
-        <FormMessage />
-      </FormItem>
-    )}
-  />
-
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <FormField
-      control={form.control}
-      name="transactionHead"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Transaction Head</FormLabel>
-          <FormControl>
-            <Input
-              placeholder="Enter transaction head"
-              {...field}
+            <FormField
+              control={form.control}
+              name="amount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Amount</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="Enter amount"
+                      {...field}
+                      onChange={(e) => {
+                        const value = e.target.value
+                          ? parseFloat(e.target.value)
+                          : 0;
+                        field.onChange(value);
+                      }}
+                      value={field.value || ""}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
 
-    <FormField
-      control={form.control}
-      name="narration"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Narration</FormLabel>
-          <FormControl>
-            <Textarea
-              placeholder="Enter narration"
-              className="resize-none"
-              {...field}
-            />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-
-    <FormField
-      control={form.control}
-      name="description"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Description (Optional)</FormLabel>
-          <FormControl>
-            <Textarea
-              placeholder="Enter transaction description"
-              className="resize-none"
-              {...field}
-            />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-
-    {isBankAccount && (
-      <FormField
-        control={form.control}
-        name="transactionDetails"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Transaction Details</FormLabel>
-            <FormControl>
-              <Textarea
-                placeholder="Enter transaction details"
-                className="resize-none"
-                {...field}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="transactionHead"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Transaction Head</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter transaction head" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    )}
 
-    {isBankAccount && (
-      <FormField
-        control={form.control}
-        name="reference"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Reference Number</FormLabel>
-            <FormControl>
-              <Input
-                placeholder="Enter reference number"
-                {...field}
+              <FormField
+                control={form.control}
+                name="narration"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Narration</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Enter narration"
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    )}
-  </div>
 
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Enter transaction description"
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
+              {isBankAccount && (
+                <FormField
+                  control={form.control}
+                  name="transactionDetails"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Transaction Details</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Enter transaction details"
+                          className="resize-none"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
-  {/* {isCredit && hasInvoice && (
+              {isBankAccount && (
+                <FormField
+                  control={form.control}
+                  name="reference"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Reference Number</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter reference number"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            </div>
+
+            {/* {isCredit && hasInvoice && (
     <div className="space-y-4 border-t pt-4">
       <h1 className="text-lg font-semibold">Invoice Details</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

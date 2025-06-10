@@ -195,14 +195,14 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
       try {
         const userData = JSON.parse(userStr);
         setLoggedInUser(userData);
-        
+
         // Debug the user data structure to identify the correct ID field
-        console.log('Current logged-in user data structure:', {
+        console.log("Current logged-in user data structure:", {
           id: userData.member.id,
           memberId: userData.member.id,
           userId: userData.userId,
           memberProfile: userData.memberProfile,
-          name: userData.name || userData.username
+          name: userData.name || userData.username,
         });
       } catch (e) {
         console.error("Failed to parse user data", e);
@@ -223,7 +223,8 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
   // Fetch meeting details
   const { data: meetingData } = useQuery<MeetingData>({
     queryKey: ["chaptermeeting", meetingId],
-    queryFn: () => get(`/chapter-meetings/${meetingId}`) as Promise<MeetingData>,
+    queryFn: () =>
+      get(`/chapter-meetings/${meetingId}`) as Promise<MeetingData>,
     enabled: !!meetingId,
   });
 
@@ -251,57 +252,63 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
 
   // Watch for changes to the selected chapter in the cross-chapter form
   const selectedCrossChapter = form.watch("chapterId");
-  
+
   // Reset invitedById when chapter changes to ensure proper filtering
   useEffect(() => {
     // Always clear the invitedById field when chapter selection changes
     form.setValue("invitedById", null);
-    console.log(`Chapter selection changed to ${selectedCrossChapter}, resetting invitedById field`);
+    console.log(
+      `Chapter selection changed to ${selectedCrossChapter}, resetting invitedById field`
+    );
   }, [selectedCrossChapter, form]);
 
   // Fetch all members for the invited by dropdown, excluding the current user
   const { data: membersData } = useQuery<MemberData>({
     queryKey: ["members", loggedInUser?.id], // Include loggedInUser in the key to refetch when user changes
     queryFn: async () => {
-      const response = await get(`/api/members?active=true`) as MemberData;
-      
+      const response = (await get(`/api/members?active=true`)) as MemberData;
+
       // Log the structure to understand member data
       if (response?.members?.length > 0) {
         console.log("Member data structure example:", response.members[0]);
       }
-      
+
       // Filter out the current user from the members list
       if (loggedInUser && response?.members) {
-        console.log('Filtering out current user from general members list');
-        
+        console.log("Filtering out current user from general members list");
+
         // Get current user IDs for comparison
         const currentUserId = loggedInUser.member?.id;
         const currentUserMemberId = loggedInUser.member?.id;
         const currentUserProfileId = loggedInUser.memberProfile?.id;
-        
+
         // Filter out the current user from the members list
         const filteredMembers = response.members.filter((member: any) => {
-          const isCurrentUser = 
+          const isCurrentUser =
             (currentUserId && Number(currentUserId) === Number(member.id)) ||
-            (currentUserMemberId && Number(currentUserMemberId) === Number(member.id)) ||
-            (currentUserProfileId && Number(currentUserProfileId) === Number(member.id));
-          
+            (currentUserMemberId &&
+              Number(currentUserMemberId) === Number(member.id)) ||
+            (currentUserProfileId &&
+              Number(currentUserProfileId) === Number(member.id));
+
           if (isCurrentUser) {
-            console.log(`EXCLUDED from general list: Current user ${member.memberName} (ID: ${member.id})`);
+            console.log(
+              `EXCLUDED from general list: Current user ${member.memberName} (ID: ${member.id})`
+            );
           }
-          
+
           // Keep members who are NOT the current user
           return !isCurrentUser;
         });
-        
+
         return { ...response, members: filteredMembers };
       }
-      
+
       return response;
     },
-    enabled: !!loggedInUser // Only fetch once we have the logged-in user
+    enabled: !!loggedInUser, // Only fetch once we have the logged-in user
   });
-  
+
   // Fetch members filtered by the selected cross-chapter
   const { data: crossChapterMembersData } = useQuery<MemberData>({
     queryKey: ["crossChapterMembers", selectedCrossChapter],
@@ -309,146 +316,188 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
       if (!selectedCrossChapter) {
         return { members: [] } as MemberData;
       }
-      
+
       try {
-        console.log(`Fetching members for cross chapter ID: ${selectedCrossChapter}`);
-        
+        console.log(
+          `Fetching members for cross chapter ID: ${selectedCrossChapter}`
+        );
+
         // Direct API call to get members by chapter ID
-        let members: Array<MemberData['members'][0]> = [];
+        let members: Array<MemberData["members"][0]> = [];
         try {
           // Try to get members directly from the API with chapter filter
-          const chapResponse = await get(`/api/members?chapterId=${selectedCrossChapter}&active=true`) as MemberData;
+          const chapResponse = (await get(
+            `/api/members?chapterId=${selectedCrossChapter}&active=true`
+          )) as MemberData;
           if (chapResponse?.members?.length > 0) {
-            console.log(`SUCCESS: Found ${chapResponse.members.length} members via direct API call with chapterId=${selectedCrossChapter}`);
+            console.log(
+              `SUCCESS: Found ${chapResponse.members.length} members via direct API call with chapterId=${selectedCrossChapter}`
+            );
             members = chapResponse.members;
           }
         } catch (e) {
-          console.log('Chapter-specific API call failed, falling back to all members:', e);
+          console.log(
+            "Chapter-specific API call failed, falling back to all members:",
+            e
+          );
         }
-        
+
         // If direct chapter query failed, get all members
         if (members.length === 0) {
-          const allResponse = await get(`/api/members?active=true`) as MemberData;
+          const allResponse = (await get(
+            `/api/members?active=true`
+          )) as MemberData;
           members = allResponse.members || [];
-          console.log(`Fetched ${members.length} total members, will filter client-side`);
+          console.log(
+            `Fetched ${members.length} total members, will filter client-side`
+          );
         }
-        
+
         // Log a sample member to understand the data structure
         if (members.length > 0) {
-          console.log('Example member data structure:', {
+          console.log("Example member data structure:", {
             id: members[0].id,
             name: members[0].memberName,
             homeChapter: members[0].homeChapter,
             memberships: members[0].memberships,
             // Add any other fields that might be relevant
           });
-          
+
           // Print first 5 members with their chapter info
-          console.log('First 5 members with chapter info:');
+          console.log("First 5 members with chapter info:");
           members.slice(0, 5).forEach((m: any, i: number) => {
-            console.log(`Member ${i+1}: ${m.memberName} (ID: ${m.id})`, {
+            console.log(`Member ${i + 1}: ${m.memberName} (ID: ${m.id})`, {
               homeChapter: m.homeChapter,
               memberships: m.memberships,
-              chapterId: m.chapterId
+              chapterId: m.chapterId,
             });
           });
         }
-        
+
         // First identify the current user for exclusion
         const currentUserId = loggedInUser?.member?.id;
         const currentUserMemberId = loggedInUser?.member?.id;
-        console.log('Current user info for exclusion:', {
+        console.log("Current user info for exclusion:", {
           userId: currentUserId,
           memberId: currentUserMemberId,
-          memberProfile: loggedInUser?.member?.id
+          memberProfile: loggedInUser?.member?.id,
         });
-        
-        // FIXED APPROACH: 
+
+        // FIXED APPROACH:
         // 1. Try multiple ways to find chapter membership
         // 2. Exclude the current user
         const filteredMembers = members.filter((member: any) => {
           // FIRST: Always exclude the current user
-          const isCurrentUser = 
+          const isCurrentUser =
             (currentUserId && Number(currentUserId) === Number(member.id)) ||
-            (currentUserMemberId && Number(currentUserMemberId) === Number(member.id)) ||
-            (loggedInUser?.member?.id && Number(loggedInUser.member.id) === Number(member.id));
-          
+            (currentUserMemberId &&
+              Number(currentUserMemberId) === Number(member.id)) ||
+            (loggedInUser?.member?.id &&
+              Number(loggedInUser.member.id) === Number(member.id));
+
           if (isCurrentUser) {
-            console.log(`EXCLUDED: Current user ${member.memberName} (ID: ${member.id})`);
+            console.log(
+              `EXCLUDED: Current user ${member.memberName} (ID: ${member.id})`
+            );
             return false;
           }
-          
+
           // SECOND: Check if this member belongs to the selected chapter
           // a) Check homeChapter.id if it exists
-          const homeChapterMatch = member.homeChapter && 
-                                 Number(member.homeChapter.id) === Number(selectedCrossChapter);
-          
+          const homeChapterMatch =
+            member.homeChapter &&
+            Number(member.homeChapter.id) === Number(selectedCrossChapter);
+
           // b) Check memberships array if it exists
-          const membershipMatch = member.memberships && 
-                                Array.isArray(member.memberships) && 
-                                member.memberships.some((m: any) => 
-                                  Number(m.chapterId) === Number(selectedCrossChapter) || 
-                                  (m.chapter && Number(m.chapter.id) === Number(selectedCrossChapter)));
-          
+          const membershipMatch =
+            member.memberships &&
+            Array.isArray(member.memberships) &&
+            member.memberships.some(
+              (m: any) =>
+                Number(m.chapterId) === Number(selectedCrossChapter) ||
+                (m.chapter &&
+                  Number(m.chapter.id) === Number(selectedCrossChapter))
+            );
+
           // c) Check direct chapterId property
-          const directChapterMatch = member.chapterId && 
-                                   Number(member.chapterId) === Number(selectedCrossChapter);
-          
+          const directChapterMatch =
+            member.chapterId &&
+            Number(member.chapterId) === Number(selectedCrossChapter);
+
           // Check if member belongs to the selected chapter through any method
-          const belongsToChapter = homeChapterMatch || membershipMatch || directChapterMatch;
-          
+          const belongsToChapter =
+            homeChapterMatch || membershipMatch || directChapterMatch;
+
           if (!belongsToChapter) {
             // Skip this member as they don't belong to the selected chapter
             return false;
           }
-          
+
           // Include this member as they belong to the chapter and aren't the current user
-          console.log(`INCLUDED: Member ${member.memberName} (ID: ${member.id}) from chapter ${selectedCrossChapter}`);
+          console.log(
+            `INCLUDED: Member ${member.memberName} (ID: ${member.id}) from chapter ${selectedCrossChapter}`
+          );
           return true;
         });
-        
-        console.log(`Found ${filteredMembers.length} members after filtering for chapter ID ${selectedCrossChapter}`);
-        
-        console.log(`Filtering complete. Found ${filteredMembers.length} valid members for chapter ID ${selectedCrossChapter}`);
-        
+
+        console.log(
+          `Found ${filteredMembers.length} members after filtering for chapter ID ${selectedCrossChapter}`
+        );
+
+        console.log(
+          `Filtering complete. Found ${filteredMembers.length} valid members for chapter ID ${selectedCrossChapter}`
+        );
+
         // If we found no members, add a fallback mechanism
         if (filteredMembers.length === 0) {
-          console.log('WARNING: No members found for the selected chapter. This might indicate an issue with the data structure.');
-          
+          console.log(
+            "WARNING: No members found for the selected chapter. This might indicate an issue with the data structure."
+          );
+
           // Let's try a simpler approach as a fallback
           const fallbackMembers = members.filter((member: any) => {
             // First exclude current user
-            console.log("Loggedin user", loggedInUser)
-            const isCurrentUser = 
+            console.log("Loggedin user", loggedInUser);
+            const isCurrentUser =
               (currentUserId && Number(currentUserId) === Number(member.id)) ||
-              (currentUserMemberId && Number(currentUserMemberId) === Number(member.id)) ||
-              (loggedInUser?.member ?.id && Number(loggedInUser.member.id) === Number(member.id));
-            
+              (currentUserMemberId &&
+                Number(currentUserMemberId) === Number(member.id)) ||
+              (loggedInUser?.member?.id &&
+                Number(loggedInUser.member.id) === Number(member.id));
+
             if (isCurrentUser) return false;
-            
+
             // Very simple check - just look at homeChapter.id
-            return member.homeChapter && Number(member.homeChapter.id) === Number(selectedCrossChapter);
+            return (
+              member.homeChapter &&
+              Number(member.homeChapter.id) === Number(selectedCrossChapter)
+            );
           });
-          
-          console.log(`Fallback filtering found ${fallbackMembers.length} members`);
-          
+
+          console.log(
+            `Fallback filtering found ${fallbackMembers.length} members`
+          );
+
           if (fallbackMembers.length > 0) {
             // Use the fallback if it found any members
             return { members: fallbackMembers } as MemberData;
           }
-          
+
           // If both approaches failed, return empty list
           return { members: [] } as MemberData;
         }
-        
+
         // Return the successfully filtered members
         return { members: filteredMembers } as MemberData;
       } catch (error) {
-        console.error(`Error fetching members for chapter ID ${selectedCrossChapter}:`, error);
+        console.error(
+          `Error fetching members for chapter ID ${selectedCrossChapter}:`,
+          error
+        );
         return { members: [] } as MemberData;
       }
     },
-    enabled: !!selectedCrossChapter
+    enabled: !!selectedCrossChapter,
   });
 
   // Fetch members by chapter when a regular (non-cross) chapter is selected
@@ -458,87 +507,109 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
       if (!selectedChapter) {
         return { members: [] } as MemberData;
       }
-      
+
       // Try to fetch members filtered by chapter from the backend
       try {
         console.log(`Fetching members for chapter: ${selectedChapter}`);
-        
+
         // Try multiple endpoint patterns - we don't know exactly what the API expects
         let response: MemberData;
-        
+
         // First try - direct chapter name filter
         try {
-          response = await get(`/api/members?chapter=${encodeURIComponent(selectedChapter)}&active=true`) as MemberData;
+          response = (await get(
+            `/api/members?chapter=${encodeURIComponent(
+              selectedChapter
+            )}&active=true`
+          )) as MemberData;
           if (response?.members?.length > 0) {
-            console.log(`Found ${response.members.length} members using /api/members?chapter= endpoint`);
+            console.log(
+              `Found ${response.members.length} members using /api/members?chapter= endpoint`
+            );
             return response;
           }
         } catch (e) {
-          console.log('First attempt failed:', e);
+          console.log("First attempt failed:", e);
         }
-        
+
         // Second try - homeChapter filter
         try {
-          response = await get(`/api/members?homeChapter=${encodeURIComponent(selectedChapter)}&active=true`) as MemberData;
+          response = (await get(
+            `/api/members?homeChapter=${encodeURIComponent(
+              selectedChapter
+            )}&active=true`
+          )) as MemberData;
           if (response?.members?.length > 0) {
-            console.log(`Found ${response.members.length} members using /api/members?homeChapter= endpoint`);
+            console.log(
+              `Found ${response.members.length} members using /api/members?homeChapter= endpoint`
+            );
             return response;
           }
         } catch (e) {
-          console.log('Second attempt failed:', e);
+          console.log("Second attempt failed:", e);
         }
-        
+
         // Third try - try a broader endpoint and filter client-side
-        response = await get(`/api/members?active=true`) as MemberData;
-        console.log(`Fetched all members, filtering client-side for chapter: ${selectedChapter}`);
-        
+        response = (await get(`/api/members?active=true`)) as MemberData;
+        console.log(
+          `Fetched all members, filtering client-side for chapter: ${selectedChapter}`
+        );
+
         // Manually filter members by chapter
         // Add comprehensive logging to debug the filtering issue
-        console.log('Filtering members for chapter:', selectedChapter);
-        console.log('Total members to filter:', response.members.length);
-        
+        console.log("Filtering members for chapter:", selectedChapter);
+        console.log("Total members to filter:", response.members.length);
+
         // Log some sample members to understand their structure
         if (response.members.length > 0) {
-          console.log('Sample member data structures:');
+          console.log("Sample member data structures:");
           response.members.slice(0, 3).forEach((m, i) => {
-            console.log(`Member ${i+1}:`, {
+            console.log(`Member ${i + 1}:`, {
               id: m.id,
               name: m.memberName,
               homeChapter: m.homeChapter,
-              chapter: m.chapter
+              chapter: m.chapter,
             });
           });
         }
-        
-        const filteredMembers = response.members.filter(member => {
+
+        const filteredMembers = response.members.filter((member) => {
           // Very detailed logging for each member's chapter match
           const homeChapterName = member.homeChapter?.name;
           const directChapter = member.chapter;
-          
+
           const isHomeChapterMatch = homeChapterName === selectedChapter;
           const isDirectChapterMatch = directChapter === selectedChapter;
           const isMatch = isHomeChapterMatch || isDirectChapterMatch;
-          
+
           if (isMatch) {
-            console.log(`MATCH: Member ${member.memberName} matches chapter ${selectedChapter}:`, {
-              homeChapterName,
-              directChapter,
-              isHomeChapterMatch,
-              isDirectChapterMatch
-            });
+            console.log(
+              `MATCH: Member ${member.memberName} matches chapter ${selectedChapter}:`,
+              {
+                homeChapterName,
+                directChapter,
+                isHomeChapterMatch,
+                isDirectChapterMatch,
+              }
+            );
           }
-          
+
           return isMatch;
         });
-        
-        console.log(`Found ${filteredMembers.length} members after client-side filtering`);
+
+        console.log(
+          `Found ${filteredMembers.length} members after client-side filtering`
+        );
         return { members: filteredMembers } as MemberData;
       } catch (error) {
-        console.error(`Error fetching members for chapter ${selectedChapter}:`, error);
+        console.error(
+          `Error fetching members for chapter ${selectedChapter}:`,
+          error
+        );
         return { members: [] } as MemberData;
       }
     },
-    enabled: !!selectedChapter
+    enabled: !!selectedChapter,
   });
 
   // Fetch chapters for the chapter dropdown
@@ -559,17 +630,19 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
 
     // Explicitly exclude the chapter that the meeting belongs to
     // Make sure meetingData.chapterId exists before using it
-    const meetingChapterId = meetingData.chapterId ? Number(meetingData.chapterId) : null;
+    const meetingChapterId = meetingData.chapterId
+      ? Number(meetingData.chapterId)
+      : null;
     console.log("Meeting Chapter ID:", meetingChapterId);
     console.log("Meeting Chapter:", meetingData.chapter);
     console.log("All Chapters:", chaptersData.chapters);
-    
+
     // Only filter if we have a valid chapterId
     if (meetingChapterId === null) {
       return chaptersData.chapters;
     }
-    
-    const filtered = chaptersData.chapters.filter(chapter => {
+
+    const filtered = chaptersData.chapters.filter((chapter) => {
       const chapterId = Number(chapter.id);
       return chapterId !== meetingChapterId;
     });
@@ -588,11 +661,15 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
   }
 
   // Fetch categories for the category dropdown
-  const { data: categoriesData, isLoading: isCategoriesLoading, isError: isCategoriesError } = useQuery<CategoryData>({
+  const {
+    data: categoriesData,
+    isLoading: isCategoriesLoading,
+    isError: isCategoriesError,
+  } = useQuery<CategoryData>({
     queryKey: ["categories"],
     queryFn: async () => {
       try {
-        const response = await get(`/categories`) as CategoryData;
+        const response = (await get(`/categories`)) as CategoryData;
         console.log("Categories loaded:", response);
         return response;
       } catch (error) {
@@ -657,21 +734,25 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
           ? new Date(visitorData.dateOfBirth)
           : null,
         meetingId: visitorData.meetingId,
-        // Make sure gender and category are explicitly set as strings 
+        // Make sure gender and category are explicitly set as strings
         gender: visitorData.gender || "",
         category: visitorData.category || "",
         chapterId: visitorData.chapterId,
         invitedById: String(visitorData.invitedById || ""),
         isCrossChapter: !!visitorData.isCrossChapter,
       };
-      
+
       console.log("[DEBUG] Gender and Category:", {
         gender: visitorData.gender,
-        category: visitorData.category
+        category: visitorData.category,
       });
 
       console.log("[DEBUG] Setting visitor data:", formattedData);
-      console.log("[DEBUG] Chapter ID:", formattedData.chapterId, typeof formattedData.chapterId);
+      console.log(
+        "[DEBUG] Chapter ID:",
+        formattedData.chapterId,
+        typeof formattedData.chapterId
+      );
       console.log(
         "[DEBUG] invitedById (raw):",
         visitorData.invitedById,
@@ -698,7 +779,7 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
           shouldDirty: true,
           shouldTouch: true,
         });
-        
+
         // Force the chapterId to the correct value if it's a cross-chapter visitor
         if (formattedData.isCrossChapter && formattedData.chapterId) {
           const chapterIdString = String(formattedData.chapterId);
@@ -709,7 +790,7 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
             shouldTouch: true,
           });
         }
-        
+
         console.log(
           "[DEBUG] Form values after explicit setValue:",
           form.getValues()
@@ -798,7 +879,7 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
       } else if (meetingData) {
         // Fallback to meeting's chapter if none is selected
         submissionData.chapter = meetingData.chapter?.name;
-        if (meetingData && typeof meetingData.chapterId === 'number') {
+        if (meetingData && typeof meetingData.chapterId === "number") {
           submissionData.chapterId = meetingData.chapterId;
         }
       }
@@ -871,8 +952,11 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                           <SelectContent>
                             {meetingData && (
                               <SelectItem value={meetingData.id.toString()}>
-                                {format(new Date(meetingData.date), "PPP")} -{" "}
-                                {meetingData.meetingTitle}
+                                {format(
+                                  new Date(meetingData.date),
+                                  "dd/MM/yyyy"
+                                )}{" "}
+                                - {meetingData.meetingTitle}
                               </SelectItem>
                             )}
                           </SelectContent>
@@ -933,20 +1017,31 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                         name="chapterId"
                         render={({ field }) => {
                           // Debug the field value
-                          console.log("[DEBUG] chapterId field value:", field.value, typeof field.value);
-                          
+                          console.log(
+                            "[DEBUG] chapterId field value:",
+                            field.value,
+                            typeof field.value
+                          );
+
                           // Find the selected chapter
                           const selectedChapter = chaptersData?.chapters?.find(
                             (c: any) => Number(c.id) === Number(field.value)
                           );
-                          console.log("[DEBUG] Selected chapter:", selectedChapter);
-                          
+                          console.log(
+                            "[DEBUG] Selected chapter:",
+                            selectedChapter
+                          );
+
                           return (
                             <FormItem>
                               <FormLabel>From Chapter</FormLabel>
                               <Select
                                 onValueChange={(value) => {
-                                  console.log("[DEBUG] Selected chapter value:", value, typeof value);
+                                  console.log(
+                                    "[DEBUG] Selected chapter value:",
+                                    value,
+                                    typeof value
+                                  );
                                   field.onChange(parseInt(value));
                                 }}
                                 value={field.value ? String(field.value) : ""}
@@ -954,7 +1049,8 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                                 <FormControl>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select home chapter">
-                                      {selectedChapter?.name || "Select home chapter"}
+                                      {selectedChapter?.name ||
+                                        "Select home chapter"}
                                     </SelectValue>
                                   </SelectTrigger>
                                 </FormControl>
@@ -1024,14 +1120,21 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                                 </FormControl>
                                 <SelectContent>
                                   {/* Use the appropriately filtered members list */}
-                                  {(selectedCrossChapter ? 
-                                    (crossChapterMembersData?.members || []) : 
-                                    (membersData?.members || []))?.map((member: any) => {
+                                  {(selectedCrossChapter
+                                    ? crossChapterMembersData?.members || []
+                                    : membersData?.members || []
+                                  )?.map((member: any) => {
                                     // Add a final safety check to exclude the current user
-                                    if (loggedInUser && 
-                                        (Number(loggedInUser.member?.id) === Number(member.id) || 
-                                         Number(loggedInUser.member?.id) === Number(member.id))) {
-                                      console.log('Skipping current user in dropdown render');
+                                    if (
+                                      loggedInUser &&
+                                      (Number(loggedInUser.member?.id) ===
+                                        Number(member.id) ||
+                                        Number(loggedInUser.member?.id) ===
+                                          Number(member.id))
+                                    ) {
+                                      console.log(
+                                        "Skipping current user in dropdown render"
+                                      );
                                       return null;
                                     }
                                     // as we filter in the query functions
@@ -1088,13 +1191,19 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                             <FormLabel>Chapter</FormLabel>
                             <Select
                               onValueChange={(value) => {
-                                console.log("[DEBUG] Selected chapter value:", value);
+                                console.log(
+                                  "[DEBUG] Selected chapter value:",
+                                  value
+                                );
                                 field.onChange(value);
                                 // Clear invitedById when chapter changes
                                 form.setValue("invitedById", null);
                                 // Trigger refetch of chapter members with slight delay to ensure react-hook-form updates
                                 setTimeout(() => {
-                                  console.log('Refetching members for newly selected chapter:', value);
+                                  console.log(
+                                    "Refetching members for newly selected chapter:",
+                                    value
+                                  );
                                   refetchChapterMembers();
                                 }, 300);
                               }}
@@ -1133,37 +1242,52 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
 
                           // Get the current chapter selection directly inside the render function
                           const selectedChapter = form.watch("chapter");
-                          console.log("Current chapter selection:", selectedChapter);
-                          
+                          console.log(
+                            "Current chapter selection:",
+                            selectedChapter
+                          );
+
                           // Manual filtering within the render function for maximum control
                           const allMembers = membersData?.members || [];
-                          
+
                           // Debug - log ALL properties of the first few members to see their structure
                           console.log("DETAILED MEMBER STRUCTURE DEBUGGING:");
                           if (allMembers.length > 0) {
                             const firstMember = allMembers[0];
-                            console.log("First member complete object:", firstMember);
-                            console.log("All member keys:", Object.keys(firstMember));
-                            
+                            console.log(
+                              "First member complete object:",
+                              firstMember
+                            );
+                            console.log(
+                              "All member keys:",
+                              Object.keys(firstMember)
+                            );
+
                             // Log the first 3 members with their chapter-related properties
                             allMembers.slice(0, 3).forEach((m, i) => {
-                              console.log(`Member ${i+1} (${m.memberName}) chapter info:`, {
-                                homeChapter: m.homeChapter,
-                                chapter: m.chapter,
-                                chapterId: m.chapterId,
-                                homeChapterName: m.homeChapterName,
-                                chapterName: m.chapterName,
-                                // Also check nested objects
-                                "homeChapter?.id": m.homeChapter?.id,
-                                "homeChapter?.name": m.homeChapter?.name,
-                                "homeChapter?.chapterName": m.homeChapter?.chapterName
-                              });
+                              console.log(
+                                `Member ${i + 1} (${
+                                  m.memberName
+                                }) chapter info:`,
+                                {
+                                  homeChapter: m.homeChapter,
+                                  chapter: m.chapter,
+                                  chapterId: m.chapterId,
+                                  homeChapterName: m.homeChapterName,
+                                  chapterName: m.chapterName,
+                                  // Also check nested objects
+                                  "homeChapter?.id": m.homeChapter?.id,
+                                  "homeChapter?.name": m.homeChapter?.name,
+                                  "homeChapter?.chapterName":
+                                    m.homeChapter?.chapterName,
+                                }
+                              );
                             });
                           }
-                          
+
                           // Try multiple approaches for filtering based on the console debug info
-                          const filteredMembers = selectedChapter 
-                            ? allMembers.filter(member => {
+                          const filteredMembers = selectedChapter
+                            ? allMembers.filter((member) => {
                                 // Try EVERY possible way the chapter might be stored
                                 const approaches = [
                                   // Object with name property
@@ -1173,36 +1297,60 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                                   member.chapterName === selectedChapter,
                                   member.homeChapterName === selectedChapter,
                                   // Substring matching (in case chapter is stored in a different format)
-                                  typeof member.chapter === 'string' && member.chapter.includes(selectedChapter),
-                                  typeof member.homeChapterName === 'string' && member.homeChapterName.includes(selectedChapter),
+                                  typeof member.chapter === "string" &&
+                                    member.chapter.includes(selectedChapter),
+                                  typeof member.homeChapterName === "string" &&
+                                    member.homeChapterName.includes(
+                                      selectedChapter
+                                    ),
                                   // Check if chapterId matches any chapter with the selected name
                                   chaptersData?.chapters?.some(
-                                    c => c.name === selectedChapter && c.id === member.chapterId
-                                  )
+                                    (c) =>
+                                      c.name === selectedChapter &&
+                                      c.id === member.chapterId
+                                  ),
                                 ];
-                                
+
                                 // If ANY approach matches, include this member
-                                const matches = approaches.some(approach => approach === true);
-                                
+                                const matches = approaches.some(
+                                  (approach) => approach === true
+                                );
+
                                 // Debug specific member matching
                                 if (matches) {
-                                  console.log(`MATCH: Member ${member.memberName} matches chapter ${selectedChapter}`);
+                                  console.log(
+                                    `MATCH: Member ${member.memberName} matches chapter ${selectedChapter}`
+                                  );
                                 }
-                                
+
                                 return matches;
                               })
                             : [];
-                          
-                          console.log(`Showing ${filteredMembers.length} of ${allMembers.length} members for chapter "${selectedChapter || 'none'}"`); 
+
+                          console.log(
+                            `Showing ${filteredMembers.length} of ${
+                              allMembers.length
+                            } members for chapter "${
+                              selectedChapter || "none"
+                            }"`
+                          );
 
                           // Find selected member from filtered list
                           const selectedMember = filteredMembers.find(
-                            member => member.id === field.value || member.id.toString() === field.value?.toString()
+                            (member) =>
+                              member.id === field.value ||
+                              member.id.toString() === field.value?.toString()
                           );
-                          
+
                           // If no selection or selection isn't in filtered list, clear it
-                          if (field.value && !selectedMember && filteredMembers.length > 0) {
-                            console.log("Selected member not in filtered list, clearing selection");
+                          if (
+                            field.value &&
+                            !selectedMember &&
+                            filteredMembers.length > 0
+                          ) {
+                            console.log(
+                              "Selected member not in filtered list, clearing selection"
+                            );
                             // Clear the selection on next tick to avoid render issues
                             setTimeout(() => {
                               form.setValue("invitedById", null);
@@ -1218,19 +1366,23 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                                   field.onChange(parseInt(value));
                                 }}
                                 value={field.value?.toString() || ""}
-                                disabled={!selectedChapter || filteredMembers.length === 0}
+                                disabled={
+                                  !selectedChapter ||
+                                  filteredMembers.length === 0
+                                }
                               >
                                 <FormControl>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select member">
-                                      {selectedMember?.memberName || "Select member"}
+                                      {selectedMember?.memberName ||
+                                        "Select member"}
                                     </SelectValue>
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
                                   {selectedChapter ? (
                                     filteredMembers.length > 0 ? (
-                                      filteredMembers.map(member => (
+                                      filteredMembers.map((member) => (
                                         <SelectItem
                                           key={member.id}
                                           value={member.id.toString()}
@@ -1279,14 +1431,21 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                         name="gender"
                         render={({ field }) => {
                           // Debug the current value
-                          console.log('[DEBUG] Gender field value:', field.value, typeof field.value);
-                          
+                          console.log(
+                            "[DEBUG] Gender field value:",
+                            field.value,
+                            typeof field.value
+                          );
+
                           return (
                             <FormItem>
                               <FormLabel>Gender</FormLabel>
                               <Select
                                 onValueChange={(val) => {
-                                  console.log('[DEBUG] Setting gender to:', val);
+                                  console.log(
+                                    "[DEBUG] Setting gender to:",
+                                    val
+                                  );
                                   field.onChange(val);
                                 }}
                                 value={field.value || undefined}
@@ -1326,7 +1485,7 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                                     )}
                                   >
                                     {field.value ? (
-                                      format(field.value, "PPP")
+                                      format(field.value, "dd/MM/yyyy")
                                     ) : (
                                       <span>Pick a date</span>
                                     )}
@@ -1405,14 +1564,21 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                       name="category"
                       render={({ field }) => {
                         // Debug the current value
-                        console.log('[DEBUG] Category field value:', field.value, typeof field.value);
-                        
+                        console.log(
+                          "[DEBUG] Category field value:",
+                          field.value,
+                          typeof field.value
+                        );
+
                         return (
                           <FormItem>
                             <FormLabel>Category</FormLabel>
                             <Select
                               onValueChange={(val) => {
-                                console.log('[DEBUG] Setting category to:', val);
+                                console.log(
+                                  "[DEBUG] Setting category to:",
+                                  val
+                                );
                                 field.onChange(val);
                               }}
                               value={field.value || undefined}
@@ -1424,36 +1590,36 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                              {isCategoriesLoading ? (
-                                <SelectItem value="loading" disabled>
-                                  Loading categories...
-                                </SelectItem>
-                              ) : isCategoriesError ? (
-                                <SelectItem value="error" disabled>
-                                  Error loading categories
-                                </SelectItem>
-                              ) : categoriesData?.categories?.length ? (
-                                /* Show categories from API */
-                                categoriesData.categories.map(category => (
-                                  <SelectItem
-                                    key={category.id}
-                                    value={category.name}
-                                  >
-                                    {category.name}
+                                {isCategoriesLoading ? (
+                                  <SelectItem value="loading" disabled>
+                                    Loading categories...
                                   </SelectItem>
-                                ))
-                              ) : (
-                                /* If no categories found in API */
-                                <SelectItem value="no-categories" disabled>
-                                  No categories available
-                                </SelectItem>
-                              )}
-                              {/* Always include Other as a fallback option */}
-                              <SelectItem value="Other">Other</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
+                                ) : isCategoriesError ? (
+                                  <SelectItem value="error" disabled>
+                                    Error loading categories
+                                  </SelectItem>
+                                ) : categoriesData?.categories?.length ? (
+                                  /* Show categories from API */
+                                  categoriesData.categories.map((category) => (
+                                    <SelectItem
+                                      key={category.id}
+                                      value={category.name}
+                                    >
+                                      {category.name}
+                                    </SelectItem>
+                                  ))
+                                ) : (
+                                  /* If no categories found in API */
+                                  <SelectItem value="no-categories" disabled>
+                                    No categories available
+                                  </SelectItem>
+                                )}
+                                {/* Always include Other as a fallback option */}
+                                <SelectItem value="Other">Other</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
                         );
                       }}
                     />

@@ -132,9 +132,7 @@ const DirectThankYouSlip: React.FC = () => {
       });
     },
     onError: (error: any) => {
-      toast.error(
-        error.response?.data?.error || "Failed to create done deal"
-      );
+      toast.error(error.response?.data?.error || "Failed to create done deal");
     },
   });
 
@@ -159,9 +157,7 @@ const DirectThankYouSlip: React.FC = () => {
       <Card className="w-full max-w-4xl mx-auto">
         <CardHeader>
           <CardTitle>Create Done Deal</CardTitle>
-          <CardDescription>
-            Create a new done deal for a member
-          </CardDescription>
+          <CardDescription>Create a new done deal for a member</CardDescription>
         </CardHeader>
 
         <CardContent>
@@ -186,7 +182,7 @@ const DirectThankYouSlip: React.FC = () => {
                               )}
                             >
                               {field.value ? (
-                                format(field.value, "PPP")
+                                format(field.value, "dd/MM/yyyy")
                               ) : (
                                 <span>Select a date</span>
                               )}
@@ -311,9 +307,9 @@ const DirectThankYouSlip: React.FC = () => {
                     <FormItem>
                       <FormLabel>To Whom</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="Recipient name" 
-                          {...field} 
+                        <Input
+                          placeholder="Recipient name"
+                          {...field}
                           onChange={(e) => {
                             field.onChange(e);
                             // Clear toWhomId when manual entry

@@ -64,20 +64,21 @@ type TimeOptionsMap = Record<string, string[]>;
 const generateTimeOptions = (): TimeOptionsMap => {
   // Group by hour for better performance
   const groupedOptions: TimeOptionsMap = {};
-  
+
   // Only generate common business hours by default (7 AM to 9 PM)
   // This significantly reduces the number of options loaded at once
   for (let hour = 7; hour < 21; hour++) {
-    const hourKey = hour < 12 ? `${hour} AM` : (hour === 12 ? `12 PM` : `${hour-12} PM`);
+    const hourKey =
+      hour < 12 ? `${hour} AM` : hour === 12 ? `12 PM` : `${hour - 12} PM`;
     groupedOptions[hourKey] = [];
-    
+
     for (let minute = 0; minute < 60; minute += 15) {
       const formattedHour = hour.toString().padStart(2, "0");
       const formattedMinute = minute.toString().padStart(2, "0");
       groupedOptions[hourKey].push(`${formattedHour}:${formattedMinute}`);
     }
   }
-  
+
   return groupedOptions;
 };
 
@@ -229,7 +230,9 @@ export default function ChapterMeetingForm({
                 name="meetingTitle"
                 render={({ field }) => (
                   <FormItem className="col-span-full">
-                    <FormLabel>Meeting Title <span className="text-red-500">*</span></FormLabel>
+                    <FormLabel>
+                      Meeting Title <span className="text-red-500">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="Enter meeting title" {...field} />
                     </FormControl>
@@ -253,7 +256,7 @@ export default function ChapterMeetingForm({
                               className="w-full pl-3 text-left font-normal"
                             >
                               {field.value
-                                ? format(field.value, "PPP")
+                                ? format(field.value, "dd/MM/yyyy")
                                 : "Pick a date"}
                               <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
@@ -278,7 +281,9 @@ export default function ChapterMeetingForm({
                   name="meetingTime"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Meeting Time <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>
+                        Meeting Time <span className="text-red-500">*</span>
+                      </FormLabel>
                       <Select
                         value={field.value || ""}
                         onValueChange={field.onChange}
@@ -288,18 +293,24 @@ export default function ChapterMeetingForm({
                         </SelectTrigger>
                         <SelectContent className="max-h-[300px]">
                           {/* Render options grouped by hour for better performance */}
-                          {Object.entries(TIME_OPTIONS).map(([hourLabel, times]) => (
-                            <div key={hourLabel}>
-                              <SelectItem value={hourLabel} disabled className="font-semibold bg-muted">
-                                {hourLabel}
-                              </SelectItem>
-                              {times.map((time) => (
-                                <SelectItem key={time} value={time}>
-                                  {time}
+                          {Object.entries(TIME_OPTIONS).map(
+                            ([hourLabel, times]) => (
+                              <div key={hourLabel}>
+                                <SelectItem
+                                  value={hourLabel}
+                                  disabled
+                                  className="font-semibold bg-muted"
+                                >
+                                  {hourLabel}
                                 </SelectItem>
-                              ))}
-                            </div>
-                          ))}
+                                {times.map((time) => (
+                                  <SelectItem key={time} value={time}>
+                                    {time}
+                                  </SelectItem>
+                                ))}
+                              </div>
+                            )
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -313,7 +324,9 @@ export default function ChapterMeetingForm({
                 name="meetingVenue"
                 render={({ field }) => (
                   <FormItem className="col-span-full">
-                    <FormLabel>Meeting Venue <span className="text-red-500">*</span></FormLabel>
+                    <FormLabel>
+                      Meeting Venue <span className="text-red-500">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="Enter meeting venue" {...field} />
                     </FormControl>

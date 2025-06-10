@@ -171,7 +171,7 @@ const EditAttendance = () => {
 
   const formatDate = (dateString: string) => {
     try {
-      return format(new Date(dateString), "PPP");
+      return format(new Date(dateString), "dd/MM/yyyy");
     } catch (e) {
       return dateString;
     }

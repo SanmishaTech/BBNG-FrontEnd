@@ -84,7 +84,7 @@ const DirectThankYouSlipForm = () => {
   const navigate = useNavigate();
 
   const userData = (() => {
-    const userStr = localStorage.getItem('user');
+    const userStr = localStorage.getItem("user");
     try {
       return userStr ? JSON.parse(userStr) : null;
     } catch (e) {
@@ -99,7 +99,7 @@ const DirectThankYouSlipForm = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [open, setOpen] = useState(false);
-  
+
   // Initialize form
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -120,7 +120,7 @@ const DirectThankYouSlipForm = () => {
       try {
         setLoading(true);
         const response = await get("/thankyou-slips/chapters");
-        
+
         if (response && response.chapters) {
           setChapters(response.chapters);
           // Default to the first chapter
@@ -141,13 +141,15 @@ const DirectThankYouSlipForm = () => {
 
     loadChapters();
   }, [form]);
-  
+
   // Function to load members for a specific chapter
   const loadMembersForChapter = async (chapterId: number) => {
     try {
       setLoadingMembers(true);
-      const response = await get(`/thankyou-slips/members/chapter/${chapterId}`);
-      
+      const response = await get(
+        `/thankyou-slips/members/chapter/${chapterId}`
+      );
+
       if (response && Array.isArray(response.members)) {
         let fetchedMembers = response.members;
         if (loggedInUserMemberId) {
@@ -168,7 +170,7 @@ const DirectThankYouSlipForm = () => {
       setLoadingMembers(false);
     }
   };
-  
+
   // Handle chapter change
   const handleChapterChange = (chapterId: string) => {
     const id = parseInt(chapterId);
@@ -186,9 +188,9 @@ const DirectThankYouSlipForm = () => {
         ...data,
         // The backend will get the current user's member ID if fromMemberId is not provided
       };
-      
+
       const response = await post("/thankyou-slips", submissionData);
-      
+
       if (response && response.thankYouSlip) {
         toast.success("Done deal submitted successfully");
         navigate("/dashboard/done-deal");
@@ -197,7 +199,7 @@ const DirectThankYouSlipForm = () => {
       }
     } catch (error: any) {
       console.error("Error submitting done deal:", error);
-      
+
       // Handle validation errors
       if (error.response?.data?.errors) {
         const validationErrors = error.response.data.errors;
@@ -233,7 +235,10 @@ const DirectThankYouSlipForm = () => {
           <CardContent className="pt-6">
             <div className="text-center py-4">
               <p className="text-red-500">No chapters found in the system.</p>
-              <p>Please contact an administrator to set up chapters before creating done deals.</p>
+              <p>
+                Please contact an administrator to set up chapters before
+                creating done deals.
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -259,7 +264,9 @@ const DirectThankYouSlipForm = () => {
                 name="date"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Date <span className="text-red-500">*</span></FormLabel>
+                    <FormLabel>
+                      Date <span className="text-red-500">*</span>
+                    </FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -271,7 +278,7 @@ const DirectThankYouSlipForm = () => {
                             )}
                           >
                             {field.value ? (
-                              format(field.value, "PPP")
+                              format(field.value, "dd/MM/yyyy")
                             ) : (
                               <span>Select a date</span>
                             )}
@@ -299,7 +306,9 @@ const DirectThankYouSlipForm = () => {
                 name="chapterId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Select Chapter <span className="text-red-500">*</span></FormLabel>
+                    <FormLabel>
+                      Select Chapter <span className="text-red-500">*</span>
+                    </FormLabel>
                     <Select
                       value={field.value.toString()}
                       onValueChange={handleChapterChange}
@@ -311,7 +320,10 @@ const DirectThankYouSlipForm = () => {
                       </FormControl>
                       <SelectContent>
                         {chapters.map((chapter) => (
-                          <SelectItem key={chapter.id} value={chapter.id.toString()}>
+                          <SelectItem
+                            key={chapter.id}
+                            value={chapter.id.toString()}
+                          >
                             {chapter.name}
                           </SelectItem>
                         ))}
@@ -328,7 +340,9 @@ const DirectThankYouSlipForm = () => {
                 name="toWhom"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>To Whom <span className="text-red-500">*</span></FormLabel>
+                    <FormLabel>
+                      To Whom <span className="text-red-500">*</span>
+                    </FormLabel>
                     <Dialog open={open} onOpenChange={setOpen}>
                       <DialogTrigger asChild>
                         <FormControl>
@@ -351,7 +365,11 @@ const DirectThankYouSlipForm = () => {
                         </DialogHeader>
                         <Command className="rounded-lg border shadow-md">
                           <CommandInput placeholder="Search member..." />
-                          <CommandEmpty>{loadingMembers ? "Loading..." : "No members found."}</CommandEmpty>
+                          <CommandEmpty>
+                            {loadingMembers
+                              ? "Loading..."
+                              : "No members found."}
+                          </CommandEmpty>
                           <CommandGroup>
                             {members.map((member) => (
                               <CommandItem
@@ -363,7 +381,9 @@ const DirectThankYouSlipForm = () => {
                                 }}
                               >
                                 <div className="flex flex-col">
-                                  <span className="font-medium">{member.memberName}</span>
+                                  <span className="font-medium">
+                                    {member.memberName}
+                                  </span>
                                   {member.organizationName && (
                                     <span className="text-xs text-muted-foreground">
                                       {member.organizationName}
@@ -377,7 +397,8 @@ const DirectThankYouSlipForm = () => {
                       </DialogContent>
                     </Dialog>
                     <FormDescription>
-                      Select a member from the chapter who will receive this done deal
+                      Select a member from the chapter who will receive this
+                      done deal
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -390,12 +411,15 @@ const DirectThankYouSlipForm = () => {
                 name="amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Amount <span className="text-red-500">*</span></FormLabel>
+                    <FormLabel>
+                      Amount <span className="text-red-500">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="Amount" {...field} />
                     </FormControl>
                     <FormDescription>
-                      The value received or given (can be monetary or descriptive)
+                      The value received or given (can be monetary or
+                      descriptive)
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -408,7 +432,9 @@ const DirectThankYouSlipForm = () => {
                 name="narration"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Narration <span className="text-red-500">*</span></FormLabel>
+                    <FormLabel>
+                      Narration <span className="text-red-500">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="Describe the interaction or transaction"
@@ -430,7 +456,9 @@ const DirectThankYouSlipForm = () => {
                 name="testimony"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Testimony <span className="text-red-500">*</span></FormLabel>
+                    <FormLabel>
+                      Testimony <span className="text-red-500">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="Share your testimony about this experience"

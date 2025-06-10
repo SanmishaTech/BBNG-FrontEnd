@@ -18,11 +18,7 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Form,
   FormControl,
@@ -72,7 +68,7 @@ const ThankYouSlipForm = () => {
   const [referenceData, setReferenceData] = useState<any>(null);
   const [previousSlips, setPreviousSlips] = useState<ThankYouSlip[]>([]);
   const [loadingPreviousSlips, setLoadingPreviousSlips] = useState(false);
-  
+
   // Initialize form
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -99,10 +95,10 @@ const ThankYouSlipForm = () => {
       try {
         setLoading(true);
         const response = await get(`/references/${referenceId}`);
-        
+
         if (response) {
           setReferenceData(response);
-          
+
           // Pre-fill form with data from reference
           form.setValue("referenceId", parseInt(referenceId));
           form.setValue("chapterId", response.chapter?.id || 0);
@@ -111,7 +107,9 @@ const ThankYouSlipForm = () => {
           // Load previous thank you slips for this reference
           setLoadingPreviousSlips(true);
           try {
-            const slipsResponse = await get(`/thankyou-slips/reference/${referenceId}`);
+            const slipsResponse = await get(
+              `/thankyou-slips/reference/${referenceId}`
+            );
             if (slipsResponse && slipsResponse.thankYouSlips) {
               setPreviousSlips(slipsResponse.thankYouSlips);
             }
@@ -122,7 +120,7 @@ const ThankYouSlipForm = () => {
           }
         } else {
           toast.error("Failed to load reference data");
-          navigate("/references")
+          navigate("/references");
         }
       } catch (error) {
         console.error("Error loading reference:", error);
@@ -141,7 +139,7 @@ const ThankYouSlipForm = () => {
     try {
       // Submit thank you slip data to backend
       const response = await post("/thankyou-slips", data);
-      
+
       if (response && response.thankYouSlip) {
         toast.success("Thank you slip submitted successfully");
         navigate("/references/received");
@@ -150,7 +148,7 @@ const ThankYouSlipForm = () => {
       }
     } catch (error) {
       console.error("Error submitting thank you slip:", error);
-      
+
       // Handle validation errors
       if (error.response?.data?.errors) {
         const validationErrors = error.response.data.errors;
@@ -184,18 +182,26 @@ const ThankYouSlipForm = () => {
                 {previousSlips.map((slip) => (
                   <Alert key={slip.id} className="bg-gray-50">
                     <AlertTitle className="flex justify-between">
-                      <span>Sent on {format(new Date(slip.date), "PPP")}</span>
-                      <span className="text-sm font-normal">Amount: {slip.amount}</span>
+                      <span>
+                        Sent on {format(new Date(slip.date), "dd/MM/yyyy")}
+                      </span>
+                      <span className="text-sm font-normal">
+                        Amount: {slip.amount}
+                      </span>
                     </AlertTitle>
                     <AlertDescription className="mt-2">
                       <div className="grid grid-cols-2 gap-4 text-sm mt-2">
                         <div>
                           <p className="font-semibold">To: {slip.toWhom}</p>
-                          <p className="text-gray-500">Chapter: {slip.chapter.name}</p>
+                          <p className="text-gray-500">
+                            Chapter: {slip.chapter.name}
+                          </p>
                         </div>
                         <div>
                           <p className="font-semibold">Narration:</p>
-                          <p className="text-gray-600 line-clamp-2">{slip.narration}</p>
+                          <p className="text-gray-600 line-clamp-2">
+                            {slip.narration}
+                          </p>
                         </div>
                       </div>
                     </AlertDescription>
@@ -215,7 +221,8 @@ const ThankYouSlipForm = () => {
         <CardHeader>
           <CardTitle>Thank You Slip</CardTitle>
           <CardDescription>
-            Create a thank you slip for the reference from {referenceData?.giver?.memberName || "Unknown"}
+            Create a thank you slip for the reference from{" "}
+            {referenceData?.giver?.memberName || "Unknown"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -247,7 +254,9 @@ const ThankYouSlipForm = () => {
                   name="date"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Date <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>
+                        Date <span className="text-red-500">*</span>
+                      </FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -259,7 +268,7 @@ const ThankYouSlipForm = () => {
                               )}
                             >
                               {field.value ? (
-                                format(field.value, "PPP")
+                                format(field.value, "dd/MM/yyyy")
                               ) : (
                                 <span>Pick a date</span>
                               )}
@@ -290,12 +299,15 @@ const ThankYouSlipForm = () => {
                   name="amount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Amount <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>
+                        Amount <span className="text-red-500">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input
-                        
                           type="number"
-                         placeholder="Enter amount" {...field} />
+                          placeholder="Enter amount"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -309,7 +321,9 @@ const ThankYouSlipForm = () => {
                     name="narration"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Narration <span className="text-red-500">*</span></FormLabel>
+                        <FormLabel>
+                          Narration <span className="text-red-500">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Textarea
                             placeholder="Enter narration"
@@ -333,7 +347,9 @@ const ThankYouSlipForm = () => {
                     name="testimony"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Testimony <span className="text-red-500">*</span></FormLabel>
+                        <FormLabel>
+                          Testimony <span className="text-red-500">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Textarea
                             placeholder="Enter testimony"
@@ -364,7 +380,7 @@ const ThankYouSlipForm = () => {
             </form>
           </Form>
         </CardContent>
-        
+
         {previousSlips.length > 0 && (
           <CardFooter className="flex-col items-start border-t p-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center">
@@ -375,18 +391,26 @@ const ThankYouSlipForm = () => {
               {previousSlips.map((slip) => (
                 <Alert key={slip.id} className="bg-gray-50">
                   <AlertTitle className="flex justify-between">
-                    <span>Sent on {format(new Date(slip.date), "PPP")}</span>
-                    <span className="text-sm font-normal">Amount: {slip.amount}</span>
+                    <span>
+                      Sent on {format(new Date(slip.date), "dd/MM/yyyy")}
+                    </span>
+                    <span className="text-sm font-normal">
+                      Amount: {slip.amount}
+                    </span>
                   </AlertTitle>
                   <AlertDescription className="mt-2">
                     <div className="grid grid-cols-2 gap-4 text-sm mt-2">
                       <div>
                         <p className="font-semibold">To: {slip.toWhom}</p>
-                        <p className="text-gray-500">Chapter: {slip.chapter.name}</p>
+                        <p className="text-gray-500">
+                          Chapter: {slip.chapter.name}
+                        </p>
                       </div>
                       <div>
                         <p className="font-semibold">Narration:</p>
-                        <p className="text-gray-600 line-clamp-2">{slip.narration}</p>
+                        <p className="text-gray-600 line-clamp-2">
+                          {slip.narration}
+                        </p>
                       </div>
                     </div>
                   </AlertDescription>
