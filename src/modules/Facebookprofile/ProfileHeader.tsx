@@ -2,10 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Camera, Edit, MoreHorizontal, Plus } from "lucide-react";
 import { MemberData } from "@/types/member";
 import { useState, useEffect } from "react";
-import { get } from "@/services/apiService"
+import { get } from "@/services/apiService";
 
 // Define the base URL for your API.
-const API_BASE_URL = 'http://15.207.30.113';
+const API_BASE_URL = "http://15.207.30.113";
 
 interface ActivitySummary {
   testimonials: number;
@@ -24,10 +24,11 @@ const ProfileHeader = ({ memberData }: ProfileHeaderProps) => {
   // State to track image loading errors
   const [imageError, setImageError] = useState({
     profile: false,
-    cover: false
+    cover: false,
   });
 
-  const [activitySummary, setActivitySummary] = useState<ActivitySummary | null>(null);
+  const [activitySummary, setActivitySummary] =
+    useState<ActivitySummary | null>(null);
   const [isLoadingSummary, setIsLoadingSummary] = useState(false);
   const [summaryError, setSummaryError] = useState<string | null>(null);
 
@@ -42,15 +43,19 @@ const ProfileHeader = ({ memberData }: ProfileHeaderProps) => {
         setIsLoadingSummary(true);
         setSummaryError(null);
         try {
-          const response = await get(`/members/${memberData.id}/activity-summary`);
+          const response = await get(
+            `/members/${memberData.id}/activity-summary`
+          );
           // if (!response.ok) {
           //   throw new Error(`Failed to fetch activity summary: ${response.statusText}`);
           // }
-          console.log(response)
+          console.log(response);
           setActivitySummary(response);
         } catch (error) {
           console.error("Error fetching activity summary:", error);
-          setSummaryError(error instanceof Error ? error.message : "An unknown error occurred");
+          setSummaryError(
+            error instanceof Error ? error.message : "An unknown error occurred"
+          );
           setActivitySummary(null); // Reset on error
         }
         setIsLoadingSummary(false);
@@ -62,34 +67,54 @@ const ProfileHeader = ({ memberData }: ProfileHeaderProps) => {
     }
   }, [memberData?.id]);
 
-  console.log(memberData)
+  console.log(memberData);
   useEffect(() => {
-    console.log("Activity", activitySummary)
-  }, [activitySummary])
+    console.log("Activity", activitySummary);
+  }, [activitySummary]);
 
   // TODO: Replace hardcoded stats with data from memberData props
   const formatCurrency = (amount: number | undefined) => {
-    return amount ? `₹ ${amount.toLocaleString('en-IN')}` : "₹ 0";
+    return amount ? `₹ ${amount.toLocaleString("en-IN")}` : "₹ 0";
   };
 
-  console.log("Activity", activitySummary)
+  console.log("Activity", activitySummary);
   const statsData = [
-    { value:  activitySummary?.testimonials?.toString() || "0", label: "Testimonials" },
-    { value:  formatCurrency(activitySummary?.businessGiven), label: "Business Given" },
-    { value:  formatCurrency(activitySummary?.businessReceived), label: "Business Received" },
-    { value:  activitySummary?.referencesGiven?.toString() || "0", label: "References Given" },
-    { value:  activitySummary?.referencesReceived?.toString() || "0", label: "References Received" },
-    { value:  activitySummary?.oneToOnes?.toString() || "0", label: "One To Ones" },
+    {
+      value: activitySummary?.testimonials?.toString() || "0",
+      label: "Testimonials",
+    },
+    {
+      value: formatCurrency(activitySummary?.businessGiven),
+      label: "Business Given",
+    },
+    {
+      value: formatCurrency(activitySummary?.businessReceived),
+      label: "Business Received",
+    },
+    {
+      value: activitySummary?.referencesGiven?.toString() || "0",
+      label: "References Given",
+    },
+    {
+      value: activitySummary?.referencesReceived?.toString() || "0",
+      label: "References Received",
+    },
+    {
+      value: activitySummary?.oneToOnes?.toString() || "0",
+      label: "One To Ones",
+    },
   ];
 
   // Default local placeholder images (used as fallbacks)
-  const defaultCoverUrl = "https://picsum.photos/1200/300"; 
-  const defaultProfileUrl = "https://picsum.photos/200"; 
-  console.log("Member Data",memberData)
+  const defaultCoverUrl = "https://picsum.photos/1200/300";
+  const defaultProfileUrl = "https://picsum.photos/200";
+  console.log("Member Data", memberData);
   const displayName = memberData?.name || "Member Name"; // Use memberName from JSON
 
   const lastLoginDate = memberData?.users?.lastLogin;
-  const lastActiveDisplay = lastLoginDate ? new Date(lastLoginDate).toLocaleDateString() : "Recently";
+  const lastActiveDisplay = lastLoginDate
+    ? new Date(lastLoginDate).toLocaleDateString()
+    : "Recently";
 
   const getImageUrl = (path: string | undefined, isCover: boolean): string => {
     const currentError = isCover ? imageError.cover : imageError.profile;
@@ -97,7 +122,9 @@ const ProfileHeader = ({ memberData }: ProfileHeaderProps) => {
     if (currentError || !path) {
       if (memberData?.id) {
         const seed = memberData.id;
-        return isCover ? `https://picsum.photos/seed/${seed}/1200/300` : `https://picsum.photos/seed/${seed}/200`;
+        return isCover
+          ? `https://picsum.photos/seed/${seed}/1200/300`
+          : `https://picsum.photos/seed/${seed}/200`;
       } else {
         // Fallback to non-seeded if memberData.id is not available
         return isCover ? defaultCoverUrl : defaultProfileUrl;
@@ -108,14 +135,17 @@ const ProfileHeader = ({ memberData }: ProfileHeaderProps) => {
     if (/^(?:[a-z]+:)?\/\//i.test(path)) {
       return path;
     }
-    
+
     // Otherwise, assume it's relative and prepend API_BASE_URL
-    return `${API_BASE_URL.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
+    return `${API_BASE_URL.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
   };
 
-  const actualProfilePictureSrc = getImageUrl(memberData?.profilePicture, false);
+  const actualProfilePictureSrc = getImageUrl(
+    memberData?.profilePicture,
+    false
+  );
   const actualCoverPhotoSrc = getImageUrl(memberData?.coverPhoto, true);
-  
+
   return (
     <div className="min-w-full">
       {/* Cover Photo */}
@@ -124,7 +154,7 @@ const ProfileHeader = ({ memberData }: ProfileHeaderProps) => {
           src={actualCoverPhotoSrc} // Use the determined source
           alt="Cover"
           className="w-full h-full object-cover"
-          onError={() => setImageError(prev => ({ ...prev, cover: true }))}
+          onError={() => setImageError((prev) => ({ ...prev, cover: true }))}
         />
         <div className="absolute bottom-4 right-4 flex gap-2">
           <Button variant="secondary" size="sm" className="bg-white">
@@ -142,7 +172,9 @@ const ProfileHeader = ({ memberData }: ProfileHeaderProps) => {
               src={actualProfilePictureSrc} // Use the determined source
               alt="Profile"
               className="w-full h-full object-cover"
-              onError={() => setImageError(prev => ({ ...prev, profile: true }))}
+              onError={() =>
+                setImageError((prev) => ({ ...prev, profile: true }))
+              }
             />
           </div>
           <div className="absolute bottom-3 right-3 bg-gray-200 rounded-full p-2 border-2 border-white">
@@ -153,34 +185,47 @@ const ProfileHeader = ({ memberData }: ProfileHeaderProps) => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end w-full pt-4 md:pt-0 px-0 md:px-6 mb-4">
           <div className="mb-4 md:mb-6">
             <h1 className="text-3xl font-bold">{displayName}</h1>
-             {memberData?.category && (
-              <p className="text-gray-500">{memberData.organizationName ? `${memberData.category} at ${memberData.organizationName}` : memberData.category}</p>
+            {memberData?.category && (
+              <p className="text-gray-500">
+                {memberData.organizationName
+                  ? `${memberData.category} at ${memberData.organizationName}`
+                  : memberData.category}
+              </p>
             )}
-            <p className="text-gray-500 text-sm mt-1">Organization Name: {memberData?.businessDetails?.organizationName}</p>
+            <p className="text-gray-500 text-sm mt-1">
+              Organization Name: {memberData?.businessDetails?.organizationName}
+            </p>
           </div>
           <div className="flex gap-2 mb-4 md:mb-6">
             <Button className="bg-blue-600 hover:bg-blue-700 flex items-center">
               <Plus className="h-4 w-4 mr-2" /> Connect
             </Button>
-            <Button variant="secondary" className="bg-gray-200 flex items-center">
+            <Button
+              variant="secondary"
+              className="bg-gray-200 flex items-center"
+            >
               <Edit className="h-4 w-4 mr-2" /> Message
             </Button>
             <Button variant="secondary" className="bg-gray-200">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </div>
-        </div>  
+        </div>
       </div>
 
       {/* Stats Bar - Exact match to UI in the screenshot */}
       <div className=" w-full mt-4 rounded-5xl">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 border-t border-gray-200 bg-white max-w-[98%] ml-3 flex justify-center items-center rounded-lg">
           {statsData.map((stat, index) => (
-            <div 
-              key={stat.label} 
-              className={`py-4 flex flex-col items-center justify-center text-center ${index < statsData.length - 1 ? 'border-r border-gray-200' : ''}`}
+            <div
+              key={stat.label}
+              className={`py-4 flex flex-col items-center justify-center text-center ${
+                index < statsData.length - 1 ? "border-r border-gray-200" : ""
+              }`}
             >
-              <p className="text-base font-medium text-gray-800">{stat.value}</p>
+              <p className="text-base font-medium text-gray-800">
+                {stat.value}
+              </p>
               <p className="text-xs text-gray-500 mt-1">{stat.label}</p>
             </div>
           ))}

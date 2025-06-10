@@ -130,12 +130,22 @@ const membershipSchema = z.object({
   memberId: z.number({
     required_error: "Member is required",
   }),
-  invoiceDate: z.date({
-    required_error: "Invoice date is required",
-  }),
-  packageStartDate: z.date({
-    required_error: "Package start date is required",
-  }).min(new Date(new Date().setHours(0, 0, 0, 0)), { message: "Package start date cannot be in the past." }),
+  invoiceDate: z.preprocess(
+    (arg) => {
+      if (typeof arg == "string" || arg instanceof Date) return new Date(arg);
+    },
+    z.date({
+      required_error: "Invoice date is required",
+    }),
+  ),
+  packageStartDate: z.preprocess(
+    (arg) => {
+      if (typeof arg == "string" || arg instanceof Date) return new Date(arg);
+    },
+    z.date({
+      required_error: "Package start date is required",
+    }),
+  ),
   packageId: z.number({
     required_error: "Package is required",
   }),
@@ -155,9 +165,14 @@ const membershipSchema = z.object({
     (val) => (val === "" ? null : Number(val)),
     z.number().min(0, "IGST rate cannot be negative").nullable().optional(),
   ),
-  paymentDate: z.date({
-    required_error: "Payment date is required",
-  }),
+  paymentDate: z.preprocess(
+    (arg) => {
+      if (typeof arg == "string" || arg instanceof Date) return new Date(arg);
+    },
+    z.date({
+      required_error: "Payment date is required",
+    }),
+  ),
   paymentMode: z
     .string({
       required_error: "Payment mode is required",
