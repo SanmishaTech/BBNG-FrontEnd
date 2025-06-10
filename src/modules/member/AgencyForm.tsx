@@ -41,12 +41,7 @@ import { getCategories } from "@/services/categoryService";
 import { getSubCategoriesByCategoryId } from "@/services/subCategoryService";
 import { cn } from "@/lib/utils";
 // import MembershipStatusAlert from "@/components/common/membership-status-alert";
-import {
-  Info,
-  Check,
-  ChevronsUpDown,
-  X,
-} from "lucide-react";
+import { Info, Check, ChevronsUpDown, X } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -98,7 +93,7 @@ type BaseMemberFormValues = {
   memberName: string;
   chapterId: number;
   category: string;
-  businessCategory: number[]; 
+  businessCategory: number[];
   gender: string;
   dateOfBirth: Date | null;
   mobile1: string;
@@ -152,13 +147,14 @@ const createMemberSchema = (mode: "create" | "edit") => {
     dateOfBirth: z.preprocess(
       (arg) => {
         if (!arg || arg === "") return null; // Handle empty string or falsy to null
-        if (typeof arg === 'string') {
-            const d = new Date(arg);
-            return Number.isNaN(d.getTime()) ? null : d; // Ensure valid date, else null
+        if (typeof arg === "string") {
+          const d = new Date(arg);
+          return Number.isNaN(d.getTime()) ? null : d; // Ensure valid date, else null
         }
         return arg;
       },
-      z.date({ invalid_type_error: "Invalid date format for Date of Birth" })
+      z
+        .date({ invalid_type_error: "Invalid date format for Date of Birth" })
         .nullable() // Allows null
         .refine(
           (date) => {
@@ -189,38 +185,43 @@ const createMemberSchema = (mode: "create" | "edit") => {
       .string()
       .min(10, "Mobile number must be 10 digits")
       .max(10, "Mobile number must be 10 digits"),
-     mobile2: z // Type: string | null
+    mobile2: z // Type: string | null
       .string()
       .min(10, "Mobile number must be 10 digits")
       .max(10, "Mobile number must be 10 digits")
-       .nullable()
+      .nullable()
       .or(z.literal("")), // Allows empty string, effectively making it nullable
-      gstNo: z.preprocess( // Type: string | undefined
-        (val) => (val === "" || val === null ? undefined : val),
-        z
-          .string()
-          .regex(
-            /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9A-Z]{1}Z[0-9A-Z]{1}$/,
-            "Invalid GST number format. Example: 27AAPFU0939F1ZV"
-          )
-          .optional()
-      ),
+    gstNo: z.preprocess(
+      // Type: string | undefined
+      (val) => (val === "" || val === null ? undefined : val),
+      z
+        .string()
+        .regex(
+          /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9A-Z]{1}Z[0-9A-Z]{1}$/,
+          "Invalid GST number format. Example: 27AAPFU0939F1ZV"
+        )
+        .optional()
+    ),
     organizationName: z.string().min(1, "Organization name is required"),
-    businessTagline: z.preprocess((val) => (val === "" || val === null ? undefined : val), 
+    businessTagline: z.preprocess(
+      (val) => (val === "" || val === null ? undefined : val),
       z.string().optional()
     ),
     organizationMobileNo: z
       .string()
       .min(10, "Mobile number must be 10 digits")
       .max(10, "Mobile number must be 10 digits"),
-     organizationLandlineNo: z.preprocess((val) => (val === "" || val === null ? undefined : val), 
+    organizationLandlineNo: z.preprocess(
+      (val) => (val === "" || val === null ? undefined : val),
       z.string().optional()
     ),
-    organizationEmail: z.preprocess((val) => (val === "" || val === null ? undefined : val), 
+    organizationEmail: z.preprocess(
+      (val) => (val === "" || val === null ? undefined : val),
       z.string().email("Invalid email address").optional()
     ),
     orgAddressLine1: z.string().min(1, "Address is required"),
-    orgAddressLine2: z.preprocess((val) => (val === "" || val === null ? undefined : val), 
+    orgAddressLine2: z.preprocess(
+      (val) => (val === "" || val === null ? undefined : val),
       z.string().optional()
     ),
     orgLocation: z.string().min(1, "Location is required"),
@@ -228,41 +229,57 @@ const createMemberSchema = (mode: "create" | "edit") => {
       .string()
       .length(6, "Pincode must be 6 digits")
       .regex(/^\d{6}$/, "Invalid pincode format"),
-    organizationWebsite: z.preprocess((val) => (val === "" || val === null ? undefined : val), 
+    organizationWebsite: z.preprocess(
+      (val) => (val === "" || val === null ? undefined : val),
       z.string().url("Invalid URL").optional()
     ),
-    organizationDescription: z.preprocess((val) => (val === "" || val === null ? undefined : val), 
+    organizationDescription: z.preprocess(
+      (val) => (val === "" || val === null ? undefined : val),
       z.string().optional()
     ),
     addressLine1: z.string().min(1, "Address is required"),
     location: z.string().min(1, "Location is required"),
-    addressLine2: z.preprocess((val) => (val === "" || val === null ? undefined : val), 
+    addressLine2: z.preprocess(
+      (val) => (val === "" || val === null ? undefined : val),
       z.string().optional()
     ),
     pincode: z
       .string()
       .length(6, "Pincode must be 6 digits")
       .regex(/^\d{6}$/, "Invalid pincode format"),
-    specificAsk: z.preprocess((val) => (val === "" || val === null ? undefined : val), 
+    specificAsk: z.preprocess(
+      (val) => (val === "" || val === null ? undefined : val),
       z.string().optional()
     ),
-    specificGive: z.preprocess((val) => (val === "" || val === null ? undefined : val), 
+    specificGive: z.preprocess(
+      (val) => (val === "" || val === null ? undefined : val),
       z.string().optional()
     ),
-    clients: z.preprocess((val) => (val === "" || val === null ? undefined : val), 
+    clients: z.preprocess(
+      (val) => (val === "" || val === null ? undefined : val),
       z.string().optional()
     ),
-    profilePicture: z.preprocess((val) => (val === null ? undefined : val), 
+    profilePicture: z.preprocess(
+      (val) => (val === null ? undefined : val),
       z.instanceof(File).optional()
     ),
-    coverPhoto: z.preprocess((val) => (val === null ? undefined : val), 
+    coverPhoto: z.preprocess(
+      (val) => (val === null ? undefined : val),
       z.instanceof(File).optional()
     ),
-    logo: z.preprocess((val) => (val === null ? undefined : val), 
+    logo: z.preprocess(
+      (val) => (val === null ? undefined : val),
       z.instanceof(File).optional()
     ),
     email: z.string().email("Invalid email format"),
-    stateId: z.preprocess((val) => (val === null || val === "" || Number.isNaN(Number(val)) || Number(val) === 0 ? undefined : Number(val)), 
+    stateId: z.preprocess(
+      (val) =>
+        val === null ||
+        val === "" ||
+        Number.isNaN(Number(val)) ||
+        Number(val) === 0
+          ? undefined
+          : Number(val),
       z.number().int().positive().optional()
     ),
   });
@@ -284,9 +301,9 @@ const createMemberSchema = (mode: "create" | "edit") => {
 };
 
 // Environment variable for the API base URL (recommended)
-// const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://15.207.30.113
+// const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000
 // For this example, we'll use the hardcoded one if not available.
-const IMAGE_BASE_URL = "http://15.207.30.113"; // Replace with your actual image base URL
+const IMAGE_BASE_URL = "http://localhost:3000"; // Replace with your actual image base URL
 
 export default function MemberForm({ mode }: MemberFormProps) {
   const { id } = useParams<{ id: string }>();
@@ -347,18 +364,19 @@ export default function MemberForm({ mode }: MemberFormProps) {
     Chapter[]
   >({
     queryKey: ["chapters"],
-    queryFn: () => get("/chapters").then((response) => {
-      // Ensure response and response.chapters are as expected
-      const rawChapters = response?.chapters;
-      if (Array.isArray(rawChapters)) {
-        return rawChapters.map(chapter => ({
-          ...chapter,
-          // Ensure chapter.zones is always an array
-          zones: Array.isArray(chapter.zones) ? chapter.zones : [],
-        }));
-      }
-      return []; // Return empty array if data is not in expected format
-    }),
+    queryFn: () =>
+      get("/chapters").then((response) => {
+        // Ensure response and response.chapters are as expected
+        const rawChapters = response?.chapters;
+        if (Array.isArray(rawChapters)) {
+          return rawChapters.map((chapter) => ({
+            ...chapter,
+            // Ensure chapter.zones is always an array
+            zones: Array.isArray(chapter.zones) ? chapter.zones : [],
+          }));
+        }
+        return []; // Return empty array if data is not in expected format
+      }),
   });
 
   const visitorData = useMemo(() => {
@@ -836,7 +854,6 @@ export default function MemberForm({ mode }: MemberFormProps) {
                 <FormField
                   control={form.control}
                   name="businessCategory"
-
                   render={({ field }) => {
                     const subCategoryOptions: Option[] = useMemo(() => {
                       if (!Array.isArray(subcategories)) return [];
@@ -855,9 +872,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
 
                     return (
                       <FormItem>
-                        <FormLabel>
-                          Business Subcategories
-                        </FormLabel>
+                        <FormLabel>Business Subcategories</FormLabel>
                         <MultipleSelector
                           className="min-w-full"
                           options={subCategoryOptions}
@@ -881,7 +896,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                           onChange={(selectedOpts: Option[]) => {
                             const selectedIds = selectedOpts
                               .map((opt) => Number(opt.value))
-                              .filter(id => !Number.isNaN(id)); 
+                              .filter((id) => !Number.isNaN(id));
                             field.onChange(selectedIds);
                           }}
                           disabled={!selectedCategoryId || loadingSubcategories}
@@ -1272,7 +1287,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   </FormItem>
                 )}
               />
-              
+
               <div className="grid md:grid-cols-2 gap-4 md:gap-6">
                 <FormField
                   control={form.control}
@@ -1377,22 +1392,26 @@ export default function MemberForm({ mode }: MemberFormProps) {
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-3 gap-6">
-                {[ // Define an array for image field configuration
+                {[
+                  // Define an array for image field configuration
                   { name: "profilePicture", label: "Profile Picture" },
                   { name: "coverPhoto", label: "Cover Photo" },
                   { name: "logo", label: "Logo" },
                 ].map((imageField, index) => {
                   const fieldName = imageField.name as keyof FormValues;
                   const relativeImagePath = existingImageUrls[index]; // Assuming existingImageUrls aligns with this order
-                  console.log("Relative path",relativeImagePath)
+                  console.log("Relative path", relativeImagePath);
                   const displayUrl = relativeImagePath
                     ? relativeImagePath.startsWith("http")
                       ? relativeImagePath
-                      : `${IMAGE_BASE_URL}/${relativeImagePath.replace(/^\/+/, "")}`
+                      : `${IMAGE_BASE_URL}/${relativeImagePath.replace(
+                          /^\/+/,
+                          ""
+                        )}`
                     : null;
-                  console.log("display url",displayUrl)
+                  console.log("display url", displayUrl);
                   const currentFile = form.watch(fieldName) as File | undefined;
-                  console.log('Current file for', fieldName, ':', currentFile); // Added log for currentFile
+                  console.log("Current file for", fieldName, ":", currentFile); // Added log for currentFile
 
                   return (
                     <FormField
@@ -1401,7 +1420,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
                       key={fieldName}
                       render={({ field }) => (
                         <FormItem className="flex flex-col items-center">
-                          <FormLabel className="mb-2">{imageField.label}</FormLabel>
+                          <FormLabel className="mb-2">
+                            {imageField.label}
+                          </FormLabel>
                           <FormControl>
                             <div className="w-40 h-40 border rounded-md flex items-center justify-center overflow-hidden relative group">
                               <Input
@@ -1411,7 +1432,8 @@ export default function MemberForm({ mode }: MemberFormProps) {
                                 onChange={(e) => {
                                   const file = e.target.files?.[0];
                                   if (file) {
-                                    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                                    if (file.size > 5 * 1024 * 1024) {
+                                      // 5MB limit
                                       form.setError(fieldName, {
                                         type: "manual",
                                         message: "File size exceeds 5MB.",
@@ -1425,7 +1447,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                                   }
                                 }}
                               />
-                              {(currentFile || displayUrl) ? (
+                              {currentFile || displayUrl ? (
                                 <img
                                   src={displayUrl}
                                   alt={imageField.label}
@@ -1451,13 +1473,16 @@ export default function MemberForm({ mode }: MemberFormProps) {
                                     if (relativeImagePath) {
                                       // Potentially set a flag like form.setValue(`remove_${fieldName}`, true);
                                       // Or handle this in the FormData preparation
-                                      setExistingImageUrls(prev => {
+                                      setExistingImageUrls((prev) => {
                                         const newUrls = [...prev];
                                         newUrls[index] = null;
                                         return newUrls;
                                       });
                                     }
-                                    const fileInput = e.currentTarget.parentElement?.querySelector('input[type="file"]') as HTMLInputElement;
+                                    const fileInput =
+                                      e.currentTarget.parentElement?.querySelector(
+                                        'input[type="file"]'
+                                      ) as HTMLInputElement;
                                     if (fileInput) fileInput.value = "";
                                   }}
                                 >
@@ -1469,7 +1494,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
                           <FormMessage className="mt-1" />
                           {form.formState.errors[fieldName] && (
                             <p className="text-xs text-red-500 mt-1">
-                              {form.formState.errors[fieldName]?.message?.toString()}
+                              {form.formState.errors[
+                                fieldName
+                              ]?.message?.toString()}
                             </p>
                           )}
                         </FormItem>

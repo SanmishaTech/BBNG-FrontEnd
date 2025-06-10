@@ -41,12 +41,7 @@ import { getCategories } from "@/services/categoryService";
 import { getSubCategoriesByCategoryId } from "@/services/subCategoryService";
 import { cn } from "@/lib/utils";
 // import MembershipStatusAlert from "@/components/common/membership-status-alert";
-import {
-  Info,                
-  Check,
-  ChevronsUpDown,
-  X,
-} from "lucide-react";
+import { Info, Check, ChevronsUpDown, X } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -145,7 +140,8 @@ const createMemberSchema = (mode: "create" | "edit") => {
       .number({ required_error: "Chapter is required" })
       .int()
       .min(1, "Chapter is required"),
-    category: z.preprocess( // Type: string | undefined
+    category: z.preprocess(
+      // Type: string | undefined
       (val) => (val === "" || val === null ? undefined : val),
       z.string().optional()
     ),
@@ -174,7 +170,8 @@ const createMemberSchema = (mode: "create" | "edit") => {
       .or(z.literal(""))
       .transform((val) => (val === "" ? null : val))
       .nullable(),
-    gstNo: z.preprocess( // Type: string | undefined
+    gstNo: z.preprocess(
+      // Type: string | undefined
       (val) => (val === "" || val === null ? undefined : val),
       z
         .string()
@@ -185,79 +182,102 @@ const createMemberSchema = (mode: "create" | "edit") => {
         .optional()
     ),
     organizationName: z.string().min(1, "Organization name is required"),
-    businessTagline: z.preprocess( // Type: string | undefined
+    businessTagline: z.preprocess(
+      // Type: string | undefined
       (val) => (val === "" || val === null ? undefined : val),
       z.string().optional()
     ),
     organizationMobileNo: z
       .string()
       .regex(/^[0-9]{10}$/, "Valid organization mobile number is required"),
-    organizationLandlineNo: z.preprocess( // Type: string | undefined
+    organizationLandlineNo: z.preprocess(
+      // Type: string | undefined
       (val) => (val === "" || val === null ? undefined : val),
-      z.string().regex(/^[0-9]{6,15}$/, "Invalid landline number format").optional()
+      z
+        .string()
+        .regex(/^[0-9]{6,15}$/, "Invalid landline number format")
+        .optional()
     ),
-    organizationEmail: z.preprocess( // Type: string | undefined
+    organizationEmail: z.preprocess(
+      // Type: string | undefined
       (val) => (val === "" || val === null ? undefined : val),
       z.string().email("Invalid organization email address").optional()
     ),
     orgAddressLine1: z.string().min(1, "Organization address is required"),
-    orgAddressLine2: z.preprocess( // Type: string | undefined
+    orgAddressLine2: z.preprocess(
+      // Type: string | undefined
       (val) => (val === "" || val === null ? undefined : val),
       z.string().optional()
     ),
     orgLocation: z.string().min(1, "Organization location is required"),
     orgPincode: z.string().regex(/^[0-9]{6}$/, "Invalid organization pincode"),
-    organizationWebsite: z.preprocess( // Type: string | undefined
+    organizationWebsite: z.preprocess(
+      // Type: string | undefined
       (val) => (val === "" || val === null ? undefined : val),
       z.string().url("Invalid organization website URL").optional()
     ),
-    organizationDescription: z.preprocess( // Type: string | undefined
+    organizationDescription: z.preprocess(
+      // Type: string | undefined
       (val) => (val === "" || val === null ? undefined : val),
       z.string().optional()
     ),
     addressLine1: z.string().min(1, "Address is required"),
     location: z.string().min(1, "Location is required"),
-    addressLine2: z.preprocess( // Type: string | undefined
+    addressLine2: z.preprocess(
+      // Type: string | undefined
       (val) => (val === "" || val === null ? undefined : val),
       z.string().optional()
     ),
     pincode: z.string().regex(/^[0-9]{6}$/, "Invalid pincode"),
-    specificAsk: z.preprocess( // Type: string | undefined
+    specificAsk: z.preprocess(
+      // Type: string | undefined
       (val) => (val === "" || val === null ? undefined : val),
       z.string().optional()
     ),
-    specificGive: z.preprocess( // Type: string | undefined
+    specificGive: z.preprocess(
+      // Type: string | undefined
       (val) => (val === "" || val === null ? undefined : val),
       z.string().optional()
     ),
-    clients: z.preprocess( // Type: string | undefined
+    clients: z.preprocess(
+      // Type: string | undefined
       (val) => (val === "" || val === null ? undefined : val),
       z.string().optional()
     ),
-    profilePicture: z.preprocess( // Type: File | undefined
-        (val) => (val === null ? undefined : val), 
-        z.instanceof(File).optional()
+    profilePicture: z.preprocess(
+      // Type: File | undefined
+      (val) => (val === null ? undefined : val),
+      z.instanceof(File).optional()
     ),
-    coverPhoto: z.preprocess( // Type: File | undefined
-        (val) => (val === null ? undefined : val), 
-        z.instanceof(File).optional()
+    coverPhoto: z.preprocess(
+      // Type: File | undefined
+      (val) => (val === null ? undefined : val),
+      z.instanceof(File).optional()
     ),
-    logo: z.preprocess( // Type: File | undefined
-        (val) => (val === null ? undefined : val), 
-        z.instanceof(File).optional()
+    logo: z.preprocess(
+      // Type: File | undefined
+      (val) => (val === null ? undefined : val),
+      z.instanceof(File).optional()
     ),
     email: z.string().email("Valid email is required"),
-    stateId: z.preprocess( // Type: number | undefined
+    stateId: z.preprocess(
+      // Type: number | undefined
       (val) => {
-        if (val === null || val === "" || Number.isNaN(Number(val)) || Number(val) === 0) {
+        if (
+          val === null ||
+          val === "" ||
+          Number.isNaN(Number(val)) ||
+          Number(val) === 0
+        ) {
           return undefined;
         }
         return Number(val);
       },
-      z.number({ invalid_type_error: "State ID must be a number" })
-       .int({ message: "State ID must be an integer" })
-       .positive("State ID must be a positive integer")
-       .optional()
+      z
+        .number({ invalid_type_error: "State ID must be a number" })
+        .int({ message: "State ID must be an integer" })
+        .positive("State ID must be a positive integer")
+        .optional()
     ),
   });
 
@@ -278,9 +298,9 @@ const createMemberSchema = (mode: "create" | "edit") => {
 };
 
 // Environment variable for the API base URL (recommended)
-// const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://15.207.30.113
+// const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000
 // For this example, we'll use the hardcoded one if not available.
-const IMAGE_BASE_URL = "http://15.207.30.113"; // Replace with your actual image base URL
+const IMAGE_BASE_URL = "http://localhost:3000"; // Replace with your actual image base URL
 
 export default function MemberForm({ mode }: MemberFormProps) {
   const id = JSON.parse(localStorage.getItem("user"))?.member?.id;
@@ -341,18 +361,19 @@ export default function MemberForm({ mode }: MemberFormProps) {
     Chapter[]
   >({
     queryKey: ["chapters"],
-    queryFn: () => get("/chapters").then((response) => {
-      // Ensure response and response.chapters are as expected
-      const rawChapters = response?.chapters;
-      if (Array.isArray(rawChapters)) {
-        return rawChapters.map(chapter => ({
-          ...chapter,
-          // Ensure chapter.zones is always an array
-          zones: Array.isArray(chapter.zones) ? chapter.zones : [],
-        }));
-      }
-      return []; // Return empty array if data is not in expected format
-    }),
+    queryFn: () =>
+      get("/chapters").then((response) => {
+        // Ensure response and response.chapters are as expected
+        const rawChapters = response?.chapters;
+        if (Array.isArray(rawChapters)) {
+          return rawChapters.map((chapter) => ({
+            ...chapter,
+            // Ensure chapter.zones is always an array
+            zones: Array.isArray(chapter.zones) ? chapter.zones : [],
+          }));
+        }
+        return []; // Return empty array if data is not in expected format
+      }),
   });
 
   const visitorData = useMemo(() => {
@@ -376,7 +397,10 @@ export default function MemberForm({ mode }: MemberFormProps) {
     defaultValues: {
       memberName: visitorData?.memberName || "",
       chapterId: visitorData?.chapterId || undefined,
-      category: (visitorData?.category && typeof visitorData.category === 'string') ? visitorData.category : undefined,
+      category:
+        visitorData?.category && typeof visitorData.category === "string"
+          ? visitorData.category
+          : undefined,
       businessCategory: visitorData?.businessCategory
         ? Array.isArray(visitorData.businessCategory)
           ? visitorData.businessCategory
@@ -790,9 +814,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   name="category"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
-                        Business Category
-                      </FormLabel>
+                      <FormLabel>Business Category</FormLabel>
                       <Select
                         value={field.value}
                         onValueChange={(value) => {
@@ -849,9 +871,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
 
                     return (
                       <FormItem>
-                        <FormLabel>
-                          Business Subcategories
-                        </FormLabel>
+                        <FormLabel>Business Subcategories</FormLabel>
                         <MultipleSelector
                           options={subCategoryOptions}
                           value={selectedOptions}
@@ -1263,7 +1283,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                   </FormItem>
                 )}
               />
-              
+
               <div className="grid md:grid-cols-2 gap-4 md:gap-6">
                 <FormField
                   control={form.control}
