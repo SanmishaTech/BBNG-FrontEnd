@@ -60,11 +60,11 @@ import {
 const formSchema = z.object({
   date: z.date(),
   chapterId: z.number(),
-  toWhom: z.string().min(1, "Recipient is required"),
+  toWhom: z.string().optional(),
   toWhomId: z.number().optional(),
   amount: z.string().min(1, "Amount is required"),
-  narration: z.string().min(1, "Narration is required"),
-  testimony: z.string().min(1, "Testimony is required"),
+  narration: z.string().optional(),
+  testimony: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;

@@ -1,12 +1,6 @@
 import React, { useState } from "react";
 import { Button, Input } from "@/components/ui";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "@/components/ui/select";
+
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
@@ -16,23 +10,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useNavigate } from "react-router-dom";
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { get, del } from "@/services/apiService";
-import { toast } from "sonner";
-import { Separator } from "@/components/ui/separator";
-import CustomPagination from "@/components/common/custom-pagination";
+import { get, del } from "@/services/apiService"; 
 import {
   Loader,
   ChevronUp,
   ChevronDown,
   Edit,
   Trash2,
-  Filter,
   Search,
   PlusCircle,
   Calendar,
-} from "lucide-react";
+} from "lucide-react"; 
+import { toast } from "sonner"; 
+import { Separator } from "@/components/ui/separator";
+import CustomPagination from "@/components/common/custom-pagination";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,8 +43,10 @@ import CreateTraining from "./CreateTraining";
 // Define the Training interface for type-safety
 interface Training {
   id: number;
-  trainingDate: string;
-  trainingTopic: string;
+  date: string;
+  title: string;
+  time: string;
+  venue: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -80,7 +75,7 @@ const TrainingList = () => {
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const [recordsPerPage, setRecordsPerPage] = useState(10);
-  const [sortBy, setSortBy] = useState("trainingDate");
+  const [sortBy, setSortBy] = useState("date");
   const [sortOrder, setSortOrder] = useState("desc");
   const [search, setSearch] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -88,10 +83,9 @@ const TrainingList = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedTrainingId, setSelectedTrainingId] = useState<string | null>(null);
-  const navigate = useNavigate();
 
   // Fetch trainings using react-query
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: [
       "trainings",
       currentPage,
@@ -118,11 +112,11 @@ const TrainingList = () => {
   const deleteTrainingMutation = useMutation({
     mutationFn: (id: number) => del(`/trainings/${id}`),
     onSuccess: () => {
-      toast.success("Training deleted successfully");
+      toast.success("Training deleted successfully"); 
       queryClient.invalidateQueries({ queryKey: ["trainings"] });
     },
     onError: (error: any) => {
-      toast.error(error.message || "Failed to delete training");
+      toast.error(error.message || "Failed to delete training"); 
     },
   });
 
@@ -235,12 +229,12 @@ const TrainingList = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead
-                      onClick={() => handleSort("trainingDate")}
+                      onClick={() => handleSort("date")}
                       className="cursor-pointer"
                     >
                       <div className="flex items-center">
                         <span>Date</span>
-                        {sortBy === "trainingDate" && (
+                        {sortBy === "date" && (
                           <span className="ml-2">
                             {sortOrder === "asc" ? (
                               <ChevronUp className="h-4 w-4" />
@@ -252,12 +246,46 @@ const TrainingList = () => {
                       </div>
                     </TableHead>
                     <TableHead
-                      onClick={() => handleSort("trainingTopic")}
+                      onClick={() => handleSort("title")}
                       className="cursor-pointer"
                     >
                       <div className="flex items-center">
-                        <span>Topic</span>
-                        {sortBy === "trainingTopic" && (
+                        <span>Title</span>
+                        {sortBy === "title" && (
+                          <span className="ml-2">
+                            {sortOrder === "asc" ? (
+                              <ChevronUp className="h-4 w-4" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4" />
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    </TableHead>
+                    <TableHead
+                      onClick={() => handleSort("time")}
+                      className="cursor-pointer"
+                    >
+                      <div className="flex items-center">
+                        <span>Time</span>
+                        {sortBy === "time" && (
+                          <span className="ml-2">
+                            {sortOrder === "asc" ? (
+                              <ChevronUp className="h-4 w-4" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4" />
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    </TableHead>
+                    <TableHead
+                      onClick={() => handleSort("venue")}
+                      className="cursor-pointer"
+                    >
+                      <div className="flex items-center">
+                        <span>Venue</span>
+                        {sortBy === "venue" && (
                           <span className="ml-2">
                             {sortOrder === "asc" ? (
                               <ChevronUp className="h-4 w-4" />
@@ -277,10 +305,12 @@ const TrainingList = () => {
                       <TableCell>
                         <div className="flex items-center">
                           <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                          {format(new Date(training.trainingDate), "PPP p")}
+                          {format(new Date(training.date), "ddMMyy")}
                         </div>
                       </TableCell>
-                      <TableCell>{training.trainingTopic}</TableCell>
+                      <TableCell>{training.title}</TableCell>
+                      <TableCell>{training.time}</TableCell>
+                      <TableCell>{training.venue}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end space-x-2">
                           <Button
@@ -360,4 +390,4 @@ const TrainingList = () => {
   );
 };
 
-export default TrainingList; 
+export default TrainingList;

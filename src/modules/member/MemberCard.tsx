@@ -33,6 +33,10 @@ const MemberCard = ({ member, onViewProfile }: MemberCardProps) => {
         {member.designation && (
           <p className="text-gray-600 text-sm">{member.designation}</p>
         )}
+        {/* Display the role if available */}
+        {member.user && member.user.role && (
+          <p className="text-purple-600 text-sm font-medium">Role: {member.user.role}</p>
+        )}
         {member.department && (
           <p className="text-gray-500 text-sm">{member.department}</p>
         )}

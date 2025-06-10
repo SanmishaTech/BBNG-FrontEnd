@@ -1,7 +1,20 @@
 import { Button } from "@/components/ui/button";
 import { Camera, Edit, MoreHorizontal, Plus } from "lucide-react";
 import { MemberData } from "@/types/member";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { get } from "@/services/apiService"
+
+// Define the base URL for your API.
+const API_BASE_URL = 'http://15.207.30.113';
+
+interface ActivitySummary {
+  testimonials: number;
+  businessGiven: number;
+  businessReceived: number;
+  referencesGiven: number;
+  referencesReceived: number;
+  oneToOnes: number;
+}
 
 interface ProfileHeaderProps {
   memberData: MemberData | null;
@@ -14,27 +27,101 @@ const ProfileHeader = ({ memberData }: ProfileHeaderProps) => {
     cover: false
   });
 
-  // Default values if no member data is provided
-  const name = memberData?.name || "Member Name";
-  const defaultCover = "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200";
-  const defaultProfile = "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&w=150&h=150";
-  
-  // Use profile picture as cover photo fallback if cover photo fails to load
-  const coverPhoto = !imageError.cover 
-    ? (memberData?.coverPhoto || defaultCover)
-    : (memberData?.profilePicture || defaultProfile);
+  const [activitySummary, setActivitySummary] = useState<ActivitySummary | null>(null);
+  const [isLoadingSummary, setIsLoadingSummary] = useState(false);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+
+  // Reset imageError state when the memberData or its image paths change
+  useEffect(() => {
+    setImageError({ profile: false, cover: false });
+  }, [memberData?.profilePicture, memberData?.coverPhoto]);
+
+  useEffect(() => {
+    if (memberData?.id) {
+      const fetchActivitySummary = async () => {
+        setIsLoadingSummary(true);
+        setSummaryError(null);
+        try {
+          const response = await get(`/members/${memberData.id}/activity-summary`);
+          // if (!response.ok) {
+          //   throw new Error(`Failed to fetch activity summary: ${response.statusText}`);
+          // }
+          console.log(response)
+          setActivitySummary(response);
+        } catch (error) {
+          console.error("Error fetching activity summary:", error);
+          setSummaryError(error instanceof Error ? error.message : "An unknown error occurred");
+          setActivitySummary(null); // Reset on error
+        }
+        setIsLoadingSummary(false);
+      };
+      fetchActivitySummary();
+    } else {
+      // Clear summary if memberData or id is not available
+      setActivitySummary(null);
+    }
+  }, [memberData?.id]);
+
+  console.log(memberData)
+  useEffect(() => {
+    console.log("Activity", activitySummary)
+  }, [activitySummary])
+
+  // TODO: Replace hardcoded stats with data from memberData props
+  const formatCurrency = (amount: number | undefined) => {
+    return amount ? `₹ ${amount.toLocaleString('en-IN')}` : "₹ 0";
+  };
+
+  console.log("Activity", activitySummary)
+  const statsData = [
+    { value:  activitySummary?.testimonials?.toString() || "0", label: "Testimonials" },
+    { value:  formatCurrency(activitySummary?.businessGiven), label: "Business Given" },
+    { value:  formatCurrency(activitySummary?.businessReceived), label: "Business Received" },
+    { value:  activitySummary?.referencesGiven?.toString() || "0", label: "References Given" },
+    { value:  activitySummary?.referencesReceived?.toString() || "0", label: "References Received" },
+    { value:  activitySummary?.oneToOnes?.toString() || "0", label: "One To Ones" },
+  ];
+
+  // Default local placeholder images (used as fallbacks)
+  const defaultCoverUrl = "https://picsum.photos/1200/300"; 
+  const defaultProfileUrl = "https://picsum.photos/200"; 
+  console.log("Member Data",memberData)
+  const displayName = memberData?.name || "Member Name"; // Use memberName from JSON
+
+  const lastLoginDate = memberData?.users?.lastLogin;
+  const lastActiveDisplay = lastLoginDate ? new Date(lastLoginDate).toLocaleDateString() : "Recently";
+
+  const getImageUrl = (path: string | undefined, isCover: boolean): string => {
+    const currentError = isCover ? imageError.cover : imageError.profile;
+
+    if (currentError || !path) {
+      if (memberData?.id) {
+        const seed = memberData.id;
+        return isCover ? `https://picsum.photos/seed/${seed}/1200/300` : `https://picsum.photos/seed/${seed}/200`;
+      } else {
+        // Fallback to non-seeded if memberData.id is not available
+        return isCover ? defaultCoverUrl : defaultProfileUrl;
+      }
+    }
+
+    // If path looks like an absolute URL (starts with http://, https://, or //), use it directly
+    if (/^(?:[a-z]+:)?\/\//i.test(path)) {
+      return path;
+    }
     
-  // Use cover photo as profile picture fallback if profile picture fails to load
-  const profilePicture = !imageError.profile 
-    ? (memberData?.profilePicture || defaultProfile)
-    : (memberData?.coverPhoto || defaultCover);
+    // Otherwise, assume it's relative and prepend API_BASE_URL
+    return `${API_BASE_URL.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
+  };
+
+  const actualProfilePictureSrc = getImageUrl(memberData?.profilePicture, false);
+  const actualCoverPhotoSrc = getImageUrl(memberData?.coverPhoto, true);
   
   return (
-    <div className="w-full">
+    <div className="min-w-full">
       {/* Cover Photo */}
-      <div className="relative w-full h-[300px] md:h-[350px] overflow-hidden rounded-b-lg">
+      <div className="relative w-full h-[1800px] md:h-[350px] min-w-full rounded-lg">
         <img
-          src={coverPhoto}
+          src={actualCoverPhotoSrc} // Use the determined source
           alt="Cover"
           className="w-full h-full object-cover"
           onError={() => setImageError(prev => ({ ...prev, cover: true }))}
@@ -50,9 +137,9 @@ const ProfileHeader = ({ memberData }: ProfileHeaderProps) => {
       {/* Profile Picture and Name */}
       <div className="flex flex-col md:flex-row px-4 relative -mt-8 md:-mt-16">
         <div className="relative z-10">
-          <div className="rounded-full border-4 border-white w-[168px] h-[168px] overflow-hidden bg-white">
+          <div className="relative z-[-1] rounded-full border-4 border-white w-[168px] h-[168px] overflow-hidden bg-white">
             <img
-              src={profilePicture}
+              src={actualProfilePictureSrc} // Use the determined source
               alt="Profile"
               className="w-full h-full object-cover"
               onError={() => setImageError(prev => ({ ...prev, profile: true }))}
@@ -65,11 +152,11 @@ const ProfileHeader = ({ memberData }: ProfileHeaderProps) => {
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end w-full pt-4 md:pt-0 px-0 md:px-6 mb-4">
           <div className="mb-4 md:mb-6">
-            <h1 className="text-3xl font-bold">{name}</h1>
-            {memberData?.designation && memberData?.department && (
-              <p className="text-gray-500">{memberData.designation} at {memberData.department}</p>
+            <h1 className="text-3xl font-bold">{displayName}</h1>
+             {memberData?.category && (
+              <p className="text-gray-500">{memberData.organizationName ? `${memberData.category} at ${memberData.organizationName}` : memberData.category}</p>
             )}
-            <p className="text-gray-500 text-sm mt-1">Last active: {memberData?.lastActive || "Recently"}</p>
+            <p className="text-gray-500 text-sm mt-1">Organization Name: {memberData?.businessDetails?.organizationName}</p>
           </div>
           <div className="flex gap-2 mb-4 md:mb-6">
             <Button className="bg-blue-600 hover:bg-blue-700 flex items-center">
@@ -82,40 +169,23 @@ const ProfileHeader = ({ memberData }: ProfileHeaderProps) => {
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </div>
-        </div>
+        </div>  
       </div>
 
-      {/* Navigation */}
-      <div className="border-t border-gray-300 mt-2">
-        <div className="flex overflow-x-auto scrollbar-hide">
-          <NavItem active>Overview</NavItem>
-          <NavItem>Activity</NavItem>
-          <NavItem>Meetings</NavItem>
-          <NavItem>Projects</NavItem>
-          <NavItem>Skills</NavItem>
-          <NavItem>Achievements</NavItem>
-          <NavItem>More</NavItem>
+      {/* Stats Bar - Exact match to UI in the screenshot */}
+      <div className=" w-full mt-4 rounded-5xl">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 border-t border-gray-200 bg-white max-w-[98%] ml-3 flex justify-center items-center rounded-lg">
+          {statsData.map((stat, index) => (
+            <div 
+              key={stat.label} 
+              className={`py-4 flex flex-col items-center justify-center text-center ${index < statsData.length - 1 ? 'border-r border-gray-200' : ''}`}
+            >
+              <p className="text-base font-medium text-gray-800">{stat.value}</p>
+              <p className="text-xs text-gray-500 mt-1">{stat.label}</p>
+            </div>
+          ))}
         </div>
       </div>
-    </div>
-  );
-};
-
-interface NavItemProps {
-  children: React.ReactNode;
-  active?: boolean;
-}
-
-const NavItem = ({ children, active }: NavItemProps) => {
-  return (
-    <div
-      className={`px-4 py-3 font-medium text-sm relative whitespace-nowrap
-        ${active 
-          ? "text-blue-600 border-b-2 border-blue-600" 
-          : "text-gray-600 hover:bg-gray-100 rounded-md"
-        }`}
-    >
-      {children}
     </div>
   );
 };

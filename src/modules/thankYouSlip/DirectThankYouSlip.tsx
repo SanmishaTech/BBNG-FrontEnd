@@ -63,7 +63,7 @@ const formSchema = z.object({
     .string({
       required_error: "To Whom is required",
     })
-    .min(1, "To Whom is required"),
+    .optional(),
   toWhomId: z.number().optional(),
   amount: z
     .string({
@@ -74,7 +74,7 @@ const formSchema = z.object({
     .string({
       required_error: "Narration is required",
     })
-    .min(1, "Narration is required"),
+    .optional(),
   testimony: z.string().optional(),
 });
 

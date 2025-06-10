@@ -267,7 +267,7 @@ const LocationList = () => {
                     </TableHead>
                     <TableHead className="cursor-pointer">
                       <div className="flex items-center">
-                        <span>Zone</span>
+                        <span>Region</span>
                         {sortBy === "zone" && (
                           <span className="ml-1">
                             {sortOrder === "asc" ? (

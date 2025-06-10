@@ -59,6 +59,12 @@ const MemberCard = ({ member, onViewProfile }: MemberCardProps) => {
             <span className="font-medium">Email:</span> {member.email}
           </p>
         )}
+        {console.log(member.role)}
+        {member.email && (
+          <p className="text-sm text-gray-600 truncate">
+            <span className="font-medium mr-2">Role:</span> {member?.role}
+          </p>
+        )}
         {member.phone && (
           <p className="text-sm text-gray-600 mt-1">
             <span className="font-medium">Phone:</span> {member.phone}

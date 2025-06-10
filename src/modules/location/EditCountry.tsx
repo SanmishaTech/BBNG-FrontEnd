@@ -25,7 +25,7 @@ import { Loader } from "lucide-react";
 import Validate from "@/lib/Handlevalidation";
 
 const countrySchema = z.object({
-  zoneId: z.string().min(1, "Zone is required"),
+  zoneId: z.string().min(1, "Region is required"),
   location: z.string().min(1, "Location name is required"),
 });
 
@@ -137,7 +137,7 @@ const EditCountry = ({ countryId, isOpen, onClose }: EditCountryProps) => {
 };
 
 const locationSchema = z.object({
-  zoneId: z.string().min(1, "Zone is required"),
+  zoneId: z.string().min(1, "Region is required"),
   location: z.string().min(1, "Location name is required"),
 });
 
@@ -225,13 +225,13 @@ const EditLocation = ({ locationId, isOpen, onClose }: EditLocationProps) => {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             <div className="grid grid-cols-2 gap-4">
               <div className="relative">
-                <Label className="mb-2" htmlFor="zoneId">Zone <span className="text-red-500">*</span></Label>
+                <Label className="mb-2" htmlFor="zoneId">Region <span className="text-red-500">*</span></Label>
                 <Select
                   defaultValue={locationData?.zoneId?.toString()}
                   onValueChange={(value) => setValue("zoneId", value)}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select a zone" />
+                    <SelectValue placeholder="Select a Region" />
                   </SelectTrigger>
                   <SelectContent>
                     {zonesData?.zones?.map((zone: any) => (

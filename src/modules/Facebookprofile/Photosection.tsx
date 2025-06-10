@@ -53,7 +53,7 @@ const Photosection = ({ memberData }: PhotosectionProps) => {
             <div key={index} className="flex items-start space-x-3">
               <div className="relative w-12 h-12 flex-shrink-0">
                 <img
-                  src={defaultImages[index % defaultImages.length]}
+                  // src={defaultImages[index % defaultImages.length]}
                   alt={project.name}
                   className="rounded-md w-full h-full object-cover"
                 />
@@ -88,7 +88,7 @@ const Photosection = ({ memberData }: PhotosectionProps) => {
                   // If member photo fails to load, replace with a default image
                   const target = e.target as HTMLImageElement;
                   target.onerror = null; // Prevent infinite error loop
-                  target.src = defaultImages[index % defaultImages.length];
+                  // target.src = defaultImages[index % defaultImages.length];
                 }}
               />
             </div>

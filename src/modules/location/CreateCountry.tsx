@@ -23,7 +23,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 const locationSchema = z.object({
-  zoneId: z.string().min(1, "Zone is required"),
+  zoneId: z.string().min(1, "Region is required"),
   location: z.string().min(1, "Location name is required"),
 });
 
@@ -88,12 +88,12 @@ const CreateLocation: React.FC<CreateLocationProps> = ({ isOpen, onClose }) => {
           <div className="grid gap-4 grid-cols-2 gap-y-6 mt-4">
             <div className="relative">
               <Label className="mb-2" htmlFor="zoneId">
-                Zone
+                Region
                 <span className="text-red-500">*</span>
               </Label>
               <Select onValueChange={(value) => setValue("zoneId", value)}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a zone" />
+                  <SelectValue placeholder="Select a Region" />
                 </SelectTrigger>
                 <SelectContent>
                   {zonesData?.zones?.map((zone: any) => (
@@ -102,7 +102,7 @@ const CreateLocation: React.FC<CreateLocationProps> = ({ isOpen, onClose }) => {
                     </SelectItem>
                   )) || (
                     <SelectItem value="no-zones" disabled>
-                      No zones available
+                      No Regions available
                     </SelectItem>
                   )}
                 </SelectContent>
