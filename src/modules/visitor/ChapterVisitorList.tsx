@@ -91,19 +91,19 @@ const ChapterVisitorList = () => {
     ],
     queryFn: () => {
       let url = `/visitors?chapterId=${chapterId}&page=${currentPage}&limit=${recordsPerPage}&sortBy=${sortBy}&sortOrder=${sortOrder}&search=${search}`;
-      
+
       if (statusFilter) {
         url += `&status=${statusFilter}`;
       }
-      
+
       if (fromDate) {
         url += `&fromDate=${fromDate}`;
       }
-      
+
       if (toDate) {
         url += `&toDate=${toDate}`;
       }
-      
+
       return get(url);
     },
     enabled: !!chapterId,
@@ -171,21 +171,23 @@ const ChapterVisitorList = () => {
       addressLine2: visitor.addressLine2 || "",
       location: visitor.city || "",
       pincode: visitor.pincode || "",
-      category: visitor.category || ""
+      category: visitor.category || "",
     };
-    
+
     // Store data in localStorage to be accessed by the member creation form
     localStorage.setItem("visitorToMember", JSON.stringify(memberData));
-    
+
     // Redirect to member creation page
-    toast.success("Redirecting to member creation with pre-filled visitor data");
+    toast.success(
+      "Redirecting to member creation with pre-filled visitor data"
+    );
     navigate("/members/create");
   };
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "N/A";
     try {
-      return format(new Date(dateString), "PPP");
+      return format(new Date(dateString), "dd/MM/yyyy");
     } catch (e) {
       return dateString;
     }
@@ -211,7 +213,9 @@ const ChapterVisitorList = () => {
       <div className="mt-2 p-4 sm:p-6">
         <div className="flex justify-center items-center h-32">
           <div className="text-center">
-            <p className="text-lg text-gray-700">Unable to determine your chapter. Please check your profile.</p>
+            <p className="text-lg text-gray-700">
+              Unable to determine your chapter. Please check your profile.
+            </p>
           </div>
         </div>
       </div>
@@ -275,7 +279,9 @@ const ChapterVisitorList = () => {
             {showFilters && (
               <div className="w-full flex flex-col sm:flex-row gap-4 mt-4">
                 <div className="flex-1">
-                  <label className="text-sm font-medium mb-1 block">From Date</label>
+                  <label className="text-sm font-medium mb-1 block">
+                    From Date
+                  </label>
                   <div className="relative">
                     <CalendarRange className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                     <input
@@ -290,7 +296,9 @@ const ChapterVisitorList = () => {
                   </div>
                 </div>
                 <div className="flex-1">
-                  <label className="text-sm font-medium mb-1 block">To Date</label>
+                  <label className="text-sm font-medium mb-1 block">
+                    To Date
+                  </label>
                   <div className="relative">
                     <CalendarRange className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                     <input
@@ -305,8 +313,8 @@ const ChapterVisitorList = () => {
                   </div>
                 </div>
                 <div className="flex items-end">
-                  <Button 
-                    variant="secondary" 
+                  <Button
+                    variant="secondary"
                     size="sm"
                     onClick={() => {
                       setFromDate("");
@@ -411,7 +419,7 @@ const ChapterVisitorList = () => {
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <Calendar className="h-4 w-4 mr-1" />
-                            {visitor.meeting?.meetingTitle || "N/A"} 
+                            {visitor.meeting?.meetingTitle || "N/A"}
                             <span className="text-xs text-gray-500 ml-1">
                               ({formatDate(visitor.meeting?.date)})
                             </span>

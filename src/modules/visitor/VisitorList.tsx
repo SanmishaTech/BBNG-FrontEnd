@@ -129,7 +129,7 @@ const VisitorList = () => {
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "N/A";
     try {
-      return format(new Date(dateString), "PPP");
+      return format(new Date(dateString), "dd/MM/yyyy");
     } catch (e) {
       return dateString;
     }
@@ -166,8 +166,8 @@ const VisitorList = () => {
             Meeting: {meetingData.meetingTitle}
           </h2>
           <p className="text-gray-600">
-            Date: {formatDate(meetingData.date)} | Time: {meetingData.meetingTime} | 
-            Venue: {meetingData.meetingVenue}
+            Date: {formatDate(meetingData.date)} | Time:{" "}
+            {meetingData.meetingTime} | Venue: {meetingData.meetingVenue}
           </p>
         </div>
       ) : null}
@@ -209,7 +209,9 @@ const VisitorList = () => {
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center gap-2">
               <Button
-                onClick={() => navigate(`/chaptermeetings/${meetingId}/visitors/add`)}
+                onClick={() =>
+                  navigate(`/chaptermeetings/${meetingId}/visitors/add`)
+                }
                 className="bg-primary hover:bg-primary/90 text-white shadow-sm transition-all duration-200 hover:shadow-md"
               >
                 <UserPlus className="mr-2 h-5 w-5" />
@@ -276,7 +278,9 @@ const VisitorList = () => {
                         <div className="space-y-1">
                           <div>{visitor.mobile1}</div>
                           {visitor.email && (
-                            <div className="text-xs text-gray-500">{visitor.email}</div>
+                            <div className="text-xs text-gray-500">
+                              {visitor.email}
+                            </div>
                           )}
                         </div>
                       </TableCell>
@@ -292,7 +296,9 @@ const VisitorList = () => {
                             variant="outline"
                             size="sm"
                             onClick={() =>
-                              navigate(`/chaptermeetings/${meetingId}/visitors/${visitor.id}/edit`)
+                              navigate(
+                                `/chaptermeetings/${meetingId}/visitors/${visitor.id}/edit`
+                              )
                             }
                           >
                             <Edit size={16} />
@@ -329,7 +335,9 @@ const VisitorList = () => {
                 There are no visitors for this meeting yet.
               </p>
               <Button
-                onClick={() => navigate(`/chaptermeetings/${meetingId}/visitors/add`)}
+                onClick={() =>
+                  navigate(`/chaptermeetings/${meetingId}/visitors/add`)
+                }
                 className="bg-primary hover:bg-primary/90 text-white"
               >
                 <UserPlus className="mr-2 h-5 w-5" />

@@ -361,7 +361,7 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                           <SelectContent>
                             {meetingData && (
                               <SelectItem value={meetingData.id.toString()}>
-                                {format(new Date(meetingData.date), "PPP")} - {meetingData.meetingTitle}
+                                {format(new Date(meetingData.date), "dd/MM/yyyy")} - {meetingData.meetingTitle}
                               </SelectItem>
                             )}
                           </SelectContent>
@@ -593,7 +593,7 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                                     )}
                                   >
                                     {field.value ? (
-                                      format(field.value, "PPP")
+                                      format(field.value, "dd/MM/yyyy")
                                     ) : (
                                       <span>Pick a date</span>
                                     )}

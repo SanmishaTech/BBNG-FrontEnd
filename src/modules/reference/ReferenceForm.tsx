@@ -50,22 +50,30 @@ const referenceSchema = z.object({
     required_error: "Date is required",
   }),
   // noOfReferences: z.number().optional().nullable(),
-  chapterId: z.number({
-    required_error: "Chapter is required",
-  }).min(1, "Please select a chapter"),
-  memberId: z.number({
-    required_error: "Member is required",
-  }).min(1, "Please select a member"),
+  chapterId: z
+    .number({
+      required_error: "Chapter is required",
+    })
+    .min(1, "Please select a chapter"),
+  memberId: z
+    .number({
+      required_error: "Member is required",
+    })
+    .min(1, "Please select a member"),
   urgency: z.string().optional(),
   self: z.boolean(),
-  nameOfReferral: z.string({
-    required_error: "Name of referral is required",
-  }).min(1, "Name of referral is required"),
-  mobile1: z.string({
-    required_error: "Primary mobile number is required",
-  }).min(10, "Mobile number must be at least 10 digits"),
+  nameOfReferral: z
+    .string({
+      required_error: "Name of referral is required",
+    })
+    .min(1, "Name of referral is required"),
+  mobile1: z
+    .string({
+      required_error: "Primary mobile number is required",
+    })
+    .min(10, "Mobile number must be at least 10 digits"),
   mobile2: z.string().optional(),
-  email: z.string().email("Invalid email format").optional().or(z.literal('')),
+  email: z.string().email("Invalid email format").optional().or(z.literal("")),
   remarks: z.string().optional(),
   addressLine1: z.string().optional(),
   location: z.string().optional(),
@@ -115,17 +123,17 @@ const ReferenceForm = () => {
       // noOfReferences: undefined,
       chapterId: 0,
       memberId: 0,
-      urgency: '',
+      urgency: "",
       self: false,
-      nameOfReferral: '',
-      mobile1: '',
-      mobile2: '',
-      email: '',
-      remarks: '',
-      addressLine1: '',
-      location: '',
-      addressLine2: '',
-      pincode: '',
+      nameOfReferral: "",
+      mobile1: "",
+      mobile2: "",
+      email: "",
+      remarks: "",
+      addressLine1: "",
+      location: "",
+      addressLine2: "",
+      pincode: "",
     },
   });
 
@@ -146,7 +154,7 @@ const ReferenceForm = () => {
 
   // Create a state to track the selected chapter ID
   const [selectedChapterId, setSelectedChapterId] = useState<number>(0);
-  
+
   // Load members data based on selected chapter
   useEffect(() => {
     const fetchMembers = async () => {
@@ -155,14 +163,14 @@ const ReferenceForm = () => {
         setMembers([]);
         return;
       }
-      
+
       try {
         // Use the dedicated membersLoading state to not block the entire form
         setMembersLoading(true);
-        
-        const membersRes = await get("/api/members", { 
+
+        const membersRes = await get("/api/members", {
           limit: 100,
-          chapterId: selectedChapterId // Pass chapterId as query parameter
+          chapterId: selectedChapterId, // Pass chapterId as query parameter
         });
         setMembers(membersRes.members || []);
       } catch (error) {
@@ -189,25 +197,25 @@ const ReferenceForm = () => {
             // noOfReferences: reference.noOfReferences,
             chapterId: reference.chapterId,
             memberId: reference.receiverId,
-            urgency: reference.urgency || '',
+            urgency: reference.urgency || "",
             self: reference.self,
             nameOfReferral: reference.nameOfReferral,
             mobile1: reference.mobile1,
-            mobile2: reference.mobile2 || '', 
-            email: reference.email || '',
-            remarks: reference.remarks || '',
-            addressLine1: reference.addressLine1 || '',
-            location: reference.location || '',
-            addressLine2: reference.addressLine2 || '',
-            pincode: reference.pincode || '',
+            mobile2: reference.mobile2 || "",
+            email: reference.email || "",
+            remarks: reference.remarks || "",
+            addressLine1: reference.addressLine1 || "",
+            location: reference.location || "",
+            addressLine2: reference.addressLine2 || "",
+            pincode: reference.pincode || "",
           });
-          
+
           // Set the selectedChapterId to load members for the selected chapter
           setSelectedChapterId(reference.chapterId);
         } catch (error) {
           console.error("Error loading reference:", error);
           toast.error("Failed to load reference");
-          navigate("/references")
+          navigate("/references");
         } finally {
           setLoading(false);
         }
@@ -217,8 +225,6 @@ const ReferenceForm = () => {
     }
   }, [isEditMode, id, form, navigate]);
 
-
-
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
@@ -226,7 +232,10 @@ const ReferenceForm = () => {
       // Check the backend schema requirements in referenceController.js
       const formattedData = {
         // Backend expects date as string
-        date: data.date instanceof Date ? data.date.toISOString() : new Date().toISOString(),
+        date:
+          data.date instanceof Date
+            ? data.date.toISOString()
+            : new Date().toISOString(),
         // Convert numbers to string where needed
         // noOfReferences: data.noOfReferences !== undefined && data.noOfReferences !== null ? data.noOfReferences.toString() : undefined,
         // Keep as numbers for these fields
@@ -246,7 +255,7 @@ const ReferenceForm = () => {
         pincode: data.pincode || undefined,
       };
 
-      console.log('Submitting data:', formattedData);
+      console.log("Submitting data:", formattedData);
 
       if (isEditMode) {
         await put(`/references/${id}`, formattedData);
@@ -258,7 +267,9 @@ const ReferenceForm = () => {
       navigate("/references/given");
     } catch (error) {
       console.error("Error saving reference:", error);
-      toast.error(isEditMode ? "Failed to update reference" : "Failed to create reference");
+      toast.error(
+        isEditMode ? "Failed to update reference" : "Failed to create reference"
+      );
     } finally {
       setLoading(false);
     }
@@ -269,17 +280,17 @@ const ReferenceForm = () => {
       // Use the dedicated endpoint for reference autofill
       const response = await get(`/api/members/${memberId}/reference-details`);
       const memberDetails = response.member;
-      
+
       // Auto-fill form fields using member details
-      form.setValue("nameOfReferral", memberDetails.memberName || '');
-      form.setValue("email", memberDetails.email || '');
-      form.setValue("mobile1", memberDetails.mobile1 || '');
-      form.setValue("mobile2", memberDetails.mobile2 || '');
-      form.setValue("addressLine1", memberDetails.addressLine1 || '');
-      form.setValue("addressLine2", memberDetails.addressLine2 || '');
-      form.setValue("location", memberDetails.location || '');
-      form.setValue("pincode", memberDetails.pincode || '');
-      
+      form.setValue("nameOfReferral", memberDetails.memberName || "");
+      form.setValue("email", memberDetails.email || "");
+      form.setValue("mobile1", memberDetails.mobile1 || "");
+      form.setValue("mobile2", memberDetails.mobile2 || "");
+      form.setValue("addressLine1", memberDetails.addressLine1 || "");
+      form.setValue("addressLine2", memberDetails.addressLine2 || "");
+      form.setValue("location", memberDetails.location || "");
+      form.setValue("pincode", memberDetails.pincode || "");
+
       toast.success("Member details loaded successfully");
     } catch (error) {
       console.error("Error fetching member details:", error);
@@ -293,22 +304,22 @@ const ReferenceForm = () => {
       // Get current user data from localStorage
       const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
       const memberDetails = currentUser.member;
-      
+
       if (!memberDetails) {
         toast.error("User information not found in localStorage");
         return;
       }
-      
+
       // Auto-fill form fields using current user's details
-      form.setValue("nameOfReferral", memberDetails.memberName || '');
-      form.setValue("email", memberDetails.email || '');
-      form.setValue("mobile1", memberDetails.mobile1 || '');
-      form.setValue("mobile2", memberDetails.mobile2 || '');
-      form.setValue("addressLine1", memberDetails.addressLine1 || '');
-      form.setValue("addressLine2", memberDetails.addressLine2 || '');
-      form.setValue("location", memberDetails.location || '');
-      form.setValue("pincode", memberDetails.pincode || '');
-      
+      form.setValue("nameOfReferral", memberDetails.memberName || "");
+      form.setValue("email", memberDetails.email || "");
+      form.setValue("mobile1", memberDetails.mobile1 || "");
+      form.setValue("mobile2", memberDetails.mobile2 || "");
+      form.setValue("addressLine1", memberDetails.addressLine1 || "");
+      form.setValue("addressLine2", memberDetails.addressLine2 || "");
+      form.setValue("location", memberDetails.location || "");
+      form.setValue("pincode", memberDetails.pincode || "");
+
       toast.success("Self referral details loaded");
     } catch (error) {
       console.error("Error loading user details from localStorage:", error);
@@ -319,18 +330,22 @@ const ReferenceForm = () => {
   // Get current user ID to filter from members list
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
   const currentMemberId = currentUser?.member?.id;
-  
+
   // Filter out current user from members list
-  const filteredMembers = members.filter(member => member.id !== currentMemberId);
+  const filteredMembers = members.filter(
+    (member) => member.id !== currentMemberId
+  );
 
   return (
     <div className="container mx-auto py-6 ml-2 mr-2 justify-center items-center flex">
       <Card className="max-w-[95%] w-full">
         <CardHeader>
-          <CardTitle>{isEditMode ? "Edit Reference" : "Add New Reference"}</CardTitle>
+          <CardTitle>
+            {isEditMode ? "Edit Reference" : "Add New Reference"}
+          </CardTitle>
           <CardDescription>
-            {isEditMode 
-              ? "Update the reference information below" 
+            {isEditMode
+              ? "Update the reference information below"
               : "Enter the reference details to add a new reference"}
           </CardDescription>
         </CardHeader>
@@ -339,7 +354,10 @@ const ReferenceForm = () => {
             <div className="text-center py-4">Loading reference data...</div>
           ) : (
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-6"
+              >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Date */}
                   <FormField
@@ -347,7 +365,9 @@ const ReferenceForm = () => {
                     name="date"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
-                        <FormLabel>Date <span className="text-red-500">*</span></FormLabel>
+                        <FormLabel>
+                          Date <span className="text-red-500">*</span>
+                        </FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
                             <FormControl>
@@ -359,7 +379,7 @@ const ReferenceForm = () => {
                                 )}
                               >
                                 {field.value ? (
-                                  format(field.value, "PPP")
+                                  format(field.value, "dd/MM/yyyy")
                                 ) : (
                                   <span>Pick a date</span>
                                 )}
@@ -408,20 +428,24 @@ const ReferenceForm = () => {
                     name="chapterId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Chapter <span className="text-red-500">*</span></FormLabel>
+                        <FormLabel>
+                          Chapter <span className="text-red-500">*</span>
+                        </FormLabel>
                         <Select
                           onValueChange={(value) => {
                             // Update the chapterId value
                             const chapterId = parseInt(value);
                             field.onChange(chapterId);
-                            
+
                             // Update the selectedChapterId state to trigger member fetch
                             setSelectedChapterId(chapterId);
-                            
+
                             // Reset member selection when chapter changes
                             form.setValue("memberId", 0);
                           }}
-                          value={field.value ? field.value.toString() : undefined}
+                          value={
+                            field.value ? field.value.toString() : undefined
+                          }
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -430,7 +454,10 @@ const ReferenceForm = () => {
                           </FormControl>
                           <SelectContent>
                             {chapters.map((chapter) => (
-                              <SelectItem key={chapter.id} value={chapter.id.toString()}>
+                              <SelectItem
+                                key={chapter.id}
+                                value={chapter.id.toString()}
+                              >
                                 {chapter.name}
                               </SelectItem>
                             ))}
@@ -447,38 +474,55 @@ const ReferenceForm = () => {
                     name="memberId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Member <span className="text-red-500">*</span></FormLabel>
+                        <FormLabel>
+                          Member <span className="text-red-500">*</span>
+                        </FormLabel>
                         <div className="relative">
                           <Select
                             onValueChange={(value) => {
                               field.onChange(parseInt(value));
                               // Auto-filling member data is disabled as per requirements
                             }}
-                            value={field.value ? field.value.toString() : undefined}
+                            value={
+                              field.value ? field.value.toString() : undefined
+                            }
                             disabled={membersLoading || selectedChapterId <= 0}
                           >
                             <FormControl>
                               <SelectTrigger>
                                 {membersLoading ? (
                                   <div className="flex items-center justify-between w-full">
-                                    <span className="text-muted-foreground">Loading members...</span>
+                                    <span className="text-muted-foreground">
+                                      Loading members...
+                                    </span>
                                     <div className="animate-spin h-4 w-4 border-2 border-primary rounded-full border-t-transparent"></div>
                                   </div>
                                 ) : (
-                                  <SelectValue placeholder={selectedChapterId <= 0 ? "Select chapter first" : "Select member"} />
+                                  <SelectValue
+                                    placeholder={
+                                      selectedChapterId <= 0
+                                        ? "Select chapter first"
+                                        : "Select member"
+                                    }
+                                  />
                                 )}
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
                               {filteredMembers.length > 0 ? (
                                 filteredMembers.map((member) => (
-                                  <SelectItem key={member.id} value={member.id.toString()}>
+                                  <SelectItem
+                                    key={member.id}
+                                    value={member.id.toString()}
+                                  >
                                     {member.memberName}
                                   </SelectItem>
                                 ))
                               ) : (
                                 <div className="py-2 px-2 text-center text-sm text-muted-foreground">
-                                  {selectedChapterId > 0 ? "No members found in this chapter" : "Please select a chapter first"}
+                                  {selectedChapterId > 0
+                                    ? "No members found in this chapter"
+                                    : "Please select a chapter first"}
                                 </div>
                               )}
                             </SelectContent>
@@ -507,8 +551,12 @@ const ReferenceForm = () => {
                           </FormControl>
                           <SelectContent>
                             <SelectItem value="immediate">Immediate</SelectItem>
-                            <SelectItem value="within_1_month">Within 1 Month</SelectItem>
-                            <SelectItem value="after_1_month">After 1 Month</SelectItem>
+                            <SelectItem value="within_1_month">
+                              Within 1 Month
+                            </SelectItem>
+                            <SelectItem value="after_1_month">
+                              After 1 Month
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -531,14 +579,14 @@ const ReferenceForm = () => {
                                 autoFillCurrentUserDetails();
                               } else {
                                 // Clear the fields when unchecked
-                                form.setValue("nameOfReferral", '');
-                                form.setValue("email", '');
-                                form.setValue("mobile1", '');
-                                form.setValue("mobile2", '');
-                                form.setValue("addressLine1", '');
-                                form.setValue("addressLine2", '');
-                                form.setValue("location", '');
-                                form.setValue("pincode", '');
+                                form.setValue("nameOfReferral", "");
+                                form.setValue("email", "");
+                                form.setValue("mobile1", "");
+                                form.setValue("mobile2", "");
+                                form.setValue("addressLine1", "");
+                                form.setValue("addressLine2", "");
+                                form.setValue("location", "");
+                                form.setValue("pincode", "");
                               }
                             }}
                           />
@@ -561,7 +609,10 @@ const ReferenceForm = () => {
                     name="nameOfReferral"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Name of Referral <span className="text-red-500">*</span></FormLabel>
+                        <FormLabel>
+                          Name of Referral{" "}
+                          <span className="text-red-500">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Input placeholder="Enter referral name" {...field} />
                         </FormControl>
@@ -576,9 +627,14 @@ const ReferenceForm = () => {
                     name="mobile1"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Mobile 1 <span className="text-red-500">*</span></FormLabel>
+                        <FormLabel>
+                          Mobile 1 <span className="text-red-500">*</span>
+                        </FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter primary mobile number" {...field} />
+                          <Input
+                            placeholder="Enter primary mobile number"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -593,7 +649,10 @@ const ReferenceForm = () => {
                       <FormItem>
                         <FormLabel>Mobile 2</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter secondary mobile number" {...field} />
+                          <Input
+                            placeholder="Enter secondary mobile number"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -608,10 +667,10 @@ const ReferenceForm = () => {
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="email" 
-                            placeholder="Enter email address" 
-                            {...field} 
+                          <Input
+                            type="email"
+                            placeholder="Enter email address"
+                            {...field}
                           />
                         </FormControl>
                         <FormMessage />
@@ -628,10 +687,10 @@ const ReferenceForm = () => {
                     <FormItem>
                       <FormLabel>Remarks</FormLabel>
                       <FormControl>
-                        <Textarea 
-                          placeholder="Enter any additional remarks" 
-                          className="min-h-[100px]" 
-                          {...field} 
+                        <Textarea
+                          placeholder="Enter any additional remarks"
+                          className="min-h-[100px]"
+                          {...field}
                         />
                       </FormControl>
                       <FormMessage />
@@ -651,7 +710,10 @@ const ReferenceForm = () => {
                         <FormItem>
                           <FormLabel>Address Line 1</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter address line 1" {...field} />
+                            <Input
+                              placeholder="Enter address line 1"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -681,7 +743,10 @@ const ReferenceForm = () => {
                         <FormItem>
                           <FormLabel>Address Line 2</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter address line 2" {...field} />
+                            <Input
+                              placeholder="Enter address line 2"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -706,17 +771,14 @@ const ReferenceForm = () => {
                 </div>
 
                 <div className="flex justify-end space-x-4">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
+                  <Button
+                    type="button"
+                    variant="outline"
                     onClick={() => navigate("/references/given")}
                   >
                     Cancel
                   </Button>
-                  <Button 
-                    type="submit" 
-                    disabled={loading}
-                  >
+                  <Button type="submit" disabled={loading}>
                     {loading ? "Saving..." : "Save"}
                   </Button>
                 </div>
@@ -729,4 +791,4 @@ const ReferenceForm = () => {
   );
 };
 
-export default ReferenceForm; 
+export default ReferenceForm;

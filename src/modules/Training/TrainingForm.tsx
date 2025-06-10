@@ -44,7 +44,10 @@ const trainingFormSchema = z.object({
     .string()
     .min(1, "Title is required")
     .max(255, "Title must not exceed 255 characters"),
-  venue: z.string().min(1, "Venue is required").max(255, "Venue must not exceed 255 characters"),
+  venue: z
+    .string()
+    .min(1, "Venue is required")
+    .max(255, "Venue must not exceed 255 characters"),
 });
 
 type TrainingFormInputs = z.infer<typeof trainingFormSchema>;
@@ -83,16 +86,17 @@ const TrainingForm = ({
   });
 
   // Query for fetching training data in edit mode
-  const { isLoading: isFetchingTraining, data: fetchedTrainingData } = useQuery<TrainingData>({
-    queryKey: ["training", trainingId],
-    queryFn: async (): Promise<TrainingData> => {
-      if (!trainingId) throw new Error("Training ID is required");
-      return get(`/trainings/${trainingId}`);
-    },
-    enabled: mode === "edit" && !!trainingId,
-    retry: 1,
-    refetchOnWindowFocus: false,
-  });
+  const { isLoading: isFetchingTraining, data: fetchedTrainingData } =
+    useQuery<TrainingData>({
+      queryKey: ["training", trainingId],
+      queryFn: async (): Promise<TrainingData> => {
+        if (!trainingId) throw new Error("Training ID is required");
+        return get(`/trainings/${trainingId}`);
+      },
+      enabled: mode === "edit" && !!trainingId,
+      retry: 1,
+      refetchOnWindowFocus: false,
+    });
 
   // Handle successful training fetch
   useEffect(() => {
@@ -103,7 +107,12 @@ const TrainingForm = ({
         title: fetchedTrainingData.title,
         venue: fetchedTrainingData.venue,
       });
-    } else if (mode === "edit" && !isFetchingTraining && !fetchedTrainingData && trainingId) {
+    } else if (
+      mode === "edit" &&
+      !isFetchingTraining &&
+      !fetchedTrainingData &&
+      trainingId
+    ) {
       // Handle case where fetch might have failed or returned no data, but not loading anymore
       toast.error("Failed to fetch training details or training not found.");
       if (onSuccess) {
@@ -112,14 +121,24 @@ const TrainingForm = ({
         navigate("/trainings");
       }
     }
-  }, [trainingId, mode, reset, fetchedTrainingData, isFetchingTraining, navigate, onSuccess]);
+  }, [
+    trainingId,
+    mode,
+    reset,
+    fetchedTrainingData,
+    isFetchingTraining,
+    navigate,
+    onSuccess,
+  ]);
 
   // Generate time options
   type TimeOptionsMap = Record<string, string[]>;
   const generateTimeOptions = (): TimeOptionsMap => {
     const groupedOptions: TimeOptionsMap = {};
-    for (let hour = 7; hour < 21; hour++) { // 7 AM to 9 PM
-      const hourKey = hour < 12 ? `${hour} AM` : (hour === 12 ? `12 PM` : `${hour-12} PM`);
+    for (let hour = 7; hour < 21; hour++) {
+      // 7 AM to 9 PM
+      const hourKey =
+        hour < 12 ? `${hour} AM` : hour === 12 ? `12 PM` : `${hour - 12} PM`;
       groupedOptions[hourKey] = [];
       for (let minute = 0; minute < 60; minute += 15) {
         const formattedHour = hour.toString().padStart(2, "0");
@@ -214,7 +233,10 @@ const TrainingForm = ({
   };
 
   // Combined loading state from fetch and mutations
-  const isFormLoading = isFetchingTraining || createTrainingMutation.isPending || updateTrainingMutation.isPending;
+  const isFormLoading =
+    isFetchingTraining ||
+    createTrainingMutation.isPending ||
+    updateTrainingMutation.isPending;
 
   return (
     <div className={className}>
@@ -222,7 +244,9 @@ const TrainingForm = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Date Field */}
           <div className="grid gap-2 relative">
-            <Label htmlFor="date">Date <span className="text-red-500">*</span></Label>
+            <Label htmlFor="date">
+              Date <span className="text-red-500">*</span>
+            </Label>
             <Controller
               name="date"
               control={control}
@@ -231,11 +255,17 @@ const TrainingForm = ({
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className={`w-full justify-start text-left font-normal ${!field.value && "text-muted-foreground"}`}
+                      className={`w-full justify-start text-left font-normal ${
+                        !field.value && "text-muted-foreground"
+                      }`}
                       disabled={isFormLoading}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                      {field.value ? (
+                        format(field.value, "dd/MM/yyyy")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
@@ -259,14 +289,16 @@ const TrainingForm = ({
 
           {/* Time Field */}
           <div className="grid gap-2 relative">
-            <Label htmlFor="time">Time <span className="text-red-500">*</span></Label>
+            <Label htmlFor="time">
+              Time <span className="text-red-500">*</span>
+            </Label>
             <Controller
               name="time"
               control={control}
               render={({ field }) => (
-                <Select 
-                  onValueChange={field.onChange} 
-                  value={field.value} 
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
                   disabled={isFormLoading}
                 >
                   <SelectTrigger>
@@ -276,7 +308,11 @@ const TrainingForm = ({
                   <SelectContent className="max-h-[300px]">
                     {Object.entries(TIME_OPTIONS).map(([hourLabel, times]) => (
                       <React.Fragment key={hourLabel}>
-                        <SelectItem value={hourLabel} disabled className="font-semibold bg-muted">
+                        <SelectItem
+                          value={hourLabel}
+                          disabled
+                          className="font-semibold bg-muted"
+                        >
                           {hourLabel}
                         </SelectItem>
                         {times.map((timeOpt) => (
@@ -300,7 +336,9 @@ const TrainingForm = ({
 
         {/* Title Field */}
         <div className="grid gap-2 relative">
-          <Label htmlFor="title">Title <span className="text-red-500">*</span></Label>
+          <Label htmlFor="title">
+            Title <span className="text-red-500">*</span>
+          </Label>
           <Input
             id="title"
             placeholder="Enter training title"
@@ -316,7 +354,9 @@ const TrainingForm = ({
 
         {/* Venue Field */}
         <div className="grid gap-2 relative">
-          <Label htmlFor="venue">Venue <span className="text-red-500">*</span></Label>
+          <Label htmlFor="venue">
+            Venue <span className="text-red-500">*</span>
+          </Label>
           <Input
             id="venue"
             placeholder="Enter training venue"
