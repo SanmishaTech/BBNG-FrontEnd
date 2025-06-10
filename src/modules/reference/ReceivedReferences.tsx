@@ -198,7 +198,7 @@ const ReceivedReferences = () => {
 
   const formatDate = (dateString: string) => {
     try {
-      return format(new Date(dateString), "MMM dd, yyyy");
+      return format(new Date(dateString), "dd/MM/yyyy");
     } catch (error) {
       return "Invalid date";
     }
