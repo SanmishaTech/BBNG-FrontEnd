@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import Validate from "@/lib/Handlevalidation";
-import { DatetimePicker } from "@/components/ui/datetime-picker";
+
 import {
   Select,
   SelectContent,
@@ -31,7 +31,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Calendar } from "@/components/ui/calendar";
+import { DatePickerWithInput } from "@/components/ui/date-picker-input";
+import { cn } from "@/lib/utils";
 import {
   Popover,
   PopoverContent,
@@ -386,13 +387,9 @@ export default function ChapterForm({ mode }: { mode: "create" | "edit" }) {
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Formation Date</FormLabel>
-                      <DatetimePicker
+                      <DatePickerWithInput
                         value={field.value}
                         onChange={field.onChange}
-                        format={[
-                          ["days", "months", "years"],
-                          [] // Empty array for time format since we only need the date
-                        ]}
                       />
                       <FormMessage />
                     </FormItem>
