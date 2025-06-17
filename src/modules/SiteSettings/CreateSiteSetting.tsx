@@ -65,7 +65,7 @@ const CreateSiteSetting: React.FC<CreateSiteSettingProps> = ({ isOpen, onClose }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add Setting</DialogTitle>
         </DialogHeader>

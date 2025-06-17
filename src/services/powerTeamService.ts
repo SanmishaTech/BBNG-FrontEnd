@@ -31,6 +31,26 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status: number | undefined = error.response?.status;
+    const message: string | undefined =
+      error.response?.data?.error?.message || error.response?.data?.message;
+
+    // If the backend indicates the user has insufficient privileges, force logout/redirect
+    if (status === 403 && message?.toLowerCase().includes("insufficient privileges")) {
+      const role = error.response?.data?.error?.role?.toLowerCase();
+      // Optionally clear any auth-related storage here if needed
+      // localStorage.removeItem("authToken");
+            window.location.href = role === 'user' ? '/' : '/dashboard';
+    }
+
+    // Propagate the error so that individual callers can still handle it if needed
+    return Promise.reject(error);
+  }
+);
+
 // --- Category API --- (Needed for the PowerTeam form)
 
 /**
