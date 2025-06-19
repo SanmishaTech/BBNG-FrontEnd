@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { get } from "../../services/apiService";
 import { useNavigate } from "react-router-dom";
 
 // Add custom styles for hiding scrollbars while maintaining scroll functionality
@@ -103,7 +104,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import axios from "axios";
+
 import userAvatar from "@/images/Profile.jpg";
 
 // Updated data structure based on your requirements
@@ -182,8 +183,7 @@ export default function ResponsiveLabDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('/api/statistics/business-generated');
-        const data = await response.json();
+                const data = await get('/statistics/business-generated');
         setBusinessTotal(data.total || 0);
       } catch (error) {
         console.error('Error fetching business data:', error);
@@ -198,8 +198,7 @@ export default function ResponsiveLabDashboard() {
   useEffect(() => {
     const fetchReferencesCount = async () => {
       try {
-        const response = await fetch('/api/statistics/references-count');
-        const data = await response.json();
+                const data = await get('/statistics/references-count');
         setReferencesCount(data.total || 0);
       } catch (error) {
         console.error('Error fetching references count:', error);
@@ -214,8 +213,7 @@ export default function ResponsiveLabDashboard() {
   useEffect(() => {
     const fetchTotalVisitorsCount = async () => {
       try {
-        const response = await fetch('/api/statistics/total-visitors');
-        const data = await response.json();
+                const data = await get('/statistics/total-visitors');
         setTotalVisitorsCount(data.total || 0);
       } catch (error) {
         console.error('Error fetching total visitors count:', error);
@@ -230,8 +228,7 @@ export default function ResponsiveLabDashboard() {
   useEffect(() => {
     const fetchOneToOneCount = async () => {
       try {
-        const response = await fetch('/api/statistics/one-to-one');
-        const data = await response.json();
+                const data = await get('/statistics/one-to-one');
         setOneToOneCount(data.total || 0);
       } catch (error) {
         console.error('Error fetching one-to-one count:', error);
@@ -247,8 +244,7 @@ export default function ResponsiveLabDashboard() {
     const fetchMemberGivenReferences = async () => {
       if (User && User.member && User.member.id) {
         try {
-          const response = await fetch(`/api/statistics/member-given-references/${User.member.id}`);
-          const data = await response.json();
+                    const data = await get(`/statistics/member-given-references/${User.member.id}`);
           setMemberGivenReferencesCount(data.total || 0);
         } catch (error) {
           console.error('Error fetching member given references count:', error);
@@ -265,8 +261,7 @@ export default function ResponsiveLabDashboard() {
     const fetchMemberReceivedReferences = async () => {
       if (User && User.member && User.member.id) {
         try {
-          const response = await fetch(`/api/statistics/member-received-references/${User.member.id}`);
-          const data = await response.json();
+                    const data = await get(`/statistics/member-received-references/${User.member.id}`);
           setMemberReceivedReferencesCount(data.total || 0);
         } catch (error) {
           console.error('Error fetching member received references count:', error);
@@ -283,8 +278,7 @@ export default function ResponsiveLabDashboard() {
     const fetchChapterBusinessGenerated = async () => {
       if (User && User.member && User.member.chapterId) {
         try {
-          const response = await fetch(`/api/statistics/chapter-business-generated/${User.member.chapterId}`);
-          const data = await response.json();
+                    const data = await get(`/statistics/chapter-business-generated/${User.member.chapterId}`);
           setChapterBusinessGenerated(data.total || 0);
         } catch (error) {
           console.error('Error fetching chapter business generated data:', error);
@@ -301,8 +295,7 @@ export default function ResponsiveLabDashboard() {
     const fetchChapterReferencesCount = async () => {
       if (User && User.member && User.member.chapterId) {
         try {
-          const response = await fetch(`/api/statistics/chapter-references-count/${User.member.chapterId}`);
-          const data = await response.json();
+                    const data = await get(`/statistics/chapter-references-count/${User.member.chapterId}`);
           setChapterReferencesCount(data.total || 0);
         } catch (error) {
           console.error('Error fetching chapter references count:', error);
@@ -319,8 +312,7 @@ export default function ResponsiveLabDashboard() {
     const fetchChapterVisitorsCount = async () => {
       if (User && User.member && User.member.chapterId) {
         try {
-          const response = await fetch(`/api/statistics/chapter-visitors-count/${User.member.chapterId}`);
-          const data = await response.json();
+                    const data = await get(`/statistics/chapter-visitors-count/${User.member.chapterId}`);
           setChapterVisitorsCount(data.total || 0);
         } catch (error) {
           console.error('Error fetching chapter visitors count:', error);
@@ -337,8 +329,7 @@ export default function ResponsiveLabDashboard() {
     const fetchChapterOneToOneCount = async () => {
       try {
         if (User?.member?.chapterId) {
-          const response = await fetch(`/api/statistics/chapter-one-to-one-count/${User.member.chapterId}`);
-          const data = await response.json();
+                    const data = await get(`/statistics/chapter-one-to-one-count/${User.member.chapterId}`);
           setChapterOneToOneCount(data.total || 0);
         } else {
           setChapterOneToOneCount(0);
@@ -363,8 +354,7 @@ export default function ResponsiveLabDashboard() {
           endpoint = `/api/statistics/member-messages/${User.member.id}`;
         }
         
-        const response = await fetch(endpoint);
-        const data = await response.json();
+                const data = await get(endpoint);
         setMessages(data.messages || []);
       } catch (error) {
         console.error('Error fetching messages:', error);
@@ -393,8 +383,7 @@ export default function ResponsiveLabDashboard() {
           return;
         }
         
-        const response = await fetch(endpoint);
-        const data = await response.json();
+                const data = await get(endpoint);
         setMeetings(data.meetings || []);
       } catch (error) {
         console.error('Error fetching chapter meetings:', error);
@@ -409,8 +398,7 @@ export default function ResponsiveLabDashboard() {
   useEffect(() => {
     const fetchTrainings = async () => {
       try {
-        const response = await fetch('/api/statistics/trainings');
-        const data = await response.json();
+                const data = await get('/statistics/trainings');
         setTrainings(data.trainings || []);
       } catch (error) {
         console.error('Error fetching trainings:', error);
@@ -425,8 +413,7 @@ export default function ResponsiveLabDashboard() {
   useEffect(() => {
     const fetchUpcomingBirthdays = async () => {
       try {
-        const response = await fetch('/api/statistics/upcoming-birthdays');
-        const data = await response.json();
+                const data = await get('/statistics/upcoming-birthdays');
         setUpcomingBirthdays(data.birthdays || []);
       } catch (error) {
         console.error('Error fetching upcoming birthdays:', error);

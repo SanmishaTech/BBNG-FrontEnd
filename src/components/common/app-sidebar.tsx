@@ -49,7 +49,7 @@ const initialData = {
       isActive: false,
       items: [
         { title: "Chapter Performance", url: "/chapter-performance" },
-        { title: "Members", url: "/members" },
+        // { title: "Members", url: "/members" },
         { title: "Visitors", url: "/chapter-visitors" },
         { title: "Meetings", url: "/chaptermeetings" },
       ],
@@ -247,13 +247,12 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     ) {
       try {
         const parsedRoles = JSON.parse(storedRoles);
-        // Check if any role is "OB" and validate parsedRoles is an array
+        // Check if the user has an Office Bearer (OB) role
         if (Array.isArray(parsedRoles)) {
+          const obRoles = ["chapterHead", "secretary", "treasurer"];
           isUserOB = parsedRoles.some(
-            (roleObj: { role: string; chapters: number[] }) =>
-              roleObj.role === "OB" &&
-              roleObj.chapters &&
-              roleObj.chapters.length > 0
+            (roleObj: { roleType: string; chapterId: number }) =>
+              obRoles.includes(roleObj.roleType) && roleObj.chapterId
           );
         }
       } catch (error) {

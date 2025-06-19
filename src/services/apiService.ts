@@ -16,7 +16,11 @@ api.interceptors.response.use(
       error.response?.data?.error?.message || error.response?.data?.message;
 
     // If the backend indicates the user has insufficient privileges, force logout/redirect
-    if (status === 403 && message?.toLowerCase().includes("insufficient privileges")) {
+    if (
+      status === 403 &&
+      (message?.toLowerCase().includes("insufficient privileges") ||
+       message?.toLowerCase().includes("forbidden"))
+    ) {
       const role = error.response?.data?.error?.role?.toLowerCase();
       // Optionally clear any auth-related storage here if needed
       // localStorage.removeItem("authToken");
@@ -36,6 +40,19 @@ const ensureApiPrefix = (url: string): string => {
   }
   // Otherwise, add the '/api' prefix
   return `/api${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
+// Helper to unwrap API response when wrapped by responseWrapper middleware
+const unwrapData = (response: any) => {
+  if (
+    response &&
+    response.data &&
+    typeof response.data === 'object' &&
+    'success' in response.data
+  ) {
+    return response.data.data;
+  }
+  return response.data;
 };
 
 // Helper function to extract the most meaningful error message
@@ -91,7 +108,7 @@ export const get = async (url: string, params?: any, config?: any) => {
       return response;
     }
 
-    return response.data;
+    return unwrapData(response);
   } catch (error: any) {
     console.error('GET request error details:', error.response?.data);
     throw {
@@ -111,7 +128,7 @@ export const post = async (url: string, data: any, params?: any) => {
       return response;
     }
 
-    return response.data;
+    return unwrapData(response);
   } catch (error: any) {
     console.error('POST request error details:', error.response?.data);
     throw {
@@ -127,7 +144,7 @@ export const post = async (url: string, data: any, params?: any) => {
 export const put = async (url: string, data: any) => {
   try {
     const response = await api.put(ensureApiPrefix(url), data);
-    return response.data;
+    return unwrapData(response);
   } catch (error: any) {
     console.error('PUT request error details:', error.response?.data);
     throw {
@@ -143,7 +160,7 @@ export const put = async (url: string, data: any) => {
 export const patch = async (url: string, data: any) => {
   try {
     const response = await api.patch(ensureApiPrefix(url), data);
-    return response.data;
+    return unwrapData(response);
   } catch (error: any) {
     console.error('PATCH request error details:', error.response?.data);
     throw {
@@ -159,7 +176,7 @@ export const patch = async (url: string, data: any) => {
 export const del = async (url: string) => {
   try {
     const response = await api.delete(ensureApiPrefix(url));
-    return response.data;
+    return unwrapData(response);
   } catch (error: any) {
     console.error('DELETE request error details:', error.response?.data);
     throw {
@@ -193,7 +210,7 @@ export const postupload = async (
     });
 
     const response = await uploadInstance.post(ensureApiPrefix(url), formData, config);
-    return response.data;
+    return unwrapData(response);
   } catch (error: any) {
     console.error('POST UPLOAD request error details:', error.response?.data);
     throw {
@@ -227,7 +244,7 @@ export const putupload = async (
     });
 
     const response = await uploadInstance.put(ensureApiPrefix(url), formData, config);
-    return response.data;
+    return unwrapData(response);
   } catch (error: any) {
     console.error('PUT UPLOAD request error details:', error.response?.data);
     throw {

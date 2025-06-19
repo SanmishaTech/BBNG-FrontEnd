@@ -68,7 +68,7 @@ export default function ChapterPerformanceDashboard() {
         setIsLoading(true);
         
         // Get user roles from localStorage
-        const storedRoles = localStorage.getItem("roles");
+        const storedRoles = localStorage.getItem("RoleDC");
         if (!storedRoles) {
           setError("No chapter roles found");
           setIsLoading(false);
