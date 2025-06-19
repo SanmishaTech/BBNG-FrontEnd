@@ -224,7 +224,10 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
   const { data: meetingData } = useQuery<MeetingData>({
     queryKey: ["chaptermeeting", meetingId],
     queryFn: () =>
-      get(`/chapter-meetings/${meetingId}`) as Promise<MeetingData>,
+      get(`/chapter-meetings/${meetingId}`).then((res: any) => {
+        console.log("Meeting data:", res.data);
+        return res;
+      }),
     enabled: !!meetingId,
   });
 
@@ -256,7 +259,7 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
   // Reset invitedById when chapter changes to ensure proper filtering
   useEffect(() => {
     // Always clear the invitedById field when chapter selection changes
-    form.setValue("invitedById", null);
+    form.setValue("invitedById", meetingData?.invitedById || null);
     console.log(
       `Chapter selection changed to ${selectedCrossChapter}, resetting invitedById field`
     );
@@ -728,6 +731,7 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
       }
 
       // Format the data before setting form values
+      console.log("Visitor data:", visitorData)
       const formattedData = {
         ...visitorData,
         dateOfBirth: visitorData.dateOfBirth
@@ -738,7 +742,7 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
         gender: visitorData.gender || "",
         category: visitorData.category || "",
         chapterId: visitorData.chapterId,
-        invitedById: String(visitorData.invitedById || ""),
+        invitedById: visitorData.invitedById || "",
         isCrossChapter: !!visitorData.isCrossChapter,
       };
 
@@ -998,7 +1002,7 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                                   meetingData?.chapterId || null
                                 );
                                 // Don't set chapter automatically, let users select it
-                                form.setValue("invitedById", null);
+                                form.setValue("invitedById", meetingData?.invitedById || null);
                               }
                             }}
                           />
@@ -1197,7 +1201,7 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                                 );
                                 field.onChange(value);
                                 // Clear invitedById when chapter changes
-                                form.setValue("invitedById", null);
+                                form.setValue("invitedById", meetingData?.invitedById || null);
                                 // Trigger refetch of chapter members with slight delay to ensure react-hook-form updates
                                 setTimeout(() => {
                                   console.log(
@@ -1353,7 +1357,7 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
                             );
                             // Clear the selection on next tick to avoid render issues
                             setTimeout(() => {
-                              form.setValue("invitedById", null);
+                              form.setValue("invitedById", meetingData?.invitedById || null);
                             }, 0);
                           }
 

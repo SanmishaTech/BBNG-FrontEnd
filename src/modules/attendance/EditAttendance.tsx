@@ -26,7 +26,6 @@ import { Separator } from "@/components/ui/separator";
 import { useNavigate, useParams } from "react-router-dom";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 
 interface AttendanceData {
@@ -57,19 +56,21 @@ const EditAttendance = () => {
   // Initialize attendance and substitute maps when data is loaded
   useEffect(() => {
     if (data) {
-      // Initialize the attendance map from the API response - all members present by default
+      // Initialize attendance and substitute maps from the API response
       const initialAttendanceMap: Record<number, boolean> = {};
       const initialSubstituteMap: Record<number, boolean> = {};
-      
+
       console.log("API response data:", data);
-      
+
       data.memberAttendance.forEach((item: any) => {
-        // Set all members to present by default
-        initialAttendanceMap[item.member.id] = true;
+        // Initialize attendance status from API response
+        initialAttendanceMap[item.member.id] = item.isPresent;
         // Initialize substitute status from API or default to false
         initialSubstituteMap[item.member.id] = item.isSubstitute || false;
-        
-        console.log(`Setting initial attendance for member ${item.member.id} (${item.member.memberName}): Present, Substitute: ${initialSubstituteMap[item.member.id]}`);
+
+        console.log(
+          `Setting initial attendance for member ${item.member.id} (${item.member.memberName}): Present: ${item.isPresent}, Substitute: ${item.isSubstitute}`
+        );
       });
       
       console.log("Initial attendance map:", initialAttendanceMap);

@@ -106,14 +106,12 @@ const Login = () => {
       localStorage.setItem("authToken", data.token || data.accesstoken);
       localStorage.setItem("refreshToken", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-      localStorage.setItem(
-        "roles",
-        JSON.stringify(data.user.accessibleChapters || [])
-      ); // Handle if accessibleChapters is undefined
+      localStorage.setItem("roles", JSON.stringify(data?.roles));
+      localStorage.setItem("RoleDC", JSON.stringify(data?.accessibleChapters));
 
       // Store memberId from the nested structure if it exists
-      if (data.user.member && data.user.member.id) {
-        localStorage.setItem("memberId", data.user.member.id.toString());
+      if (data?.user?.member && data?.user?.member?.id) {
+        localStorage.setItem("memberId", data?.user?.member?.id.toString());
       }
 
       if (data.requiresPolicyAcceptance) {
