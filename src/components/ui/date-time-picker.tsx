@@ -1,28 +1,70 @@
-"use client";
-import React, { forwardRef, useCallback } from "react";
-import { useTimescape, type Options } from "timescape/react";
+ 
+import * as React from "react";
+import { format } from "date-fns";
+import { Calendar as CalendarIcon } from "lucide-react";
 
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-// @source: https://github.com/dan-lee/timescape?tab=readme-ov-file
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
-const timePickerInputBase =
-  "p-1 inline tabular-nums h-fit border-none outline-none select-none content-box caret-transparent rounded-sm min-w-8 text-center focus:bg-foreground/20 focus-visible:ring-0 focus-visible:outline-none";
-const timePickerSeparatorBase = "text-xs text-gray-400";
+interface DateTimePickerProps {
+  value?: Date;
+  onChange?: (date: Date | undefined) => void;
+}
 
-type DateFormat = "days" | "months" | "years";
-type TimeFormat = "hours" | "minutes" | "seconds" | "am/pm";
+export function DateTimePicker({ value, onChange }: DateTimePickerProps) {
+  const [date, setDate] = React.useState(value);
+  const [time, setTime] = React.useState("10:30:00");
 
-type DateTimeArray<T extends DateFormat | TimeFormat> = T[];
-type DateTimeFormatDefaults = [
-  DateTimeArray<DateFormat>,
-  DateTimeArray<TimeFormat>,
-];
+  const handleSelect = (selectedDate: Date | undefined) => {
+    if (selectedDate) {
+      const [hours, minutes, seconds] = time.split(":");
+      selectedDate.setHours(parseInt(hours, 10));
+      selectedDate.setMinutes(parseInt(minutes, 10));
+      selectedDate.setSeconds(parseInt(seconds, 10));
+    }
+    setDate(selectedDate);
+    onChange?.(selectedDate);
+  };
 
-const DEFAULTS = [
-  ["months", "days", "years"],
-  ["hours", "minutes", "am/pm"],
-] as DateTimeFormatDefaults;
+  const handleTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setTime(event.target.value);
+  };
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          data-empty={!date}
+          className="data-[empty=true]:text-muted-foreground w-[280px] justify-start text-left font-normal"
+        >
+          <CalendarIcon />
+          {date ? format(date, "dd/MM/yyyy hh:mm a") : <span>Pick a date and time</span>}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0">
+        <Calendar mode="single" selected={date} onSelect={handleSelect} />
+        <div className="p-2">
+          <Input
+            type="time"
+            id="time-picker"
+            step="1"
+            value={time}
+            onChange={handleTimeChange}
+            className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+          />
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 type TimescapeReturn = ReturnType<typeof useTimescape>;
 type InputPlaceholders = Record<DateFormat | TimeFormat, string>;
@@ -40,7 +82,7 @@ const INPUT_PLACEHOLDERS: InputPlaceholders = {
  * Date time picker Docs: {@link: https://shadcn-extension.vercel.app/docs/otp-input}
  */
 
-const DatetimeGrid = forwardRef<
+const DatetimeGrid = React.forwardRef<
   HTMLDivElement,
   {
     format: DateTimeFormatDefaults;
@@ -133,7 +175,7 @@ const DEFAULT_TS_OPTIONS = {
   date: new Date(),
   hour12: true,
 };
-export const DatetimePicker = forwardRef<HTMLDivElement, DateTimeInput>(
+export const DatetimePicker = React.forwardRef<HTMLDivElement, DateTimeInput>(
   (
     {
       value,
