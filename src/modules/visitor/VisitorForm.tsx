@@ -161,6 +161,8 @@
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [isLoading, setIsLoading] = useState(false);
+    const [formInitialized, setFormInitialized] = useState(false);
+    const [valuesSetOnce, setValuesSetOnce] = useState(false);
 
     const rawDefaults = React.useMemo(() => ({
       meetingId: meetingId ? Number(meetingId) : undefined,
@@ -691,28 +693,34 @@
       queryFn: () => get(`/visitors/${visitorId}`),
       enabled: isEditing && !!visitorId,
     });
+    
     const chapterAndMembersReady = React.useMemo(() => {
       if (!visitorData) return false;
     
       return visitorData.isCrossChapter
-        ? !!filteredChapters.length && !!crossChapterMembersData
+        ? !!chaptersData && !!meetingData // Check underlying data, not filtered results
         : !!chaptersData && !!membersData;
     }, [
       visitorData,
-      filteredChapters.length,
-      crossChapterMembersData,
       chaptersData,
+      meetingData,
       membersData,
     ]);
-    
+
+    // Reset initialization flags when visitor changes
+    useEffect(() => {
+      if (isEditing && visitorId) {
+        setFormInitialized(false);
+        setValuesSetOnce(false);
+      }
+    }, [visitorId, isEditing]);
 
     useEffect(() => {
-      if (!isEditing || !visitorData) return;
+      if (!isEditing || !visitorData || formInitialized) return;
       form.setValue("isCrossChapter", !!visitorData.isCrossChapter);
       if (
         !chaptersData || 
-        !membersData || 
-        (visitorData.isCrossChapter && !crossChapterMembersData)
+        !membersData
       ) {
         return; // Wait for data
       }
@@ -721,57 +729,75 @@
           ...rawDefaults,
           ...visitorData,
           isCrossChapter: !!visitorData.isCrossChapter,   // ← makes UI show correct fields
+          chapterId: visitorData.chapterId ? Number(visitorData.chapterId) : null,
+          invitedById: visitorData.invitedById ? Number(visitorData.invitedById) : null,
           dateOfBirth: visitorData.dateOfBirth
             ? new Date(visitorData.dateOfBirth)
             : undefined,
         },
         { keepDirty: false }
       );
+      setFormInitialized(true);
     }, [isEditing, 
   visitorData, 
   chaptersData, 
   membersData, 
-  crossChapterMembersData, 
+  formInitialized, 
   form]);
 
+    // Second effect for fine-tuning values after form reset (runs only once)
     useEffect(() => {
-      if (!isEditing || !visitorData || !chapterAndMembersReady) return;
+      if (!isEditing || !visitorData || !chapterAndMembersReady || !formInitialized || valuesSetOnce) return;
     
       if (visitorData.isCrossChapter) {
-        // numeric IDs only
-        form.setValue(
-          "chapterId",
-          Number(visitorData.chapterId ?? visitorData.homeChapter?.id ?? 0)
-        );
-        form.setValue("invitedById", Number(visitorData.invitedById ?? 0) || null);
+        // For cross-chapter, ensure proper number conversion for dropdowns
+        const currentChapterId = form.getValues("chapterId");
+        const currentInvitedById = form.getValues("invitedById");
+        
+        if (currentChapterId !== Number(visitorData.chapterId)) {
+          form.setValue("chapterId", visitorData.chapterId ? Number(visitorData.chapterId) : null);
+        }
+        if (currentInvitedById !== Number(visitorData.invitedById)) {
+          form.setValue("invitedById", visitorData.invitedById ? Number(visitorData.invitedById) : null);
+        }
       } else {
-      // Use chapter name from visitorData or meetingData
-    const chapterName = 
-    visitorData.chapter?.name ?? 
-    visitorData.chapter ?? 
-    meetingData?.chapter?.name ?? 
-    "";
-  
-  // Only set chapter if it exists in chaptersData
-  if (chaptersData.chapters.some(c => c.name === chapterName)) {
-    form.setValue("chapter", chapterName);
-  }
-  
-  // Ensure invitedById exists in filtered members
-  const members = membersData.members || [];
-  if (members.some(m => m.id === visitorData.invitedById)) {
-    form.setValue("invitedById", Number(visitorData.invitedById ?? 0) || null);
-  }
-  
-  refetchChapterMembers();
+        // For regular visitors, ensure chapter and member selections work
+        const chapterName = 
+          visitorData.chapter?.name ?? 
+          visitorData.chapter ?? 
+          meetingData?.chapter?.name ?? 
+          "";
+      
+        if (chapterName && chaptersData.chapters.some(c => c.name === chapterName)) {
+          const currentChapter = form.getValues("chapter");
+          if (currentChapter !== chapterName) {
+            form.setValue("chapter", chapterName);
+          }
+        }
+        form.setValue("gender", visitorData.gender)
+        form.setValue("category", visitorData.category)
+
+      
+        const members = membersData.members || [];
+        if (visitorData.invitedById && members.some(m => m.id === visitorData.invitedById)) {
+          const currentInvitedById = form.getValues("invitedById");
+          if (currentInvitedById !== Number(visitorData.invitedById)) {
+            form.setValue("invitedById", Number(visitorData.invitedById));
+          }
+        }
       }
+      
+      setValuesSetOnce(true);
     }, [
       isEditing, 
       visitorData, 
       chaptersData, 
       membersData, 
-      meetingData, 
-      refetchChapterMembers
+      meetingData,
+      chapterAndMembersReady,
+      formInitialized,
+      valuesSetOnce,
+      form
     ]);
 
     useEffect(() => {
@@ -951,12 +977,12 @@
                               checked={field.value}
                               onCheckedChange={(checked) => {
                                 field.onChange(checked);
-                                form.setValue("invitedById", meetingData?.invitedById || null);
-                                form.setValue("chapter", meetingData?.chapter?.name || "");
-                                form.setValue(
-                                  "chapterId",
-                                  meetingData?.chapterId || null
-                                );
+                                // Only set default values when creating new visitor, not editing
+                                if (!isEditing) {
+                                  form.setValue("invitedById", null);
+                                  form.setValue("chapter", meetingData?.chapter?.name || "");
+                                  form.setValue("chapterId", null);
+                                }
                                 // if (false) {
                                 //   // Clear fields not needed for cross-chapter
                                 //   form.setValue("name", "");
@@ -1011,16 +1037,16 @@
                                 <Select
                                   onValueChange={(val) => {
                                     field.onChange(Number(val));
-                                    // When chapter changes, clear the invited by field
-                                    form.setValue("invitedById", null);
+                                    // Only clear invited by field when creating new visitor, not editing
+                                    if (!isEditing) {
+                                      form.setValue("invitedById", null);
+                                    }
                                   }}
                                   value={field.value != null ? String(field.value) : ""}
                                 >
                                   <FormControl>
                                     <SelectTrigger>
-                                      <SelectValue placeholder="Select home chapter">
-                                        {selectedChapter?.name || "Select home chapter"}
-                                      </SelectValue>
+                                      <SelectValue placeholder="Select home chapter" />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
