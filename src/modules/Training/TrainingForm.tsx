@@ -11,12 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { post, put, get } from "@/services/apiService";
 import Validate from "@/lib/Handlevalidation";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+
 import {
   Select,
   SelectContent,
@@ -243,47 +238,28 @@ const TrainingForm = ({
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Date Field */}
-          <div className="grid gap-2 relative">
-            <Label htmlFor="date">
-              Date <span className="text-red-500">*</span>
-            </Label>
+          <div className="grid gap-2 relative w-full">
+            <Label htmlFor="date">Date</Label>
             <Controller
               name="date"
               control={control}
               render={({ field }) => (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={`w-full justify-start text-left font-normal ${
-                        !field.value && "text-muted-foreground"
-                      }`}
-                      disabled={isFormLoading}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {field.value ? (
-                        format(field.value, "dd/MM/yyyy")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      initialFocus
-                      disabled={isFormLoading}
-                    />
-                  </PopoverContent>
-                </Popover>
+                <Input
+                  type="date"
+                  id="date"
+                  value={field.value ? format(field.value, 'yyyy-MM-dd') : ''}
+                  onChange={(e) => {
+                    const dateValue = e.target.value;
+                    // Create a new Date object in UTC to avoid timezone issues.
+                    // The value will be 'YYYY-MM-DD', and new Date() will parse it as UTC midnight.
+                    field.onChange(dateValue ? new Date(dateValue + 'T00:00:00') : null);
+                  }}
+                  className="min-w-full"
+                />
               )}
             />
             {errors.date && (
-              <span className="text-red-500 text-xs absolute bottom-0 translate-y-full mt-1">
-                {errors.date.message}
-              </span>
+              <p className="text-sm text-red-500">{errors.date.message}</p>
             )}
           </div>
 

@@ -1,5 +1,5 @@
   import React, { useState, useEffect } from "react";
-  import { useForm } from "react-hook-form";
+  import { useForm, useWatch } from "react-hook-form";
   import { zodResolver } from "@hookform/resolvers/zod";
   import * as z from "zod";
   import { useNavigate, useParams } from "react-router-dom";
@@ -156,13 +156,14 @@
     isEditing?: boolean;
   }
 
-  const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = false }) => {
+  const VisitorForm: React.FC<VisitorFormProps> = ({ isEditing = true }) => {
     const { meetingId, visitorId } = useParams();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [isLoading, setIsLoading] = useState(false);
     const [formInitialized, setFormInitialized] = useState(false);
     const [valuesSetOnce, setValuesSetOnce] = useState(false);
+    const [isTimeoutLoading, setIsTimeoutLoading] = useState(false);
 
     const rawDefaults = React.useMemo(() => ({
       meetingId: meetingId ? Number(meetingId) : undefined,
@@ -257,11 +258,18 @@
       }>;
     }
 
-    // Get the currently selected chapter for queries
-    const selectedChapter = form.watch("chapter");
+    // Get the currently selected chapter for queries using useWatch for reactivity
+    const selectedChapter = useWatch({
+      control: form.control,
+      name: "chapter",
+    });
 
-    // Watch for changes to the selected chapter in the cross-chapter form
-    const selectedCrossChapter = form.watch("chapterId");
+    // Watch for ch anges to the selected chapter in the cross-chapter form using useWatch
+    const selectedCrossChapter = useWatch({
+      control: form.control,
+      name: "chapterId",
+    });
+    
 
     useEffect(() => {
       // only clear when ADDING a new visitor
@@ -717,27 +725,50 @@
 
     useEffect(() => {
       if (!isEditing || !visitorData || formInitialized) return;
-      form.setValue("isCrossChapter", !!visitorData.isCrossChapter);
-      if (
-        !chaptersData || 
-        !membersData
-      ) {
-        return; // Wait for data
-      }
-      form.reset(
-        {
-          ...rawDefaults,
-          ...visitorData,
-          isCrossChapter: !!visitorData.isCrossChapter,   // ← makes UI show correct fields
-          chapterId: visitorData.chapterId ? Number(visitorData.chapterId) : null,
-          invitedById: visitorData.invitedById ? Number(visitorData.invitedById) : null,
-          dateOfBirth: visitorData.dateOfBirth
-            ? new Date(visitorData.dateOfBirth)
-            : undefined,
-        },
-        { keepDirty: false }
-      );
+      
+      const needsCross = !!visitorData.isCrossChapter;
+      
+      // For cross-chapter, we need chapters data and the visitor to have a chapterId
+      // For regular visitors, we need chapters and members data
+      // const baseDataReady = !!chaptersData && !!membersData;
+      
+      // Set loading state to true when setTimeout starts
+      setIsTimeoutLoading(true);
+      
+      setTimeout(() => {
+          // if (!baseDataReady) return; // keep waiting for basic data
+          
+      const resetData = {
+        ...rawDefaults,
+        ...visitorData,
+        isCrossChapter: !!visitorData.isCrossChapter,   // ← makes UI show correct fields
+        chapterId: visitorData.chapterId && Number(visitorData.chapterId) ,
+        invitedById: visitorData.invitedById ? Number(visitorData.invitedById) : null,
+        dateOfBirth: visitorData.dateOfBirth
+          ? new Date(visitorData.dateOfBirth)
+          : undefined,
+      };
+      
+      form.reset(resetData, { keepDirtyValues: false });
+      
       setFormInitialized(true);
+      
+      // Set values explicitly after form is marked as initialized
+      if (needsCross) {
+        form.setValue("isCrossChapter", true);
+        
+        if (visitorData.chapterId) {
+          console.log("Thsi is maindata", visitorData.chapterId)
+
+          form.setValue("chapterId", visitorData.chapterId);
+        }
+      }
+      
+      // Set loading state to false when setTimeout completes
+      setIsTimeoutLoading(false);
+      }, 2000);
+      
+     
     }, [isEditing, 
   visitorData, 
   chaptersData, 
@@ -745,21 +776,34 @@
   formInitialized, 
   form]);
 
+    // Effect to handle cross-chapter member data after form is initialized
+    useEffect(() => {
+      if (!isEditing || !visitorData || !formInitialized) return;
+      if (!visitorData.isCrossChapter) return;
+      if (!crossChapterMembersData) return; // wait for cross-chapter members
+      if (valuesSetOnce) return; // Don't run if values have already been set
+      
+      // Now that we have the cross-chapter members, set the invitedById if it's not already set correctly
+      const currentInvitedById = form.getValues("invitedById");
+      const currentChapterId = form.getValues("chapterId");
+      
+      // Only set values if they haven't been set yet (initial load)
+      if (currentChapterId === null || currentChapterId === undefined) {
+        form.setValue("chapterId", visitorData.chapterId && Number(visitorData.chapterId));
+      }
+      if (currentInvitedById === null || currentInvitedById === undefined) {
+        form.setValue("invitedById", visitorData.invitedById && Number(visitorData.invitedById));
+      }
+      
+    }, [isEditing, visitorData, formInitialized, crossChapterMembersData, valuesSetOnce, form]);
+
     // Second effect for fine-tuning values after form reset (runs only once)
     useEffect(() => {
       if (!isEditing || !visitorData || !chapterAndMembersReady || !formInitialized || valuesSetOnce) return;
     
       if (visitorData.isCrossChapter) {
-        // For cross-chapter, ensure proper number conversion for dropdowns
-        const currentChapterId = form.getValues("chapterId");
-        const currentInvitedById = form.getValues("invitedById");
-        
-        if (currentChapterId !== Number(visitorData.chapterId)) {
-          form.setValue("chapterId", visitorData.chapterId ? Number(visitorData.chapterId) : null);
-        }
-        if (currentInvitedById !== Number(visitorData.invitedById)) {
-          form.setValue("invitedById", visitorData.invitedById ? Number(visitorData.invitedById) : null);
-        }
+        // Cross-chapter handling is now done in the dedicated effect above
+        // Skip this to avoid conflicts
       } else {
         // For regular visitors, ensure chapter and member selections work
         const chapterName = 
@@ -778,11 +822,13 @@
         form.setValue("category", visitorData.category)
 
       
-        const members = membersData.members || [];
+        const members = membersData?.members || [];
         if (visitorData.invitedById && members.some(m => m.id === visitorData.invitedById)) {
           const currentInvitedById = form.getValues("invitedById");
+          
           if (currentInvitedById !== Number(visitorData.invitedById)) {
-            form.setValue("invitedById", Number(visitorData.invitedById));
+            form.setValue("chapterId", visitorData.chapterId && visitorData.chapterId);
+            form.setValue("invitedById", visitorData.invitedById && Number(visitorData.invitedById));
           }
         }
       }
@@ -904,10 +950,13 @@
     };
 
     // Loading states
-    if ((isEditing && isVisitorLoading) || (!meetingData && meetingId)) {
+    if ((isEditing && isVisitorLoading) || (!meetingData && meetingId) || isTimeoutLoading) {
       return (
         <div className="flex justify-center items-center h-64">
           <Loader className="mr-2 h-8 w-8 animate-spin" />
+          {isTimeoutLoading && (
+            <span className="ml-2 text-sm text-muted-foreground">Loading visitor data...</span>
+          )}
         </div>
       );
     }
@@ -918,7 +967,7 @@
           {isEditing ? "Edit Visitor" : "Add New Visitor"}
         </h1>
 
-        <Card className="mx-auto max-w-4xl">
+        <Card className="mx-auto max-w-full">
           <CardHeader>
             <CardTitle>
               {isEditing ? "Update Visitor Information" : "Visitor Information"}
@@ -981,7 +1030,7 @@
                                 if (!isEditing) {
                                   form.setValue("invitedById", null);
                                   form.setValue("chapter", meetingData?.chapter?.name || "");
-                                  form.setValue("chapterId", null);
+                                  // form.setValue("chapterId", null);
                                 }
                                 // if (false) {
                                 //   // Clear fields not needed for cross-chapter
@@ -1038,9 +1087,7 @@
                                   onValueChange={(val) => {
                                     field.onChange(Number(val));
                                     // Only clear invited by field when creating new visitor, not editing
-                                    if (!isEditing) {
-                                      form.setValue("invitedById", null);
-                                    }
+                                  
                                   }}
                                   value={field.value != null ? String(field.value) : ""}
                                 >
@@ -1085,7 +1132,7 @@
 
                             return (
                               <FormItem>
-                                <FormLabel>Invited By</FormLabel>
+                                <FormLabel>Member</FormLabel>
                                 <Select
                                   onValueChange={(val) => field.onChange(Number(val))}
                                   // IMPORTANT - String conversion to ensure the value matches option format
@@ -1180,9 +1227,7 @@
                                   );
                                   field.onChange(value);
                                   // Only clear invitedById when creating, not editing
-                                  if (!isEditing) {
-                                    form.setValue("invitedById", null);
-                                  }
+                                
                                   // Trigger refetch of chapter members
                                   refetchChapterMembers();
                                 }}

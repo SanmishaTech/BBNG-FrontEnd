@@ -24,6 +24,8 @@ import {
   Calendar,
   CalendarRange,
   Filter,
+  Users,
+  UserCheck,
 } from "lucide-react";
 import CustomPagination from "@/components/common/custom-pagination";
 import ConfirmDialog from "@/components/common/confirm-dialog";
@@ -38,6 +40,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ChapterVisitorList = () => {
   const queryClient = useQueryClient();
@@ -55,6 +58,7 @@ const ChapterVisitorList = () => {
   const [chapterId, setChapterId] = useState<number | null>(null);
   const [chapterName, setChapterName] = useState<string>("");
   const [showFilters, setShowFilters] = useState(false);
+  const [activeTab, setActiveTab] = useState("visitors");
 
   useEffect(() => {
     // Get user from localStorage
@@ -88,9 +92,17 @@ const ChapterVisitorList = () => {
       statusFilter,
       fromDate,
       toDate,
+      activeTab,
     ],
     queryFn: () => {
       let url = `/visitors?chapterId=${chapterId}&page=${currentPage}&limit=${recordsPerPage}&sortBy=${sortBy}&sortOrder=${sortOrder}&search=${search}`;
+
+      // Add isCrossChapter filter based on active tab
+      if (activeTab === "visitors") {
+        url += `&isCrossChapter=false`;
+      } else if (activeTab === "cross-chapter") {
+        url += `&isCrossChapter=true`;
+      }
 
       if (statusFilter) {
         url += `&status=${statusFilter}`;
@@ -155,6 +167,11 @@ const ChapterVisitorList = () => {
 
   const handleStatusFilterChange = (value: string) => {
     setStatusFilter(value === "all" ? "" : value);
+    setCurrentPage(1);
+  };
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
     setCurrentPage(1);
   };
 
@@ -228,8 +245,20 @@ const ChapterVisitorList = () => {
         {chapterName} Visitors
       </h1>
 
-      <Card className="mx-auto mt-6 sm:mt-10">
-        <CardContent>
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsTrigger value="visitors" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Visitors
+          </TabsTrigger>
+          <TabsTrigger value="cross-chapter" className="flex items-center gap-2">
+            <UserCheck className="h-4 w-4" />
+            Cross Chapter Visitors
+          </TabsTrigger>
+        </TabsList>
+
+                <Card className="w-full mt-6">
+          <CardContent className="w-full">
           {/* Toolbar */}
           <div className="flex flex-wrap gap-4 mb-6 mt-6">
             {/* Search Input */}
@@ -414,7 +443,16 @@ const ChapterVisitorList = () => {
                     {visitors.map((visitor: any) => (
                       <TableRow key={visitor.id}>
                         <TableCell className="font-medium">
-                          {visitor.name || "N/A"}
+                          {visitor.isCrossChapter && visitor.invitedBy ? (
+                            <div>
+                              <div>{visitor.invitedBy.memberName || "N/A"}</div>
+                              <div className="text-xs text-gray-500">
+                                From: {visitor.invitedBy.homeChapter?.name || visitor.chapter || "N/A"}
+                              </div>
+                            </div>
+                          ) : (
+                            visitor.name || "N/A"
+                          )}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
@@ -425,8 +463,16 @@ const ChapterVisitorList = () => {
                             </span>
                           </div>
                         </TableCell>
-                        <TableCell>{visitor.mobile1 || "N/A"}</TableCell>
-                        <TableCell>{visitor.email || "N/A"}</TableCell>
+                        <TableCell>
+                          {visitor.isCrossChapter && visitor.invitedBy
+                            ? visitor.invitedBy.mobile1 || "N/A"
+                            : visitor.mobile1 || "N/A"}
+                        </TableCell>
+                        <TableCell>
+                          {visitor.isCrossChapter && visitor.invitedBy
+                            ? visitor.invitedBy.email || "N/A"
+                            : visitor.email || "N/A"}
+                        </TableCell>
                         <TableCell>
                           {getStatusBadge(visitor.status || "Unknown")}
                         </TableCell>
@@ -443,14 +489,16 @@ const ChapterVisitorList = () => {
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => convertToMember(visitor)}
-                              title="Convert to Member"
-                            >
-                              <UserPlus className="h-4 w-4" />
-                            </Button>
+                            {!visitor.isCrossChapter && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => convertToMember(visitor)}
+                                title="Convert to Member"
+                              >
+                                <UserPlus className="h-4 w-4" />
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
                               size="sm"
@@ -478,8 +526,9 @@ const ChapterVisitorList = () => {
               </div>
             </>
           )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </Tabs>
 
       {/* Confirmation Dialog */}
       <ConfirmDialog

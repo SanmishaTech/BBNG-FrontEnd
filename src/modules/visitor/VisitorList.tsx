@@ -172,7 +172,7 @@ const VisitorList = () => {
         </div>
       ) : null}
 
-      <Card className="mx-auto mt-6 sm:mt-10">
+      <Card className="w-full mx-auto mt-6 sm:mt-10">
         <CardContent>
           {/* Toolbar */}
           <div className="flex flex-wrap gap-4 mb-6 mt-6">

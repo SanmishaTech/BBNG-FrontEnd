@@ -397,6 +397,8 @@ export default function MemberForm({ mode }: MemberFormProps) {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(memberSchema),
+    mode: "onChange", // Enable realtime validation
+    reValidateMode: "onChange", // Revalidate on every change
     defaultValues: {
       memberName: visitorData?.memberName || "",
       chapterId: visitorData?.chapterId || undefined,

@@ -163,6 +163,8 @@ export default function ResponsiveLabDashboard() {
   const [oneToOneCount, setOneToOneCount] = useState(0);
   const [memberGivenReferencesCount, setMemberGivenReferencesCount] = useState(0);
   const [memberReceivedReferencesCount, setMemberReceivedReferencesCount] = useState(0);
+  const [memberBusinessGiven, setMemberBusinessGiven] = useState(0);
+  const [memberBusinessReceived, setMemberBusinessReceived] = useState(0);
   const [chapterBusinessGenerated, setChapterBusinessGenerated] = useState(0);
   const [chapterReferencesCount, setChapterReferencesCount] = useState(0);
   const [chapterVisitorsCount, setChapterVisitorsCount] = useState(0);
@@ -271,6 +273,28 @@ export default function ResponsiveLabDashboard() {
     };
     
     fetchMemberReceivedReferences();
+  }, [User]);
+
+  // Fetch member activity summary (business given/received)
+  useEffect(() => {
+    const fetchMemberActivitySummary = async () => {
+      if (User && User.member && User.member.id) {
+        try {
+          const data = await get(`/api/members/${User.member.id}/activity-summary`);
+          setMemberBusinessGiven(data.businessGiven || 0);
+          setMemberBusinessReceived(data.businessReceived || 0);
+          // Update references from activity summary as well for consistency
+          setMemberGivenReferencesCount(data.referencesGiven || 0);
+          setMemberReceivedReferencesCount(data.referencesReceived || 0);
+        } catch (error) {
+          console.error('Error fetching member activity summary:', error);
+          setMemberBusinessGiven(0);
+          setMemberBusinessReceived(0);
+        }
+      }
+    };
+    
+    fetchMemberActivitySummary();
   }, [User]);
 
   // Fetch chapter's business generated amount
@@ -592,7 +616,7 @@ export default function ResponsiveLabDashboard() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{}</div>
+              <div className="text-2xl font-bold">₹{memberBusinessReceived.toLocaleString()}</div>
             </CardContent>
           </Card>
           <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
@@ -604,7 +628,7 @@ export default function ResponsiveLabDashboard() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{}</div>
+              <div className="text-2xl font-bold">₹{memberBusinessGiven.toLocaleString()}</div>
             </CardContent>
           </Card>
           <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
