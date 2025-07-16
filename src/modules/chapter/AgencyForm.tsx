@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { DatePickerWithInput } from "@/components/ui/date-picker-input";
+import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import {
   Popover,
@@ -385,12 +385,19 @@ export default function ChapterForm({ mode }: { mode: "create" | "edit" }) {
                   control={form.control}
                   name="date"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Formation Date</FormLabel>
-                      <DatePickerWithInput
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
+                    <FormItem>
+                      <FormLabel>Formation Date <span className="text-red-500">*</span></FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          {...field}
+                          value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                          onChange={(e) => {
+                            const dateValue = e.target.value ? new Date(e.target.value) : new Date();
+                            field.onChange(dateValue);
+                          }}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

@@ -275,6 +275,7 @@
       // only clear when ADDING a new visitor
       if (!isEditing) {
         form.setValue("invitedById", meetingData?.invitedById || null);
+        // Do not automatically set chapter - users should select it manually
       }
     }, [selectedCrossChapter, isEditing, meetingData, form]);
 
@@ -827,7 +828,8 @@
           const currentInvitedById = form.getValues("invitedById");
           
           if (currentInvitedById !== Number(visitorData.invitedById)) {
-            form.setValue("chapterId", visitorData.chapterId && visitorData.chapterId);
+            // Don't set chapterId for non-cross-chapter visitors
+            // The backend will use the meeting's chapter
             form.setValue("invitedById", visitorData.invitedById && Number(visitorData.invitedById));
           }
         }
@@ -912,24 +914,15 @@
       }
       console.log("Submitting data:", submissionData?.invitedById)
 
-      // For non-cross-chapter visitors, make sure chapterId is set
+      // For non-cross-chapter visitors, the backend will automatically use the meeting's chapter
+      // We only need to ensure the chapter name is set for display purposes
       if (!submissionData.isCrossChapter) {
-        // Use the selected chapter from the form
-        if (submissionData.chapter) {
-          // Find the chapter ID from the name
-          const selectedChapter = chaptersData?.chapters?.find(
-            (c: any) => c.name === submissionData.chapter
-          );
-          if (selectedChapter) {
-            submissionData.chapterId = selectedChapter.id;
-          }
-        } else if (meetingData) {
-          // Fallback to meeting's chapter if none is selected
-          submissionData.chapter = meetingData.chapter?.name;
-          if (meetingData && typeof meetingData.chapterId === "number") {
-            submissionData.chapterId = meetingData.chapterId;
-          }
+        // If no chapter is selected in the form, use the meeting's chapter name
+        if (!submissionData.chapter && meetingData?.chapter?.name) {
+          submissionData.chapter = meetingData.chapter.name;
         }
+      // For non-cross-chapter visitors, chapterId should be set from the selected chapter
+      // The user selects the chapter manually, not auto-assigned
       }
 
       console.log("Submitting data:", submissionData);
@@ -1029,8 +1022,8 @@
                                 // Only set default values when creating new visitor, not editing
                                 if (!isEditing) {
                                   form.setValue("invitedById", null);
-                                  form.setValue("chapter", meetingData?.chapter?.name || "");
-                                  // form.setValue("chapterId", null);
+                                  form.setValue("chapter", "");
+                                  form.setValue("chapterId", null);
                                 }
                                 // if (false) {
                                 //   // Clear fields not needed for cross-chapter
@@ -1220,18 +1213,17 @@
                             <FormItem>
                               <FormLabel>Chapter</FormLabel>
                               <Select
-                                onValueChange={(value) => {
-                                  console.log(
-                                    "[DEBUG] Selected chapter value:",
-                                    value
-                                  );
-                                  field.onChange(value);
-                                  // Only clear invitedById when creating, not editing
-                                
-                                  // Trigger refetch of chapter members
-                                  refetchChapterMembers();
-                                }}
                                 value={field.value || ""}
+                                onValueChange={(value) => {
+                                  field.onChange(value);
+                                  // Find the selected chapter and set its ID
+                                  const selectedChapter = chaptersData?.chapters?.find(
+                                    (c) => c.name === value
+                                  );
+                                  if (selectedChapter) {
+                                    form.setValue("chapterId", selectedChapter.id);
+                                  }
+                                }}
                               >
                                 <FormControl>
                                   <SelectTrigger>
@@ -1240,10 +1232,7 @@
                                 </FormControl>
                                 <SelectContent>
                                   {chaptersData?.chapters?.map((chapter) => (
-                                    <SelectItem
-                                      key={chapter.id}
-                                      value={chapter.name}
-                                    >
+                                    <SelectItem key={chapter.id} value={chapter.name}>
                                       {chapter.name}
                                     </SelectItem>
                                   ))}
@@ -1264,8 +1253,8 @@
                               typeof field.value
                             );
 
-                            // Get the current chapter selection directly inside the render function
-                            const selectedChapter = form.watch("chapter");
+                            // For non-cross-chapter visitors, always use the meeting's chapter
+                            const selectedChapter = meetingData?.chapter?.name || form.watch("chapter");
                             console.log(
                               "Current chapter selection:",
                               selectedChapter

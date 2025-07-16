@@ -6,8 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
-import { CalendarIcon, Clock } from "lucide-react";
 
 import { get, post, put } from "@/services/apiService";
 import {
@@ -22,11 +20,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Validate from "@/lib/Handlevalidation";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
   Form,
   FormControl,
   FormField,
@@ -34,7 +27,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
 import {
   Select,
@@ -48,7 +40,7 @@ import {
 // 1) Schema Definition
 // ----------------------
 const chapterMeetingSchema = z.object({
-  date: z.date({ required_error: "Meeting date is required" }),
+  date: z.string().min(1, "Meeting date is required"),
   meetingTime: z.string().min(1, "Meeting time is required"),
   meetingTitle: z.string().min(1, "Meeting title is required"),
   meetingVenue: z.string().min(1, "Meeting venue is required"),
@@ -103,7 +95,7 @@ export default function ChapterMeetingForm({
   const form = useForm<ChapterMeetingFormInputs>({
     resolver: zodResolver(chapterMeetingSchema),
     defaultValues: {
-      date: new Date(),
+      date: new Date().toISOString().split('T')[0],
       meetingTime: "",
       meetingTitle: "",
       meetingVenue: "",
@@ -123,7 +115,7 @@ export default function ChapterMeetingForm({
       // No need to wait for chapters as they're no longer needed
       reset({
         ...apiData,
-        date: apiData.date ? new Date(apiData.date) : new Date(),
+        date: apiData.date ? new Date(apiData.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         // chapterId is now determined from the logged-in user
       });
       return apiData;
@@ -137,7 +129,7 @@ export default function ChapterMeetingForm({
       get(`/chapter-meetings/${id}`).then((apiData) => {
         reset({
           ...apiData,
-          date: apiData.date ? new Date(apiData.date) : new Date(),
+          date: apiData.date ? new Date(apiData.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
           // chapterId is now determined from the logged-in user
         });
       });
@@ -246,31 +238,17 @@ export default function ChapterMeetingForm({
                   control={form.control}
                   name="date"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Meeting Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className="w-full pl-3 text-left font-normal"
-                            >
-                              {field.value
-                                ? format(field.value, "dd/MM/yyyy")
-                                : "Pick a date"}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
+                    <FormItem>
+                      <FormLabel>
+                        Meeting Date <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          placeholder="Select meeting date"
+                          {...field}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

@@ -142,10 +142,19 @@ const createMemberSchema = (mode: "create" | "edit") => {
       .min(1, "Chapter is required"),
     category: z.preprocess(
       // Type: string | undefined
-      (val) => (val === "" || val === null ? undefined : val),
+      (val) => (val === "" || val === null || val === undefined ? undefined : val),
       z.string().optional()
-    ),
-    businessCategory: z.array(z.number()).optional(), // Type: number[] | undefined, allows empty array or undefined field
+    ).optional(),
+    businessCategory: z.preprocess(
+      // Type: number[] | undefined
+      (val) => {
+        if (val === null || val === undefined || val === "" || (Array.isArray(val) && val.length === 0)) {
+          return undefined;
+        }
+        return val;
+      },
+      z.array(z.number()).optional()
+    ).optional(),
     gender: z.string().min(1, "Gender is required"),
     dateOfBirth: z // Type: Date | null
       .date({ invalid_type_error: "Invalid date format for Date of Birth" })
@@ -409,8 +418,8 @@ export default function MemberForm({ mode }: MemberFormProps) {
           ? visitorData.businessCategory.split(",").map(Number)
           : visitorData.businessCategory
           ? [Number(visitorData.businessCategory)]
-          : []
-        : [],
+          : undefined
+        : undefined,
       gender: visitorData?.gender || "",
       dateOfBirth: visitorData?.dateOfBirth
         ? new Date(visitorData.dateOfBirth)
@@ -456,7 +465,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
     enabled: mode === "edit" && !!id,
   });
 
-  const { isLoading: loadingMember } = useQuery({
+  const { isLoading: loadingMember, data: memberData } = useQuery({
     queryKey: ["member", id],
     queryFn: async () => {
       const apiData = await get(`/api/members/${id}`);
@@ -478,47 +487,57 @@ export default function MemberForm({ mode }: MemberFormProps) {
       });
       setExistingImageUrls(processedImagePaths);
 
-      if (categoriesData && apiData.category) {
+      return apiData;
+    },
+    enabled: mode === "edit" && !!id,
+  });
+
+  // Handle form reset and state updates after data is loaded
+  useEffect(() => {
+    if (mode === "edit" && memberData && categoriesData) {
+      const { chapter, ...restApiData } = memberData;
+      
+      // Set chapter ID first
+      const chapterId = chapter?.id || memberData.chapterId;
+      if (chapterId) {
+        setSelectedChapterId(chapterId);
+      }
+
+      // Set category ID for subcategory loading
+      if (memberData.category) {
         const categoryObj = categoriesData.find(
-          (cat) => cat.name === apiData.category
+          (cat) => cat.name === memberData.category
         );
         if (categoryObj) {
           setSelectedCategoryId(categoryObj.id);
         }
       }
 
-      const chapterId = chapter?.id || apiData.chapterId;
-      if (chapterId) {
-        setSelectedChapterId(chapterId);
-      }
-
+      // Reset form with all data
       reset({
         ...restApiData,
         chapterId: chapterId,
-        category: apiData.category || "",
-        businessCategory: apiData.businessCategory
-          ? Array.isArray(apiData.businessCategory)
-            ? apiData.businessCategory
-            : typeof apiData.businessCategory === "string" &&
-              apiData.businessCategory.includes(",")
-            ? apiData.businessCategory.split(",").map(Number)
-            : apiData.businessCategory
-            ? [Number(apiData.businessCategory)]
-            : []
-          : [],
-        dateOfBirth: apiData.dateOfBirth ? new Date(apiData.dateOfBirth) : null,
+        category: memberData.category || "",
+        businessCategory: memberData.businessCategory
+          ? Array.isArray(memberData.businessCategory)
+            ? memberData.businessCategory
+            : typeof memberData.businessCategory === "string" &&
+              memberData.businessCategory.includes(",")
+            ? memberData.businessCategory.split(",").map(Number)
+            : memberData.businessCategory
+            ? [Number(memberData.businessCategory)]
+            : undefined
+          : undefined,
+        dateOfBirth: memberData.dateOfBirth ? new Date(memberData.dateOfBirth) : null,
         profilePicture: undefined,
         coverPhoto: undefined,
         logo: undefined,
-        mobile2: apiData.mobile2 || null,
-        organizationEmail: apiData.organizationEmail || "",
-        organizationWebsite: apiData.organizationWebsite || "",
+        mobile2: memberData.mobile2 || null,
+        organizationEmail: memberData.organizationEmail || "",
+        organizationWebsite: memberData.organizationWebsite || "",
       } as FormValues);
-
-      return apiData;
-    },
-    enabled: mode === "edit" && !!id,
-  });
+    }
+  }, [mode, memberData, categoriesData, reset]);
 
   const createMutation = useMutation<any, Error, MemberFormValues>({
     mutationFn: async (data: MemberFormValues) => {
@@ -527,7 +546,10 @@ export default function MemberForm({ mode }: MemberFormProps) {
       Object.keys(data).forEach((key) => {
         const value = data[key as keyof MemberFormValues];
         if (key === "businessCategory" && Array.isArray(value)) {
-          formData.append(key, value.join(","));
+          // Don't append businessCategory if it's an empty array
+          if (value.length > 0) {
+            formData.append(key, value.join(","));
+          }
         } else if (value instanceof File) {
           formData.append(key, value);
         } else if (value !== null && value !== undefined) {
@@ -575,7 +597,10 @@ export default function MemberForm({ mode }: MemberFormProps) {
             // Handle arrays specially
             if (key === "businessCategory") {
               // Backend expects businessCategory as a comma-separated string
-              formData.append(key, value.join(","));
+              // Don't append businessCategory if it's an empty array
+              if (value.length > 0) {
+                formData.append(key, value.join(","));
+              }
             } else {
               // For other arrays, use JSON stringify
               formData.append(key, JSON.stringify(value));
@@ -585,6 +610,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
           }
         }
       }
+      // Use the member ID endpoint for profile updates
       return putupload(`/api/members/${id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -730,14 +756,18 @@ export default function MemberForm({ mode }: MemberFormProps) {
                           <SelectValue placeholder="Select a chapter" />
                         </SelectTrigger>
                         <SelectContent>
-                          {chapters.map((chapter) => (
-                            <SelectItem
-                              key={chapter.id}
-                              value={String(chapter.id)}
-                            >
-                              {chapter.name}
-                            </SelectItem>
-                          ))}
+                          {Array.isArray(chapters) ? (
+                            chapters.map((chapter) => (
+                              <SelectItem
+                                key={chapter.id}
+                                value={String(chapter.id)}
+                              >
+                                {chapter.name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem disabled>No chapters available</SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -816,21 +846,33 @@ export default function MemberForm({ mode }: MemberFormProps) {
                     <FormItem>
                       <FormLabel>Business Category</FormLabel>
                       <Select
-                        value={field.value}
+                        value={field.value || ""}
                         onValueChange={(value) => {
-                          field.onChange(value);
-                          const category = categoriesData?.find(
-                            (cat) => cat.name === value
-                          );
-                          setSelectedCategoryId(category?.id || null);
+                          if (value === "" || value === "clear") {
+                            field.onChange(undefined);
+                            setSelectedCategoryId(null);
+                            // Clear subcategory selection when main category is cleared
+                            form.setValue("businessCategory", undefined);
+                          } else {
+                            field.onChange(value);
+                            const category = categoriesData?.find(
+                              (cat) => cat.name === value
+                            );
+                            setSelectedCategoryId(category?.id || null);
+                            // Clear subcategory selection when main category changes
+                            form.setValue("businessCategory", undefined);
+                          }
                         }}
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select business category" />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="clear">
+                            <span className="text-muted-foreground">Clear selection</span>
+                          </SelectItem>
                           {loadingCategories ? (
-                            <SelectItem value="loading">
+                            <SelectItem value="loading" disabled>
                               Loading categories...
                             </SelectItem>
                           ) : (
@@ -871,7 +913,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
 
                     return (
                       <FormItem>
-                        <FormLabel>Business Subcategories</FormLabel>
+                        <FormLabel>Business Subcategories </FormLabel>
                         <MultipleSelector
                           options={subCategoryOptions}
                           value={selectedOptions}
@@ -895,9 +937,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
                             const selectedIds = selectedOpts.map((opt) =>
                               Number(opt.value)
                             );
-                            field.onChange(selectedIds);
+                            field.onChange(selectedIds.length > 0 ? selectedIds : undefined);
                           }}
-                          disabled={!selectedCategoryId || loadingSubcategories}
+                          // disabled={!selectedCategoryId || loadingSubcategories}
                           hidePlaceholderWhenSelected={false}
                         />
                         <FormMessage />
@@ -1388,11 +1430,13 @@ export default function MemberForm({ mode }: MemberFormProps) {
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-3 gap-6">
-                {[0, 1, 2].map((index) => {
+                {[
+                  { name: "profilePicture", label: "Profile Picture" },
+                  { name: "coverPhoto", label: "Cover Photo" },
+                  { name: "logo", label: "Logo" },
+                ].map((imageField, index) => {
                   const relativeImagePath = existingImageUrls[index];
-                  const fieldName = `profilePicture${
-                    index + 1
-                  }` as keyof FormValues;
+                  const fieldName = imageField.name as keyof FormValues;
 
                   const displayUrl = relativeImagePath
                     ? `${IMAGE_BASE_URL}/${
@@ -1412,11 +1456,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                       }) => (
                         <FormItem>
                           <FormLabel>
-                            {index === 0
-                              ? `Profile Picture `
-                              : index === 1
-                              ? "Cover Image"
-                              : "Logo"}
+                            {imageField.label}
                           </FormLabel>
                           <div className="space-y-2">
                             {mode === "edit" && displayUrl && (

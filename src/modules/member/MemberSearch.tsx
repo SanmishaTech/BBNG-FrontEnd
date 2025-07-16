@@ -63,7 +63,7 @@ const MemberSearch = () => {
         // For cover photo, still use the second picture if available
         // If not, fall back to the best available photo (which might be the same as profilePicture)
         const coverPhoto = member.coverPhoto
-          ? `${import.meta.env.VITE_BACKEND_URL}/uploads/members/${
+          ? `${import.meta.env.VITE_BACKEND_URL}/${
               member.coverPhoto
             }`
           : member.profilePicture || member.logo

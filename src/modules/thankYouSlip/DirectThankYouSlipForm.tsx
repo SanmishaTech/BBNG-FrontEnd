@@ -433,7 +433,7 @@ const DirectThankYouSlipForm = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Narration <span className="text-red-500">*</span>
+                      Narration
                     </FormLabel>
                     <FormControl>
                       <Textarea
@@ -457,7 +457,7 @@ const DirectThankYouSlipForm = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Testimony <span className="text-red-500">*</span>
+                      Testimony
                     </FormLabel>
                     <FormControl>
                       <Textarea

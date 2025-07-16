@@ -22,11 +22,13 @@ const MemberCard = ({ member, onViewProfile }: MemberCardProps) => {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <div className="relative h-32 bg-gradient-to-r from-blue-500 to-purple-500">
+        {console.log("Memembe", member.coverPhoto)}
         {member.coverPhoto && !imageError.cover && (
+          
           <img 
             src={member.coverPhoto} 
-            alt="" 
-            className="w-full h-full object-cover"
+            alt=""
+            className="w-full h-full object-fit"
             onError={() => setImageError(prev => ({ ...prev, cover: true }))}
           />
         )}

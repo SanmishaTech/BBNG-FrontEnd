@@ -48,10 +48,25 @@ const initialData = {
       icon: UsersRound,
       isActive: false,
       items: [
+        { title: "Performance Dashboard", url: "/performance-dashboard" },
         { title: "Chapter Performance", url: "/chapter-performance" },
         // { title: "Members", url: "/members" },
         { title: "Visitors", url: "/chapter-visitors" },
         { title: "Meetings", url: "/chaptermeetings" },
+      ],
+    },
+  ],
+
+  // Navigation items for Development Coordinators and Regional Directors
+  coordinatorNavigation: [
+    {
+      title: "Coordination",
+      url: "#",
+      icon: PieChart,
+      isActive: false,
+      items: [
+        { title: "Performance Dashboard", url: "/performance-dashboard" },
+        { title: "Chapter Performance", url: "/chapter-performance" },
       ],
     },
   ],
@@ -129,8 +144,6 @@ const initialData = {
             { title: "Trainings", url: "/trainings" },
             { title: "Site Settings", url: "/site" },
             { title: "Messages", url: "/messages" },
-            
-
           ],
         },
       ],
@@ -231,15 +244,18 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     projects: [] as typeof initialData.roles.super_admin.projects,
     navMain: [] as typeof initialData.roles.admin.navMain,
     obNav: [] as typeof initialData.obNavigation,
+    coordinatorNav: [] as typeof initialData.coordinatorNavigation,
     isOB: false,
+    isCoordinator: false,
   });
 
   React.useEffect(() => {
     const storedUser = localStorage.getItem("user");
     const storedRoles = localStorage.getItem("roles");
     let isUserOB = false;
+    let isUserCoordinator = false;
 
-    // Check if user is an OB from the roles data
+    // Check if user is an OB or Coordinator from the roles data
     if (
       storedRoles &&
       storedRoles !== "undefined" &&
@@ -247,13 +263,39 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     ) {
       try {
         const parsedRoles = JSON.parse(storedRoles);
-        // Check if the user has an Office Bearer (OB) role
+        // Check if the user has roles
         if (Array.isArray(parsedRoles)) {
           const obRoles = ["chapterHead", "secretary", "treasurer"];
+          const coordinatorRoles = [
+            "guardian",
+            "districtCoordinator",
+            "regionalCoordinator",
+            "developmentCoordinator",
+          ];
+          const zoneRoles = ["Regional Director", "Joint Secretary"];
+
+          // Check for Office Bearer roles (chapter-level)
           isUserOB = parsedRoles.some(
-            (roleObj: { roleType: string; chapterId: number }) =>
+            (roleObj: { roleType: string; chapterId?: number }) =>
               obRoles.includes(roleObj.roleType) && roleObj.chapterId
           );
+
+          // Check for Coordinator roles (chapter-level)
+          isUserCoordinator = parsedRoles.some(
+            (roleObj: { roleType: string; chapterId?: number }) =>
+              coordinatorRoles.includes(roleObj.roleType) && roleObj.chapterId
+          );
+
+          // Check for Zone-level roles (Regional Director/Joint Secretary)
+          const hasZoneRole = parsedRoles.some(
+            (roleObj: { roleType: string; zoneId?: number }) =>
+              zoneRoles.includes(roleObj.roleType) && roleObj.zoneId
+          );
+
+          // If user has zone role, they should see coordinator menu (unless they're also OB)
+          if (hasZoneRole) {
+            isUserCoordinator = true;
+          }
         }
       } catch (error) {
         console.error("Failed to parse roles from localStorage", error);
@@ -284,7 +326,11 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           navMain: roleData?.navMain || [],
           user: parsedUser,
           obNav: isUserOB ? initialData.obNavigation : [],
+          coordinatorNav: isUserCoordinator
+            ? initialData.coordinatorNavigation
+            : [],
           isOB: isUserOB,
+          isCoordinator: isUserCoordinator,
         }));
       } catch (error) {
         console.error("Failed to parse user from localStorage", error);
@@ -294,7 +340,9 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           projects: initialData.roles.super_admin.projects,
           navMain: initialData.roles.super_admin.navMain,
           obNav: [],
+          coordinatorNav: [],
           isOB: false,
+          isCoordinator: false,
         }));
       }
     } else {
@@ -304,7 +352,9 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         projects: initialData.roles.super_admin.projects,
         navMain: initialData.roles.super_admin.navMain,
         obNav: [],
+        coordinatorNav: [],
         isOB: false,
+        isCoordinator: false,
       }));
     }
   }, []);
@@ -320,9 +370,7 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
               <div className="flex items-center gap-2  justify-between">
-                <a 
-                href="/dashboard"
-                className="flex items-center gap-2">
+                <a href="/dashboard" className="flex items-center gap-2">
                   <ArrowUpCircleIcon className="h-5 w-5" />
                   <span className="text-base font-semibold">{appName}</span>
                 </a>
@@ -351,6 +399,14 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {data.isOB && (
           <div className="mb-4">
             <NavMain items={data.obNav || []} groupLabel="Office Bearer Menu" />
+          </div>
+        )}
+        {data.isCoordinator && !data.isOB && (
+          <div className="mb-4">
+            <NavMain
+              items={data.coordinatorNav || []}
+              groupLabel="Coordination Menu"
+            />
           </div>
         )}
         <NavMain items={data.projects || []} groupLabel="Services" />

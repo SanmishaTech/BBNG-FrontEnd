@@ -363,7 +363,7 @@ export default function ChapterPerformanceDashboard() {
           </Card>
           
           {/* Transactions table for the selected chapter */}
-          {selectedChapter && (
+          {/* {selectedChapter && (
             <Card className="shadow-md hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle>Recent Transactions</CardTitle>
@@ -407,7 +407,7 @@ export default function ChapterPerformanceDashboard() {
               </CardContent>
             </Card>
           )}
-          
+           */}
           {/* Additional chapter information can be added here if needed */}
         </div>
       </main>
