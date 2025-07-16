@@ -73,6 +73,8 @@ const PerformanceDashboard: React.FC = () => {
   const getRoleDisplayName = (role: string) => {
     const roleMap: Record<string, string> = {
       regional_director: "Regional Director",
+      joint_secretary: "Joint Secretary",
+      guardian: "Guardian",
       development_coordinator: "Development Coordinator",
       office_bearer: "Office Bearer",
       member: "Member",
@@ -175,15 +177,6 @@ const PerformanceDashboard: React.FC = () => {
               Performance Dashboard
             </h1>
             <div className="flex items-center gap-3 mt-2">
-              <Badge variant="secondary" className="px-3 py-1">
-                {currentScope?.accessType === "zone"
-                  ? "Regional Director"
-                  : currentScope?.accessType === "chapter_guardian"
-                  ? "Development Coordinator"
-                  : currentScope?.accessType === "office_bearer"
-                  ? "Office Bearer"
-                  : getRoleDisplayName(roleInfo.inferredRole)}
-              </Badge>
               {currentScope?.accessType === "zone" && (
                 <Badge variant="outline" className="px-3 py-1">
                   Zone: {currentScope.zoneName}
@@ -309,6 +302,18 @@ const PerformanceDashboard: React.FC = () => {
                             Guardian
                           </Badge>
                         )}
+                        {scope.accessType === "development_coordinator" && (
+                          <Badge
+                            variant="outline"
+                            className={`text-xs px-1 py-0 ${
+                              currentChapterIndex === index
+                                ? "border-blue-300 text-white"
+                                : ""
+                            }`}
+                          >
+                            DC
+                          </Badge>
+                        )}
                         {scope.accessType === "office_bearer" && (
                           <Badge
                             variant="outline"
@@ -387,15 +392,6 @@ const PerformanceDashboard: React.FC = () => {
               {currentChapter.chapterName}
             </h2>
             <div className="flex items-center justify-center gap-2 mt-2">
-              <Badge variant="outline" className="px-3 py-1">
-                {currentScope?.accessType === "zone"
-                  ? "Zone Access"
-                  : currentScope?.accessType === "chapter_guardian"
-                  ? "Development Coordinator"
-                  : currentScope?.accessType === "office_bearer"
-                  ? "Office Bearer"
-                  : "Member"}
-              </Badge>
               {currentScope?.zoneName && (
                 <Badge variant="secondary" className="px-3 py-1">
                   {currentScope.zoneName}
@@ -413,7 +409,7 @@ const PerformanceDashboard: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-green-700">
-                      Business Generated
+                      Business Given
                     </p>
                     <p className="text-2xl font-bold text-green-900">
                       ₹
@@ -517,7 +513,7 @@ const PerformanceDashboard: React.FC = () => {
                             ₹{member.businessGenerated.amount.toLocaleString()}
                           </p>
                           <p className="text-xs text-slate-500">
-                            Generated ({member.businessGenerated.count})
+                            Given ({member.businessGenerated.count})
                           </p>
                         </div>
                         <div>
