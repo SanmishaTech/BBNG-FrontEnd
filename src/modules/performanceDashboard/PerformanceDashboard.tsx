@@ -176,7 +176,13 @@ const PerformanceDashboard: React.FC = () => {
             </h1>
             <div className="flex items-center gap-3 mt-2">
               <Badge variant="secondary" className="px-3 py-1">
-                {getRoleDisplayName(roleInfo.inferredRole)}
+                {currentScope?.accessType === "zone"
+                  ? "Regional Director"
+                  : currentScope?.accessType === "chapter_guardian"
+                  ? "Development Coordinator"
+                  : currentScope?.accessType === "office_bearer"
+                  ? "Office Bearer"
+                  : getRoleDisplayName(roleInfo.inferredRole)}
               </Badge>
               {currentScope?.accessType === "zone" && (
                 <Badge variant="outline" className="px-3 py-1">
@@ -274,7 +280,11 @@ const PerformanceDashboard: React.FC = () => {
                     >
                       <div className="flex items-center gap-2">
                         <Building2 className="h-4 w-4" />
-                        <span>{scope.chapterName}</span>
+                        <span>
+                          {scope.accessType === "zone"
+                            ? scope.zoneName
+                            : scope.chapterName}
+                        </span>
                         {scope.accessType === "zone" && (
                           <Badge
                             variant="secondary"
@@ -374,13 +384,7 @@ const PerformanceDashboard: React.FC = () => {
         {showPerformanceData && (
           <div className="text-center">
             <h2 className="text-2xl font-bold text-slate-900">
-              {currentScope?.accessType === "zone" && selectedChapterInZone
-                ? selectedZoneChapters.find(
-                    (ch) => ch.chapterId === selectedChapterInZone
-                  )?.chapterName || currentChapter.chapterName
-                : currentScope?.accessType === "zone"
-                ? currentScope.zoneName
-                : currentChapter.chapterName}
+              {currentChapter.chapterName}
             </h2>
             <div className="flex items-center justify-center gap-2 mt-2">
               <Badge variant="outline" className="px-3 py-1">
