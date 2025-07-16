@@ -49,8 +49,6 @@ const initialData = {
       isActive: false,
       items: [
         { title: "Performance Dashboard", url: "/performance-dashboard" },
-        { title: "Chapter Performance", url: "/chapter-performance" },
-        // { title: "Members", url: "/members" },
         { title: "Visitors", url: "/chapter-visitors" },
         { title: "Meetings", url: "/chaptermeetings" },
       ],
@@ -66,8 +64,7 @@ const initialData = {
       isActive: false,
       items: [
         { title: "Performance Dashboard", url: "/performance-dashboard" },
-        { title: "Chapter Performance", url: "/chapter-performance" },
-      ],
+       ],
     },
   ],
   roles: {
@@ -140,7 +137,6 @@ const initialData = {
             { title: "Chapters", url: "/chapters" },
             { title: "Members", url: "/members" },
             { title: "Power Teams", url: "/powerteams" },
-            { title: "Meetings", url: "/chaptermeetings" },
             { title: "Trainings", url: "/trainings" },
             { title: "Site Settings", url: "/site" },
             { title: "Messages", url: "/messages" },

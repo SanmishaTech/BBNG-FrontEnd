@@ -124,6 +124,7 @@ const PerformanceDashboard: React.FC = () => {
       "One-to-One Meetings": member.oneToOneMeetings,
       "References Given": member.referencesGiven,
       "References Received": member.referencesReceived,
+      "Visitors Invited": member.visitorsInvited,
     }));
 
     const headers = Object.keys(csvData[0] || {});
@@ -238,9 +239,19 @@ const PerformanceDashboard: React.FC = () => {
                     className="border-slate-300"
                   />
                 </div>
-                <div className="flex items-end">
-                  <Button onClick={() => refetch()} className="w-full">
+                <div className="flex items-end gap-2">
+                  <Button onClick={() => refetch()} className="flex-1">
                     Apply Filters
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setDateRange({ startDate: "", endDate: "" });
+                      refetch();
+                    }}
+                    className="flex-1"
+                  >
+                    Clear Filters
                   </Button>
                 </div>
               </div>
@@ -403,7 +414,7 @@ const PerformanceDashboard: React.FC = () => {
 
         {/* Chapter Overview */}
         {showPerformanceData && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <Card className="border-slate-200 bg-gradient-to-br from-green-50 to-green-100">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -470,6 +481,22 @@ const PerformanceDashboard: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
+
+            <Card className="border-slate-200 bg-gradient-to-br from-teal-50 to-teal-100">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-teal-700">
+                      Visitors Invited
+                    </p>
+                    <p className="text-2xl font-bold text-teal-900">
+                      {currentChapter.summary.totalVisitorsInvited}
+                    </p>
+                  </div>
+                  <Users className="h-8 w-8 text-teal-600" />
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 
@@ -507,7 +534,7 @@ const PerformanceDashboard: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 text-center">
+                      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 text-center">
                         <div>
                           <p className="text-lg font-bold text-green-600">
                             ₹{member.businessGenerated.amount.toLocaleString()}
@@ -543,6 +570,12 @@ const PerformanceDashboard: React.FC = () => {
                           <p className="text-xs text-slate-500">
                             Refs Received
                           </p>
+                        </div>
+                        <div>
+                          <p className="text-lg font-bold text-teal-600">
+                            {member.visitorsInvited}
+                          </p>
+                          <p className="text-xs text-slate-500">Visitors</p>
                         </div>
                       </div>
                     </div>

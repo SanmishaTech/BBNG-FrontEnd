@@ -40,6 +40,7 @@ export interface MemberPerformance {
   oneToOneMeetings: number;
   referencesGiven: number;
   referencesReceived: number;
+  visitorsInvited: number;
 }
 
 export interface ChapterPerformance {
@@ -53,6 +54,7 @@ export interface ChapterPerformance {
     totalOneToOnes: number;
     totalReferencesGiven: number;
     totalReferencesReceived: number;
+    totalVisitorsInvited: number;
   };
 }
 
@@ -67,6 +69,7 @@ export interface PerformanceData {
     totalOneToOnes: number;
     totalReferencesGiven: number;
     totalReferencesReceived: number;
+    totalVisitorsInvited: number;
   };
   dateRange: {
     startDate?: string;

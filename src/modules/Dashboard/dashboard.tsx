@@ -13,8 +13,8 @@ const hideScrollbarStyle = `
 
 // Add inline style for hiding scrollbars
 const scrollbarHideStyle = {
-  scrollbarWidth: "none" as "none",  /* Firefox */
-  msOverflowStyle: "none" as "none",  /* IE and Edge */
+  scrollbarWidth: "none" as "none" /* Firefox */,
+  msOverflowStyle: "none" as "none" /* IE and Edge */,
 };
 
 // Message interface for dashboard
@@ -44,8 +44,10 @@ interface ChapterMeeting {
 // Training interface for dashboard
 interface Training {
   id: number;
-  trainingDate: string;
-  trainingTopic: string;
+  date: string;
+  time: string;
+  title: string;
+  venue: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -93,10 +95,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ShimmerButton } from "@/components/ui/shimmer-button"
+import { ShimmerButton } from "@/components/ui/shimmer-button";
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
- import {
+import {
   Table,
   TableBody,
   TableCell,
@@ -161,8 +163,10 @@ export default function ResponsiveLabDashboard() {
   const [referencesCount, setReferencesCount] = useState(0);
   const [totalVisitorsCount, setTotalVisitorsCount] = useState(0);
   const [oneToOneCount, setOneToOneCount] = useState(0);
-  const [memberGivenReferencesCount, setMemberGivenReferencesCount] = useState(0);
-  const [memberReceivedReferencesCount, setMemberReceivedReferencesCount] = useState(0);
+  const [memberGivenReferencesCount, setMemberGivenReferencesCount] =
+    useState(0);
+  const [memberReceivedReferencesCount, setMemberReceivedReferencesCount] =
+    useState(0);
   const [memberBusinessGiven, setMemberBusinessGiven] = useState(0);
   const [memberBusinessReceived, setMemberBusinessReceived] = useState(0);
   const [chapterBusinessGenerated, setChapterBusinessGenerated] = useState(0);
@@ -176,7 +180,9 @@ export default function ResponsiveLabDashboard() {
   const [meetings, setMeetings] = useState<ChapterMeeting[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [trainings, setTrainings] = useState<Training[]>([]);
-  const [upcomingBirthdays, setUpcomingBirthdays] = useState<UpcomingBirthday[]>([]);
+  const [upcomingBirthdays, setUpcomingBirthdays] = useState<
+    UpcomingBirthday[]
+  >([]);
 
   const [openLeadsCount, setOpenLeadsCount] = useState(0);
   const [followUpLeadsCount, setFollowUpLeadsCount] = useState(0);
@@ -185,14 +191,14 @@ export default function ResponsiveLabDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-                const data = await get('/statistics/business-generated');
+        const data = await get("/statistics/business-generated");
         setBusinessTotal(data.total || 0);
       } catch (error) {
-        console.error('Error fetching business data:', error);
+        console.error("Error fetching business data:", error);
         setBusinessTotal(0);
       }
     };
-    
+
     fetchData();
   }, []);
 
@@ -200,14 +206,14 @@ export default function ResponsiveLabDashboard() {
   useEffect(() => {
     const fetchReferencesCount = async () => {
       try {
-                const data = await get('/statistics/references-count');
+        const data = await get("/statistics/references-count");
         setReferencesCount(data.total || 0);
       } catch (error) {
-        console.error('Error fetching references count:', error);
+        console.error("Error fetching references count:", error);
         setReferencesCount(0);
       }
     };
-    
+
     fetchReferencesCount();
   }, []);
 
@@ -215,14 +221,14 @@ export default function ResponsiveLabDashboard() {
   useEffect(() => {
     const fetchTotalVisitorsCount = async () => {
       try {
-                const data = await get('/statistics/total-visitors');
+        const data = await get("/statistics/total-visitors");
         setTotalVisitorsCount(data.total || 0);
       } catch (error) {
-        console.error('Error fetching total visitors count:', error);
+        console.error("Error fetching total visitors count:", error);
         setTotalVisitorsCount(0);
-      } 
+      }
     };
-    
+
     fetchTotalVisitorsCount();
   }, []);
 
@@ -230,14 +236,14 @@ export default function ResponsiveLabDashboard() {
   useEffect(() => {
     const fetchOneToOneCount = async () => {
       try {
-                const data = await get('/statistics/one-to-one');
+        const data = await get("/statistics/one-to-one");
         setOneToOneCount(data.total || 0);
       } catch (error) {
-        console.error('Error fetching one-to-one count:', error);
+        console.error("Error fetching one-to-one count:", error);
         setOneToOneCount(0);
       }
     };
-    
+
     fetchOneToOneCount();
   }, []);
 
@@ -246,15 +252,17 @@ export default function ResponsiveLabDashboard() {
     const fetchMemberGivenReferences = async () => {
       if (User && User.member && User.member.id) {
         try {
-                    const data = await get(`/statistics/member-given-references/${User.member.id}`);
+          const data = await get(
+            `/statistics/member-given-references/${User.member.id}`
+          );
           setMemberGivenReferencesCount(data.total || 0);
         } catch (error) {
-          console.error('Error fetching member given references count:', error);
+          console.error("Error fetching member given references count:", error);
           setMemberGivenReferencesCount(0);
         }
       }
     };
-    
+
     fetchMemberGivenReferences();
   }, [User]);
 
@@ -263,15 +271,20 @@ export default function ResponsiveLabDashboard() {
     const fetchMemberReceivedReferences = async () => {
       if (User && User.member && User.member.id) {
         try {
-                    const data = await get(`/statistics/member-received-references/${User.member.id}`);
+          const data = await get(
+            `/statistics/member-received-references/${User.member.id}`
+          );
           setMemberReceivedReferencesCount(data.total || 0);
         } catch (error) {
-          console.error('Error fetching member received references count:', error);
+          console.error(
+            "Error fetching member received references count:",
+            error
+          );
           setMemberReceivedReferencesCount(0);
         }
       }
     };
-    
+
     fetchMemberReceivedReferences();
   }, [User]);
 
@@ -280,20 +293,22 @@ export default function ResponsiveLabDashboard() {
     const fetchMemberActivitySummary = async () => {
       if (User && User.member && User.member.id) {
         try {
-          const data = await get(`/api/members/${User.member.id}/activity-summary`);
+          const data = await get(
+            `/api/members/${User.member.id}/activity-summary`
+          );
           setMemberBusinessGiven(data.businessGiven || 0);
           setMemberBusinessReceived(data.businessReceived || 0);
           // Update references from activity summary as well for consistency
           setMemberGivenReferencesCount(data.referencesGiven || 0);
           setMemberReceivedReferencesCount(data.referencesReceived || 0);
         } catch (error) {
-          console.error('Error fetching member activity summary:', error);
+          console.error("Error fetching member activity summary:", error);
           setMemberBusinessGiven(0);
           setMemberBusinessReceived(0);
         }
       }
     };
-    
+
     fetchMemberActivitySummary();
   }, [User]);
 
@@ -302,15 +317,20 @@ export default function ResponsiveLabDashboard() {
     const fetchChapterBusinessGenerated = async () => {
       if (User && User.member && User.member.chapterId) {
         try {
-                    const data = await get(`/statistics/chapter-business-generated/${User.member.chapterId}`);
+          const data = await get(
+            `/statistics/chapter-business-generated/${User.member.chapterId}`
+          );
           setChapterBusinessGenerated(data.total || 0);
         } catch (error) {
-          console.error('Error fetching chapter business generated data:', error);
+          console.error(
+            "Error fetching chapter business generated data:",
+            error
+          );
           setChapterBusinessGenerated(0);
         }
       }
     };
-    
+
     fetchChapterBusinessGenerated();
   }, [User]);
 
@@ -319,15 +339,17 @@ export default function ResponsiveLabDashboard() {
     const fetchChapterReferencesCount = async () => {
       if (User && User.member && User.member.chapterId) {
         try {
-                    const data = await get(`/statistics/chapter-references-count/${User.member.chapterId}`);
+          const data = await get(
+            `/statistics/chapter-references-count/${User.member.chapterId}`
+          );
           setChapterReferencesCount(data.total || 0);
         } catch (error) {
-          console.error('Error fetching chapter references count:', error);
+          console.error("Error fetching chapter references count:", error);
           setChapterReferencesCount(0);
         }
       }
     };
-    
+
     fetchChapterReferencesCount();
   }, [User]);
 
@@ -336,15 +358,17 @@ export default function ResponsiveLabDashboard() {
     const fetchChapterVisitorsCount = async () => {
       if (User && User.member && User.member.chapterId) {
         try {
-                    const data = await get(`/statistics/chapter-visitors-count/${User.member.chapterId}`);
+          const data = await get(
+            `/statistics/chapter-visitors-count/${User.member.chapterId}`
+          );
           setChapterVisitorsCount(data.total || 0);
         } catch (error) {
-          console.error('Error fetching chapter visitors count:', error);
+          console.error("Error fetching chapter visitors count:", error);
           setChapterVisitorsCount(0);
         }
       }
     };
-    
+
     fetchChapterVisitorsCount();
   }, [User]);
 
@@ -353,17 +377,19 @@ export default function ResponsiveLabDashboard() {
     const fetchChapterOneToOneCount = async () => {
       try {
         if (User?.member?.chapterId) {
-                    const data = await get(`/statistics/chapter-one-to-one-count/${User.member.chapterId}`);
+          const data = await get(
+            `/statistics/chapter-one-to-one-count/${User.member.chapterId}`
+          );
           setChapterOneToOneCount(data.total || 0);
         } else {
           setChapterOneToOneCount(0);
         }
       } catch (error) {
-        console.error('Error fetching chapter one-to-one count:', error);
+        console.error("Error fetching chapter one-to-one count:", error);
         setChapterOneToOneCount(0);
       }
     };
-    
+
     fetchChapterOneToOneCount();
   }, [User?.member?.chapterId]);
 
@@ -371,21 +397,21 @@ export default function ResponsiveLabDashboard() {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        let endpoint = '/api/statistics/recent-messages';
-        
+        let endpoint = "/api/statistics/recent-messages";
+
         // If user has a member ID, fetch both global and chapter-specific messages
         if (User?.member?.id) {
           endpoint = `/api/statistics/member-messages/${User.member.id}`;
         }
-        
-                const data = await get(endpoint);
+
+        const data = await get(endpoint);
         setMessages(data.messages || []);
       } catch (error) {
-        console.error('Error fetching messages:', error);
+        console.error("Error fetching messages:", error);
         setMessages([]);
       }
     };
-    
+
     fetchMessages();
   }, [User?.member?.id]);
 
@@ -393,8 +419,8 @@ export default function ResponsiveLabDashboard() {
   useEffect(() => {
     const fetchChapterMeetings = async () => {
       try {
-        let endpoint = '/api/statistics/chapter-meetings';
-        
+        let endpoint = "/api/statistics/chapter-meetings";
+
         // If user has a member ID, fetch meetings for member's chapter
         if (User?.member?.id) {
           endpoint = `/api/statistics/member-chapter-meetings/${User.member.id}`;
@@ -406,15 +432,15 @@ export default function ResponsiveLabDashboard() {
           setMeetings([]);
           return;
         }
-        
-                const data = await get(endpoint);
+
+        const data = await get(endpoint);
         setMeetings(data.meetings || []);
       } catch (error) {
-        console.error('Error fetching chapter meetings:', error);
+        console.error("Error fetching chapter meetings:", error);
         setMeetings([]);
       }
     };
-    
+
     fetchChapterMeetings();
   }, [User?.member?.id, User?.member?.chapterId]);
 
@@ -422,14 +448,14 @@ export default function ResponsiveLabDashboard() {
   useEffect(() => {
     const fetchTrainings = async () => {
       try {
-                const data = await get('/statistics/trainings');
+        const data = await get("/statistics/trainings");
         setTrainings(data.trainings || []);
       } catch (error) {
-        console.error('Error fetching trainings:', error);
+        console.error("Error fetching trainings:", error);
         setTrainings([]);
       }
     };
-    
+
     fetchTrainings();
   }, []);
 
@@ -437,14 +463,14 @@ export default function ResponsiveLabDashboard() {
   useEffect(() => {
     const fetchUpcomingBirthdays = async () => {
       try {
-                const data = await get('/statistics/upcoming-birthdays');
+        const data = await get("/statistics/upcoming-birthdays");
         setUpcomingBirthdays(data.birthdays || []);
       } catch (error) {
-        console.error('Error fetching upcoming birthdays:', error);
+        console.error("Error fetching upcoming birthdays:", error);
         setUpcomingBirthdays([]);
       }
     };
-    
+
     fetchUpcomingBirthdays();
   }, []);
 
@@ -454,46 +480,50 @@ export default function ResponsiveLabDashboard() {
       {/* <Sidebar className="hidden md:block w-64 shadow-md" /> */}
 
       {/* Main Content */}
-      <main 
+      <main
         className="flex-1 overflow-y-auto p-4 md:p-8"
         style={scrollbarHideStyle}
       >
         <div className="flex justify-between items-center mb-6">
-          <img src={bannerImage} alt="Welcome Banner 2024" className="w-full rounded-lg shadow-md" />
-         
+          <img
+            src={bannerImage}
+            alt="Welcome Banner 2024"
+            className="w-full rounded-lg shadow-md"
+          />
         </div>
 
         {User?.role !== "admin" && (
-        <div className="flex justify-center gap-3 items-center mb-6">
- 
-          <ShimmerButton className="shadow-2xl" onClick={() => navigate('/references/create')}> 
-         <span className="whitespace-pre-wrap text-center text-sm font-medium leading-none tracking-tight text-white dark:from-white dark:to-slate-900/10 lg:text-lg">
-        Give Reference
-        </span>
-      </ShimmerButton>
-      <ShimmerButton className="shadow-2xl" onClick={() => navigate('/dashboard/done-deal')}>
-        <span className="whitespace-pre-wrap text-center text-sm font-medium leading-none tracking-tight text-white dark:from-white dark:to-slate-900/10 lg:text-lg">
-        Mark Done Deal 
-        </span>
-      </ShimmerButton>
-      <ShimmerButton 
-        className="shadow-2xl" 
-        onClick={() => navigate('/one-to-ones')}
-      >
-        <span className="whitespace-pre-wrap text-center text-sm font-medium leading-none tracking-tight text-white dark:from-white dark:to-slate-900/10 lg:text-lg">
-        One To One Request
-        </span>
-      </ShimmerButton>
+          <div className="flex justify-center gap-3 items-center mb-6">
+            <ShimmerButton
+              className="shadow-2xl"
+              onClick={() => navigate("/references/create")}
+            >
+              <span className="whitespace-pre-wrap text-center text-sm font-medium leading-none tracking-tight text-white dark:from-white dark:to-slate-900/10 lg:text-lg">
+                Give Reference
+              </span>
+            </ShimmerButton>
+            <ShimmerButton
+              className="shadow-2xl"
+              onClick={() => navigate("/dashboard/done-deal")}
+            >
+              <span className="whitespace-pre-wrap text-center text-sm font-medium leading-none tracking-tight text-white dark:from-white dark:to-slate-900/10 lg:text-lg">
+                Mark Done Deal
+              </span>
+            </ShimmerButton>
+            <ShimmerButton
+              className="shadow-2xl"
+              onClick={() => navigate("/one-to-ones")}
+            >
+              <span className="whitespace-pre-wrap text-center text-sm font-medium leading-none tracking-tight text-white dark:from-white dark:to-slate-900/10 lg:text-lg">
+                One To One Request
+              </span>
+            </ShimmerButton>
           </div>
         )}
 
-   
-          <h1 className="text-xl font-bold text-start bg-gradient-to-r from-blue-600 to-white-400 text-white px-3 py-1   rounded mb-1 mt-2">
+        <h1 className="text-xl font-bold text-start bg-gradient-to-r from-blue-600 to-white-400 text-white px-3 py-1   rounded mb-1 mt-2">
           BBNG
-          </h1>
-
- 
-
+        </h1>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
@@ -507,22 +537,22 @@ export default function ResponsiveLabDashboard() {
               <div className="text-2xl font-bold">{referencesCount}</div>
             </CardContent>
           </Card>
-        <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">
-          BBNG Business Generated
-        </CardTitle>
-        <Users className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">₹{businessTotal.toLocaleString()}</div>
-      </CardContent>
-    </Card>
           <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                One to One
+                BBNG Business Generated
               </CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                ₹{businessTotal.toLocaleString()}
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">One to One</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -533,7 +563,7 @@ export default function ResponsiveLabDashboard() {
           <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-              Total Visitors
+                Total Visitors
               </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -544,135 +574,151 @@ export default function ResponsiveLabDashboard() {
         </div>
         {User?.role !== "admin" && (
           <>
+            <h1 className="text-xl font-bold text-start bg-gradient-to-r from-blue-600 to-white-400 text-white px-3 py-1   rounded mb-1 mt-2">
+              CHAPTER
+            </h1>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    {User?.member?.chapter?.name || ""} References Shared
+                  </CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {chapterReferencesCount}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    {User?.member?.chapter?.name || ""} Business Generated
+                  </CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    ₹{chapterBusinessGenerated.toLocaleString()}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    {User?.member?.chapter?.name || ""} One 2 One
+                  </CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {chapterOneToOneCount}
+                  </div>
+                </CardContent>
+              </Card>
 
-        <h1 className="text-xl font-bold text-start bg-gradient-to-r from-blue-600 to-white-400 text-white px-3 py-1   rounded mb-1 mt-2">
-    CHAPTER
-  </h1>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-              {User?.member?.chapter?.name || ''} References Shared
+              <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    {User?.member?.chapter?.name || ""} Visitors
+                  </CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {chapterVisitorsCount}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
-
-              </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{chapterReferencesCount}</div>
-            </CardContent>
-          </Card>
-        <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">
-{User?.member?.chapter?.name || ''} Business Generated
-        </CardTitle>
-        <Users className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">₹{chapterBusinessGenerated.toLocaleString()}</div>
-      </CardContent>
-    </Card>
-          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-              {User?.member?.chapter?.name || ''} One 2 One
-
-              </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{chapterOneToOneCount}</div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-              {User?.member?.chapter?.name || ''} Visitors
-
-              </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{chapterVisitorsCount}</div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        
-
-
-        <h1 className="text-xl font-bold text-start bg-gradient-to-r from-blue-600 to-white-400 text-white px-3 py-1   rounded mb-1 mt-2">
-           SELF
-         </h1>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-              Business Received
-
-              </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">₹{memberBusinessReceived.toLocaleString()}</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-              Business Given
-
-              </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">₹{memberBusinessGiven.toLocaleString()}</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-              References Recevied
-
-              </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{memberReceivedReferencesCount}</div>
-            </CardContent>
-          </Card>
-        <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">
-Reference Given        </CardTitle>
-        <Users className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{memberGivenReferencesCount}</div>
-      </CardContent>
-    </Card>
-
-        </div>
-      </>
-      )}
-
-
+            <h1 className="text-xl font-bold text-start bg-gradient-to-r from-blue-600 to-white-400 text-white px-3 py-1   rounded mb-1 mt-2">
+              SELF
+            </h1>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Business Received
+                  </CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    ₹{memberBusinessReceived.toLocaleString()}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Business Given
+                  </CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    ₹{memberBusinessGiven.toLocaleString()}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    References Recevied
+                  </CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {memberReceivedReferencesCount}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform h-full">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Reference Given{" "}
+                  </CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {memberGivenReferencesCount}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 mt-4 ">
           <Card className="col-span-full lg:col-span-4 overflow-x-auto bg-accent/40 shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 transition-transform">
             <CardHeader>
               <CardTitle>Messages</CardTitle>
             </CardHeader>
-            <CardContent className={`${messages.length > 3 ? 'max-h-[300px] overflow-y-auto' : 'overflow-x-auto'} space-y-4`}>
+            <CardContent
+              className={`${
+                messages.length > 3
+                  ? "max-h-[300px] overflow-y-auto"
+                  : "overflow-x-auto"
+              } space-y-4`}
+            >
               {messages.length > 0 ? (
                 messages.map((message) => (
-                  <div key={message.id} className="p-4 rounded-lg border bg-card">
+                  <div
+                    key={message.id}
+                    className="p-4 rounded-lg border bg-card"
+                  >
                     <div className="flex items-start justify-between">
                       <div>
-                        <h4 className="text-sm font-semibold">{message.heading}</h4>
-                        <p className="text-xs text-muted-foreground">{message.powerteam}</p>
+                        <h4 className="text-sm font-semibold">
+                          {message.heading}
+                        </h4>
+                        <p className="text-xs text-muted-foreground">
+                          {message.powerteam}
+                        </p>
                       </div>
                       <span className="text-xs text-muted-foreground">
                         {new Date(message.createdAt).toLocaleDateString()}
@@ -681,7 +727,11 @@ Reference Given        </CardTitle>
                     <p className="mt-2 text-sm">{message.message}</p>
                     {message.attachment && (
                       <p className="mt-2 text-xs text-blue-500">
-                        <a href={message.attachment} target="_blank" rel="noopener noreferrer">
+                        <a
+                          href={message.attachment}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
                           View Attachment
                         </a>
                       </p>
@@ -700,14 +750,27 @@ Reference Given        </CardTitle>
               <CardTitle>My Meetings</CardTitle>
               {/* <CardDescription>Chapter Meetings</CardDescription> */}
             </CardHeader>
-            <CardContent className={`${meetings.length > 3 ? 'max-h-[300px] overflow-y-auto' : 'overflow-x-auto'} space-y-4`}>
+            <CardContent
+              className={`${
+                meetings.length > 3
+                  ? "max-h-[300px] overflow-y-auto"
+                  : "overflow-x-auto"
+              } space-y-4`}
+            >
               {meetings.length > 0 ? (
                 meetings.map((meeting) => (
-                  <div key={meeting.id} className="p-4 rounded-lg border bg-card">
+                  <div
+                    key={meeting.id}
+                    className="p-4 rounded-lg border bg-card"
+                  >
                     <div className="flex items-start justify-between">
                       <div>
-                        <h4 className="text-sm font-semibold">{meeting.meetingTitle}</h4>
-                        <p className="text-xs text-muted-foreground">{meeting.meetingVenue}</p>
+                        <h4 className="text-sm font-semibold">
+                          {meeting.meetingTitle}
+                        </h4>
+                        <p className="text-xs text-muted-foreground">
+                          {meeting.meetingVenue}
+                        </p>
                       </div>
                       <div className="text-right">
                         <span className="text-xs text-muted-foreground">
@@ -732,21 +795,34 @@ Reference Given        </CardTitle>
             <CardHeader>
               <CardTitle>Training</CardTitle>
             </CardHeader>
-            <CardContent 
-              className={`${trainings.length > 3 ? 'max-h-[300px] overflow-y-auto' : 'overflow-x-auto'} space-y-4`}
+            <CardContent
+              className={`${
+                trainings.length > 3
+                  ? "max-h-[300px] overflow-y-auto"
+                  : "overflow-x-auto"
+              } space-y-4`}
               style={trainings.length > 3 ? scrollbarHideStyle : {}}
             >
               {trainings.length > 0 ? (
                 trainings.map((training) => (
-                  <div key={training.id} className="p-4 rounded-lg border bg-card">
+                  <div
+                    key={training.id}
+                    className="p-4 rounded-lg border bg-card"
+                  >
                     <div className="flex items-start justify-between">
                       <div>
-                        <h4 className="text-sm font-semibold">{training.trainingTopic}</h4>
+                        <h4 className="text-sm font-semibold">
+                          {training.title}
+                        </h4>
+                        <p className="text-xs text-muted-foreground">
+                          {training.venue}
+                        </p>
                       </div>
                       <div className="text-right">
                         <span className="text-xs text-muted-foreground">
-                          {new Date(training.trainingDate).toLocaleDateString()}
+                          {new Date(training.date).toLocaleDateString()}
                         </span>
+                        <p className="text-xs">{training.time}</p>
                       </div>
                     </div>
                   </div>
@@ -762,27 +838,44 @@ Reference Given        </CardTitle>
             <CardHeader>
               <CardTitle>Upcomming Birthdays</CardTitle>
             </CardHeader>
-            <CardContent 
-              className={`${upcomingBirthdays.length > 3 ? 'max-h-[300px] overflow-y-auto' : 'overflow-x-auto'} space-y-4`}
+            <CardContent
+              className={`${
+                upcomingBirthdays.length > 3
+                  ? "max-h-[300px] overflow-y-auto"
+                  : "overflow-x-auto"
+              } space-y-4`}
               style={upcomingBirthdays.length > 3 ? scrollbarHideStyle : {}}
             >
               {upcomingBirthdays.length > 0 ? (
                 upcomingBirthdays.map((birthday) => (
-                  <div key={birthday.id} className="p-4 rounded-lg border bg-card">
+                  <div
+                    key={birthday.id}
+                    className="p-4 rounded-lg border bg-card"
+                  >
                     <div className="flex items-start justify-between">
                       <div>
-                        <h4 className="text-sm font-semibold">{birthday.memberName}</h4>
-                        <p className="text-xs text-muted-foreground">{birthday.organizationName}</p>
-                        <p className="text-xs text-muted-foreground">{birthday.chapter?.name || 'No Chapter'}</p>
+                        <h4 className="text-sm font-semibold">
+                          {birthday.memberName}
+                        </h4>
+                        <p className="text-xs text-muted-foreground">
+                          {birthday.organizationName}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {birthday.chapter?.name || "No Chapter"}
+                        </p>
                       </div>
                       <div className="text-right">
                         <span className="text-xs font-medium">
-                          {new Date(birthday.upcomingBirthday).toLocaleDateString()}
+                          {new Date(
+                            birthday.upcomingBirthday
+                          ).toLocaleDateString()}
                         </span>
                         <p className="text-xs text-muted-foreground">
-                          {birthday.daysUntilBirthday === 0 ? 'Today!' : 
-                           birthday.daysUntilBirthday === 1 ? 'Tomorrow' : 
-                           `In ${birthday.daysUntilBirthday} days`}
+                          {birthday.daysUntilBirthday === 0
+                            ? "Today!"
+                            : birthday.daysUntilBirthday === 1
+                            ? "Tomorrow"
+                            : `In ${birthday.daysUntilBirthday} days`}
                         </p>
                       </div>
                     </div>
@@ -796,12 +889,6 @@ Reference Given        </CardTitle>
             </CardContent>
           </Card>
         </div>
-
-
-
-       
-
-         
       </main>
     </div>
   );
