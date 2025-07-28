@@ -304,38 +304,7 @@ const LocationList = () => {
                           >
                             <Trash2 size={16} />
                           </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-56">
-                              <DropdownMenuGroup>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    handleChangeStatus(
-                                      location.id,
-                                      location.active
-                                    )
-                                  }
-                                >
-                                  <div className="flex items-center gap-2">
-                                    {location.active ? (
-                                      <XCircle className="h-4 w-4" />
-                                    ) : (
-                                      <CheckCircle className="h-4 w-4" />
-                                    )}
-                                    <span>
-                                      Set{" "}
-                                      {location.active ? "Inactive" : "Active"}
-                                    </span>
-                                  </div>
-                                </DropdownMenuItem>
-                              </DropdownMenuGroup>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                   
                         </div>
                       </TableCell>
                     </TableRow>
