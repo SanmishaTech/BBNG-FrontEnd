@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
+import BBNGphoto from "./Screenshot_7 (1).png"
 
 const AuthLayout = () => {
 	return (
@@ -9,11 +10,11 @@ const AuthLayout = () => {
 					<Card className='overflow-hidden'>
 						<CardContent className='grid p-0 md:grid-cols-2'>
 							<Outlet />
-							<div className='relative hidden bg-muted md:block'>
+							<div className='relative hidden  md:block flex items-end justify-end'>
 								<img
-									src='https://picsum.photos/id/1/200/300'
+									src={BBNGphoto}
 									alt='Image'
-									className='absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale'
+									className='absolute inset-0 top-4 h-xl w-xl object-fit dark:brightness-[0.2] dark:grayscale'
 								/>
 							</div>
 						</CardContent>
