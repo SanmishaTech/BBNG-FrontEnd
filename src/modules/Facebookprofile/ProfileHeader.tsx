@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { get } from "@/services/apiService";
 
 // Define the base URL for your API.
-const API_BASE_URL = "http://localhost:3000";
+const API_BASE_URL = "http://47.128.201.96";
 
 interface ActivitySummary {
   testimonials: number;
