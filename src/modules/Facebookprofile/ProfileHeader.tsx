@@ -3,10 +3,10 @@ import { Camera, Edit, MoreHorizontal, Plus } from "lucide-react";
 import { MemberData } from "@/types/member";
 import { useState, useEffect } from "react";
 import { get } from "@/services/apiService";
-import { useNavigate } from "react-router-dom";   
+import { useNavigate } from "react-router-dom";
 
 // Define the base URL for your API.
-const API_BASE_URL = "http://localhost:3000";
+const API_BASE_URL = "http://47.128.201.96";
 
 interface ActivitySummary {
   testimonials: number;
@@ -158,13 +158,13 @@ const ProfileHeader = ({ memberData }: ProfileHeaderProps) => {
           className="w-full h-full object-cover"
           onError={() => setImageError((prev) => ({ ...prev, cover: true }))}
         />
-        <div
- 
-        className="absolute bottom-4 right-4 flex gap-2 z-10">
-          <Button 
-                      onClick={() => navigate(`/profile`)}
-
-          variant="secondary" size="sm" className="bg-white">
+        <div className="absolute bottom-4 right-4 flex gap-2 z-10">
+          <Button
+            onClick={() => navigate(`/profile`)}
+            variant="secondary"
+            size="sm"
+            className="bg-white"
+          >
             <Camera className="h-4 w-4 mr-2" />
             Edit cover photo
           </Button>
@@ -204,9 +204,10 @@ const ProfileHeader = ({ memberData }: ProfileHeaderProps) => {
             </p>
           </div>
           <div className="flex gap-2 mb-4 md:mb-6">
-            <Button 
+            <Button
               onClick={() => navigate(`/references/given`)}
-            className="bg-blue-600 hover:bg-blue-700 flex items-center">
+              className="bg-blue-600 hover:bg-blue-700 flex items-center"
+            >
               <Plus className="h-4 w-4 mr-2" /> Connect
             </Button>
             {/* <Button

@@ -13,7 +13,7 @@ import {
 
 // --- Configuration ---
 // TODO: Replace with your actual API base URL and token retrieval logic
-const API_BASE_URL = "http://localhost:3000/api"; // Adjust as per your setup
+const API_BASE_URL = "http://47.128.201.96/api"; // Adjust as per your setup
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -72,7 +72,7 @@ export const getCategories = async (params?: {
       "/categories",
       { params }
     );
-    console.log("SSSSSSSSSAD", response.data)
+    console.log("SSSSSSSSSAD", response.data);
     return response?.data?.data;
   } catch (error) {
     console.error("Failed to fetch categories:", error);
