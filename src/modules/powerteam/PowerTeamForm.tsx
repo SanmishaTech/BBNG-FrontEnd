@@ -125,7 +125,8 @@ const PowerTeamForm: React.FC<PowerTeamFormProps> = ({ mode }) => {
       navigate('/powerteams'); // Adjust if your route is different
     },
     onError: (error) => {
-      toast.error(`Failed to create PowerTeam: ${error.message}`);
+      console.log(error)
+      toast.error(`Failed to create PowerTeam: ${error?.response?.data?.error?.message}`);
     },
   });
 
