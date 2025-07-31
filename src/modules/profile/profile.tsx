@@ -140,21 +140,31 @@ const createMemberSchema = (mode: "create" | "edit") => {
       .number({ required_error: "Chapter is required" })
       .int()
       .min(1, "Chapter is required"),
-    category: z.preprocess(
-      // Type: string | undefined
-      (val) => (val === "" || val === null || val === undefined ? undefined : val),
-      z.string().optional()
-    ).optional(),
-    businessCategory: z.preprocess(
-      // Type: number[] | undefined
-      (val) => {
-        if (val === null || val === undefined || val === "" || (Array.isArray(val) && val.length === 0)) {
-          return undefined;
-        }
-        return val;
-      },
-      z.array(z.number()).optional()
-    ).optional(),
+    category: z
+      .preprocess(
+        // Type: string | undefined
+        (val) =>
+          val === "" || val === null || val === undefined ? undefined : val,
+        z.string().optional()
+      )
+      .optional(),
+    businessCategory: z
+      .preprocess(
+        // Type: number[] | undefined
+        (val) => {
+          if (
+            val === null ||
+            val === undefined ||
+            val === "" ||
+            (Array.isArray(val) && val.length === 0)
+          ) {
+            return undefined;
+          }
+          return val;
+        },
+        z.array(z.number()).optional()
+      )
+      .optional(),
     gender: z.string().min(1, "Gender is required"),
     dateOfBirth: z // Type: Date | null
       .date({ invalid_type_error: "Invalid date format for Date of Birth" })
@@ -307,9 +317,9 @@ const createMemberSchema = (mode: "create" | "edit") => {
 };
 
 // Environment variable for the API base URL (recommended)
-// const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000
+// const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://47.128.201.96
 // For this example, we'll use the hardcoded one if not available.
-const IMAGE_BASE_URL = "http://localhost:3000"; // Replace with your actual image base URL
+const IMAGE_BASE_URL = "http://47.128.201.96"; // Replace with your actual image base URL
 
 export default function MemberForm({ mode }: MemberFormProps) {
   const id = JSON.parse(localStorage.getItem("user"))?.member?.id;
@@ -496,7 +506,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
   useEffect(() => {
     if (mode === "edit" && memberData && categoriesData) {
       const { chapter, ...restApiData } = memberData;
-      
+
       // Set chapter ID first
       const chapterId = chapter?.id || memberData.chapterId;
       if (chapterId) {
@@ -528,7 +538,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
             ? [Number(memberData.businessCategory)]
             : undefined
           : undefined,
-        dateOfBirth: memberData.dateOfBirth ? new Date(memberData.dateOfBirth) : null,
+        dateOfBirth: memberData.dateOfBirth
+          ? new Date(memberData.dateOfBirth)
+          : null,
         profilePicture: undefined,
         coverPhoto: undefined,
         logo: undefined,
@@ -766,7 +778,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
                               </SelectItem>
                             ))
                           ) : (
-                            <SelectItem disabled>No chapters available</SelectItem>
+                            <SelectItem disabled>
+                              No chapters available
+                            </SelectItem>
                           )}
                         </SelectContent>
                       </Select>
@@ -869,7 +883,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="clear">
-                            <span className="text-muted-foreground">Clear selection</span>
+                            <span className="text-muted-foreground">
+                              Clear selection
+                            </span>
                           </SelectItem>
                           {loadingCategories ? (
                             <SelectItem value="loading" disabled>
@@ -937,7 +953,9 @@ export default function MemberForm({ mode }: MemberFormProps) {
                             const selectedIds = selectedOpts.map((opt) =>
                               Number(opt.value)
                             );
-                            field.onChange(selectedIds.length > 0 ? selectedIds : undefined);
+                            field.onChange(
+                              selectedIds.length > 0 ? selectedIds : undefined
+                            );
                           }}
                           // disabled={!selectedCategoryId || loadingSubcategories}
                           hidePlaceholderWhenSelected={false}
@@ -1455,9 +1473,7 @@ export default function MemberForm({ mode }: MemberFormProps) {
                         field: { onChange, value, ...fieldProps },
                       }) => (
                         <FormItem>
-                          <FormLabel>
-                            {imageField.label}
-                          </FormLabel>
+                          <FormLabel>{imageField.label}</FormLabel>
                           <div className="space-y-2">
                             {mode === "edit" && displayUrl && (
                               <div className="relative w-full aspect-square rounded-md overflow-hidden border border-dashed">
@@ -1618,7 +1634,5 @@ export default function MemberForm({ mode }: MemberFormProps) {
 }
 
 export const DateTimePickerExample = () => {
-  return (
-    <DateTimePicker />
-  );
+  return <DateTimePicker />;
 };

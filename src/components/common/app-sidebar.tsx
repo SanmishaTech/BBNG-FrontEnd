@@ -19,7 +19,7 @@ import {
   UserCircle,
   CreditCard,
 } from "lucide-react";
-
+import Bannerimage from "@/images/WhatsApp Image 2025-07-29 at 16.40.35.jpeg";
 import { NavMain } from "@/components/common/nav-main";
 import { NavProjects } from "@/components/common/nav-projects";
 import { NavUser } from "@/components/common/nav-user";
@@ -430,10 +430,11 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
               <div className="flex items-center gap-2  justify-between">
-                <a href="/dashboard" className="flex items-center gap-2">
+                {/* <a href="/dashboard" className="flex items-center gap-2">
                   <ArrowUpCircleIcon className="h-5 w-5" />
                   <span className="text-base font-semibold">{appName}</span>
-                </a>
+                </a> */}
+                <img src={Bannerimage} alt="" />
                 <a className="flex items-center gap-2" href="/member/search">
                   <Search className="h-5 w-5 mr-2" />
                 </a>

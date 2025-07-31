@@ -1,6 +1,6 @@
-import { Bell, Home, Menu, MessageSquare, User } from 'lucide-react';
-import GlobalSearch from './GlobalSearch';
-import { useState } from 'react';
+import { Bell, Home, Menu, MessageSquare, User } from "lucide-react";
+import GlobalSearch from "./GlobalSearch";
+import { useState } from "react";
 
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -10,7 +10,9 @@ const Header = () => {
       <div className="max-w-[1200px] mx-auto px-4 h-16 flex items-center justify-between">
         {/* Left Section - Logo */}
         <div className="flex items-center">
-          <a href="/" className="text-2xl font-bold text-blue-600 mr-6">BBNG</a>
+          <a href="/" className="text-2xl font-bold text-blue-600 mr-6">
+            BBNG
+          </a>
           <div className="hidden md:block">
             <GlobalSearch />
           </div>
@@ -29,14 +31,14 @@ const Header = () => {
           <div className="md:hidden mr-4">
             <GlobalSearch />
           </div>
-          
+
           <button
             className="md:hidden p-2 rounded-full hover:bg-gray-200"
             onClick={() => setMenuOpen(!menuOpen)}
           >
             <Menu className="h-6 w-6" />
           </button>
-          
+
           <div className="hidden md:block">
             <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden cursor-pointer">
               <img
@@ -48,15 +50,28 @@ const Header = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Mobile Navigation */}
       {menuOpen && (
         <div className="md:hidden bg-white shadow-lg absolute w-full">
           <div className="flex flex-col p-4 space-y-3">
-            <MobileNavItem icon={<Home className="h-5 w-5" />} label="Home" active />
-            <MobileNavItem icon={<User className="h-5 w-5" />} label="Profile" />
-            <MobileNavItem icon={<MessageSquare className="h-5 w-5" />} label="Messages" />
-            <MobileNavItem icon={<Bell className="h-5 w-5" />} label="Notifications" />
+            <MobileNavItem
+              icon={<Home className="h-5 w-5" />}
+              label="Home"
+              active
+            />
+            <MobileNavItem
+              icon={<User className="h-5 w-5" />}
+              label="Profile"
+            />
+            <MobileNavItem
+              icon={<MessageSquare className="h-5 w-5" />}
+              label="Messages"
+            />
+            <MobileNavItem
+              icon={<Bell className="h-5 w-5" />}
+              label="Notifications"
+            />
           </div>
         </div>
       )}
@@ -73,7 +88,7 @@ const NavButton = ({ icon, active }: NavButtonProps) => {
   return (
     <button
       className={`p-2 rounded-md hover:bg-gray-100 ${
-        active ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'
+        active ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-500"
       }`}
     >
       {icon}
@@ -92,7 +107,7 @@ const MobileNavItem = ({ icon, label, active }: MobileNavItemProps) => {
     <a
       href="#"
       className={`flex items-center space-x-3 p-3 rounded-md ${
-        active ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-100'
+        active ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-100"
       }`}
     >
       {icon}
@@ -101,4 +116,4 @@ const MobileNavItem = ({ icon, label, active }: MobileNavItemProps) => {
   );
 };
 
-export default Header; 
+export default Header;

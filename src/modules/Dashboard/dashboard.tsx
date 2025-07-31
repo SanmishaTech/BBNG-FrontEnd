@@ -67,7 +67,7 @@ interface UpcomingBirthday {
   upcomingBirthday: string;
 }
 
-import bannerImage from "@/images/banner.jpg";
+import bannerImage from "@/images/pexels-fwstudio-33348-139309.jpg";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import {
   Bell,
@@ -488,7 +488,7 @@ export default function ResponsiveLabDashboard() {
           <img
             src={bannerImage}
             alt="Welcome Banner 2024"
-            className="w-full rounded-lg shadow-md"
+            className="w-full rounded-lg shadow-md max-h-34 object-cover"
           />
         </div>
 
