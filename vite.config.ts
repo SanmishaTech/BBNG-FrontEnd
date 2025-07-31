@@ -12,11 +12,14 @@ export default defineConfig({
     },
   },
   server: {
+    host: "0.0.0.0",
+    port: 5173,
+    https: false, // Explicitly disable HTTPS
     proxy: {
       "/api": {
         target: "http://47.128.201.96",
-
         changeOrigin: true,
+        secure: false, // Disable SSL verification for HTTP target
       },
     },
   },
