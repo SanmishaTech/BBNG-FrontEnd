@@ -45,7 +45,7 @@ const subCategoryFormSchema = z.object({
   name: z.string()
     .min(1, "Sub-Category name is required")
     .max(255, "Category name must not exceed 255 characters"),
-  categoryId: z.coerce.number({invalid_type_error: "Category is required"}).positive("Category is required"),
+categoryId: z.coerce.number().optional(),
 });
 
 type SubCategoryFormInputs = z.infer<typeof subCategoryFormSchema>;

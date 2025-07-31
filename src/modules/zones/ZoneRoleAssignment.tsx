@@ -165,10 +165,13 @@ const ZoneRoleEditor: React.FC<ZoneRoleEditorProps> = ({ zoneId: propZoneId, zon
     data: zoneDetails,
     isPending: isPendingZoneRoles,
     error: zoneRolesError,
+    refetch: refetchZoneRoles,
   } = useQuery<ZoneDetailsWithRoles, Error>({
     queryKey: ["zoneRoles", zoneId],
     queryFn: () => getZoneRoles(zoneId!),
-    enabled: typeof zoneId === "number",
+    enabled: typeof zoneId === "number" && zoneId > 0,
+    retry: 3,
+    staleTime: 30000, // 30 seconds
   });
 
   // Query to fetch zone details for editing
@@ -177,16 +180,21 @@ const ZoneRoleEditor: React.FC<ZoneRoleEditorProps> = ({ zoneId: propZoneId, zon
     isPending: isPendingZoneDetails,
   } = useQuery<{ id: number; name: string; active: boolean }, Error>({
     queryKey: ["zoneDetails", zoneId],
-    queryFn: () => getZoneDetails(zoneId!),
-    enabled: typeof zoneId === "number",
+    queryFn: () => getZoneDetails(zoneId),
+    enabled: typeof zoneId === "number" && zoneId > 0,
+    retry: 3,
+    staleTime: 30000, // 30 seconds
   });
-  
+  useEffect(() => {
+    console.log("ZONE DATA", zoneData)
+  }, []);
   // Set form values when zoneData is available
   useEffect(() => {
     if (zoneData) {
       setValue("name", zoneData.name);
     }
   }, [zoneData, setValue]);
+
 
   const { 
     data: memberSearchResults, 
@@ -209,15 +217,11 @@ const ZoneRoleEditor: React.FC<ZoneRoleEditorProps> = ({ zoneId: propZoneId, zon
     setMemberSearchInput("");
     setSearchedMembers([]);
     setSelectedChapterId(null);
-    if (typeof zoneId === "number") {
-      queryClient.prefetchQuery({
-        queryKey: ["zoneRoles", zoneId],
-        queryFn: () => getZoneRoles(zoneId)
-      });
-      queryClient.prefetchQuery({
-        queryKey: ["zoneDetails", zoneId],
-        queryFn: () => getZoneDetails(zoneId)
-      });
+    setReplacingRole(null);
+    if (typeof zoneId === "number" && zoneId > 0) {
+      // Force refetch when zoneId changes
+      queryClient.invalidateQueries({ queryKey: ["zoneRoles", zoneId] });
+      queryClient.invalidateQueries({ queryKey: ["zoneDetails", zoneId] });
     }
   }, [zoneId, queryClient]);
 
@@ -497,15 +501,56 @@ const ZoneRoleEditor: React.FC<ZoneRoleEditorProps> = ({ zoneId: propZoneId, zon
         overflow: "hidden"
       }}>
         <h3>
-          Roles for {zoneDetails?.zoneName || zoneId || `Zone ID: ${zoneId}`}
+          Roles for {zoneDetails?.zoneName || zoneData?.name || `Zone ID: ${zoneId}`}
         </h3>
-        {isPendingZoneRoles && <p>Loading roles...</p>}
-        {zoneRolesError && (
-          <p style={{ color: "red" }}>
-            Error fetching roles: {zoneRolesError.message}
-          </p>
+        {isPendingZoneRoles && (
+          <div style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            justifyContent: "center", 
+            padding: "20px",
+            color: "#666"
+          }}>
+            <div style={{ 
+              width: "20px",
+              height: "20px",
+              border: "2px solid rgba(0,0,0,0.1)",
+              borderTopColor: "#333",
+              borderRadius: "50%",
+              animation: "spin 0.8s linear infinite",
+              marginRight: "10px"
+            }}></div>
+            Loading roles...
+          </div>
         )}
-        {zoneDetails?.roles?.length > 0 ? (
+        {zoneRolesError && (
+          <div style={{ 
+            color: "#d32f2f",
+            backgroundColor: "#ffebee",
+            padding: "12px 16px",
+            borderRadius: "4px",
+            border: "1px solid #ffcdd2",
+            marginBottom: "16px"
+          }}>
+            Error fetching roles: {zoneRolesError.message}
+            <button 
+              onClick={() => refetchZoneRoles()}
+              style={{
+                marginLeft: "12px",
+                padding: "4px 8px",
+                backgroundColor: "#1976d2",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "12px"
+              }}
+            >
+              Retry
+            </button>
+          </div>
+        )}
+        {!isPendingZoneRoles && !zoneRolesError && zoneDetails?.roles?.length > 0 ? (
           <div style={{ overflowX: "auto", maxWidth: "100%" }}>
             <table
               style={{
@@ -556,7 +601,19 @@ const ZoneRoleEditor: React.FC<ZoneRoleEditorProps> = ({ zoneId: propZoneId, zon
           </table>
           </div>
         ) : (
-          !isPendingZoneRoles && <p>No roles assigned in this zone.</p>
+          !isPendingZoneRoles && !zoneRolesError && (
+            <div style={{ 
+              textAlign: "center", 
+              padding: "40px 20px", 
+              color: "#666",
+              backgroundColor: "#f9f9f9",
+              borderRadius: "8px",
+              border: "1px dashed #ddd"
+            }}>
+              <p style={{ margin: 0, fontSize: "16px" }}>No roles assigned in this zone.</p>
+              <p style={{ margin: "8px 0 0 0", fontSize: "14px" }}>Use the form below to assign roles to members.</p>
+            </div>
+          )
         )}
 
         <div id="role-assignment-form" className="role-assignment-container" style={{ 

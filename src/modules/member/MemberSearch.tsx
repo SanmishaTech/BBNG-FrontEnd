@@ -9,35 +9,45 @@ import { getBestMemberPhoto } from "@/utils/photoUtils";
 
 const MemberSearch = () => {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
+  const [nameQuery, setNameQuery] = useState("");
+  const [categoryQuery, setCategoryQuery] = useState("");
+  const [chapterQuery, setChapterQuery] = useState("");
   const [members, setMembers] = useState<MemberData[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<MemberData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
   useEffect(() => {
     fetchMembers();
   }, []);
 
   useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setFilteredMembers(members);
-    } else {
-      console.log("members", members[0].member);
-      const filtered = members.filter(
-        (member) =>
-          member?.member.memberName
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          member?.member.category
-            ?.toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          member?.member?.chapter?.name
-            ?.toLowerCase()
-            .includes(searchQuery.toLowerCase()),
-      );
-      setFilteredMembers(filtered);
+    const name = nameQuery.trim().toLowerCase();
+    const category = categoryQuery.trim().toLowerCase();
+    const chapter = chapterQuery.trim().toLowerCase();
+
+    if (!name && !category && !chapter) {
+      setFilteredMembers([]);
+      if (hasSearched) setHasSearched(false);
+      return;
     }
-  }, [searchQuery, members]);
+
+    if (!hasSearched) setHasSearched(true);
+
+    const filtered = members.filter((member) => {
+      const memberName = member.member.memberName?.toLowerCase() || "";
+      const memberCategory = member.member.category?.toLowerCase() || "";
+      const memberChapter = member.member.chapter?.name?.toLowerCase() || "";
+
+      const nameMatch = name ? memberName.includes(name) : true;
+      const categoryMatch = category ? memberCategory.includes(category) : true;
+      const chapterMatch = chapter ? memberChapter.includes(chapter) : true;
+
+      return nameMatch && categoryMatch && chapterMatch;
+    });
+
+    setFilteredMembers(filtered);
+  }, [nameQuery, categoryQuery, chapterQuery, members]);
 
   const fetchMembers = async () => {
     setLoading(true);
@@ -53,7 +63,7 @@ const MemberSearch = () => {
         // For cover photo, still use the second picture if available
         // If not, fall back to the best available photo (which might be the same as profilePicture)
         const coverPhoto = member.coverPhoto
-          ? `${import.meta.env.VITE_BACKEND_URL}/uploads/members/${
+          ? `${import.meta.env.VITE_BACKEND_URL}/${
               member.coverPhoto
             }`
           : member.profilePicture || member.logo
@@ -82,7 +92,8 @@ const MemberSearch = () => {
       });
 
       setMembers(memberData);
-      setFilteredMembers(memberData);
+      // Initially, we don't want to show any members until a search is performed.
+      setFilteredMembers([]);
     } catch (error) {
       console.error("Error fetching members:", error);
       toast.error("Failed to load members");
@@ -99,18 +110,44 @@ const MemberSearch = () => {
     <div className="container mx-auto py-8 px-4">
       <h1 className="text-2xl font-bold mb-6">Member Directory</h1>
 
-      {/* Search Box */}
-      <div className="relative mb-8">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <Search className="h-5 w-5 text-gray-400" />
+      {/* Search Boxes */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Search by Name..."
+            value={nameQuery}
+            onChange={(e) => setNameQuery(e.target.value)}
+          />
         </div>
-        <input
-          type="text"
-          className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Search members by Category, chapter, Name..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Search by Category..."
+            value={categoryQuery}
+            onChange={(e) => setCategoryQuery(e.target.value)}
+          />
+        </div>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Search by Chapter..."
+            value={chapterQuery}
+            onChange={(e) => setChapterQuery(e.target.value)}
+          />
+        </div>
       </div>
 
       {loading ? (
@@ -119,18 +156,26 @@ const MemberSearch = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredMembers.length > 0 ? (
-            filteredMembers.map((member) => (
-              <MemberCard
-                key={member.id}
-                member={member}
-                onViewProfile={() => viewProfile(member.id)}
-              />
-            ))
+          {hasSearched ? (
+            filteredMembers.length > 0 ? (
+              filteredMembers.map((member) => (
+                <MemberCard
+                  key={member.id}
+                  member={member}
+                  onViewProfile={() => viewProfile(member.id)}
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-8">
+                <p className="text-gray-500">
+                  No members found matching your search criteria.
+                </p>
+              </div>
+            )
           ) : (
             <div className="col-span-full text-center py-8">
               <p className="text-gray-500">
-                No members found matching your search criteria.
+                Please enter a search term to find members.
               </p>
             </div>
           )}

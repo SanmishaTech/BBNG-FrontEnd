@@ -3,6 +3,7 @@ import React, {
   useState,
   useMemo,
   useCallback,
+  forwardRef,
   useRef,
 } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
@@ -53,6 +54,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePickerWithInput } from "@/components/ui/date-picker-input";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
+import { DatePicker } from "@/components/ui/date-picker-new";
 
 import { format } from "date-fns";
 import {
@@ -355,6 +358,11 @@ interface MemberData {
     };
   }>;
   stateName?: string;
+  chapterId?: number;
+  chapter?: {
+    id: number;
+    name: string;
+  };
   [key: string]: any;
 }
 
@@ -368,6 +376,7 @@ interface PackageItem {
     id: number;
     name: string;
   };
+  chapterId?: number | null;
   // any other fields packages might have
 }
 
@@ -431,6 +440,15 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
     neftNumber: "",
     utrNumber: ""
   });
+  
+  // State for validation errors in complementary dialog
+  const [complementaryValidationErrors, setComplementaryValidationErrors] = useState<{
+    chequeNumber?: string;
+    chequeDate?: string;
+    bankName?: string;
+    neftNumber?: string;
+    utrNumber?: string;
+  }>({});
 
   // Initialize form
   const form = useForm<MembershipFormInputs>({
@@ -519,12 +537,22 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
       const hasActiveHO =
         memberData.hoExpiryDate && new Date(memberData.hoExpiryDate) > now;
 
-      // If member has both active Venue and HO memberships, show all packages
+      // First filter by chapter
+      let chapterFilteredPackages = packages;
+      if (memberData.chapterId) {
+        // Filter packages to only show those that belong to the member's chapter or are global (chapterId is null)
+        chapterFilteredPackages = packages.filter((pkg) => {
+          return pkg.chapterId === null || pkg.chapterId === memberData.chapterId;
+        });
+      }
+
+      // Then apply the membership type filtering
       if (hasActiveVenue && hasActiveHO) {
-        result = packages; // Show all packages
+        // If member has both active Venue and HO memberships, show all chapter-filtered packages
+        result = chapterFilteredPackages;
       } else {
-        // Otherwise, apply the original filtering logic
-        result = packages.filter((pkg) => {
+        // Otherwise, apply the original filtering logic on chapter-filtered packages
+        result = chapterFilteredPackages.filter((pkg) => {
           const packageTypeName = pkg?.isVenueFee ? "VENUE" : "HO";
           if (packageTypeName === "VENUE" && hasActiveVenue) return false;
           if (packageTypeName === "HO" && hasActiveHO) return false;
@@ -799,6 +827,12 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
       totalTax,
       totalAmount,
     };
+    
+    // Debug logging for packageStartDate
+    console.log('Form submission data:', formData);
+    console.log('packageStartDate:', formData.packageStartDate);
+    console.log('packageStartDate type:', typeof formData.packageStartDate);
+    console.log('packageStartDate ISO:', formData.packageStartDate instanceof Date ? formData.packageStartDate.toISOString() : 'Not a Date object');
 
     // Check for complementary membership opportunity in create mode
     if (mode === "create") {
@@ -907,8 +941,17 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
         if (isVenuePackage && !hasActiveHO) {
           console.log("Looking for HO packages...");
           // Find ALL available HO packages (don't filter by period)
+          // Also apply chapter filtering
           complementaryPackages = packages.filter(
-            (pkg) => isPackageOfType(pkg, false), // Must be HO package - no period restriction
+            (pkg) => {
+              // Must be HO package
+              if (!isPackageOfType(pkg, false)) return false;
+              // Must belong to member's chapter or be global
+              if (memberData.chapterId) {
+                return pkg.chapterId === null || pkg.chapterId === memberData.chapterId;
+              }
+              return true;
+            }
           );
           console.log("Available HO packages:", complementaryPackages);
           shouldPrompt = complementaryPackages.length > 0;
@@ -918,8 +961,17 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
         else if (!isVenuePackage && !hasActiveVenue) {
           console.log("Looking for VENUE packages...");
           // Find ALL available VENUE packages (don't filter by period)
+          // Also apply chapter filtering
           complementaryPackages = packages.filter(
-            (pkg) => isPackageOfType(pkg, true), // Must be VENUE package - no period restriction
+            (pkg) => {
+              // Must be VENUE package
+              if (!isPackageOfType(pkg, true)) return false;
+              // Must belong to member's chapter or be global
+              if (memberData.chapterId) {
+                return pkg.chapterId === null || pkg.chapterId === memberData.chapterId;
+              }
+              return true;
+            }
           );
           console.log("Available VENUE packages:", complementaryPackages);
           shouldPrompt = complementaryPackages.length > 0;
@@ -970,26 +1022,77 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
   const createBothMemberships = async () => {
     // Validate payment details based on payment mode
     if (complementaryPaymentData.paymentMode === "cheque") {
-      if (!complementaryPaymentData.chequeNumber || !complementaryPaymentData.chequeDate || !complementaryPaymentData.bankName) {
-        toast.error("Please fill in all cheque details");
+      // Check all required fields
+      if (!complementaryPaymentData.chequeNumber?.trim()) {
+        toast.error("Cheque number is required");
         return;
       }
+      if (!complementaryPaymentData.chequeDate) {
+        toast.error("Cheque date is required");
+        return;
+      }
+      if (!complementaryPaymentData.bankName?.trim()) {
+        toast.error("Bank name is required");
+        return;
+      }
+      
       // Check if cheque number is 6-12 digits
-      if (!/^\d{6,12}$/.test(complementaryPaymentData.chequeNumber)) {
+      if (!/^\d{6,12}$/.test(complementaryPaymentData.chequeNumber.trim())) {
         toast.error("Cheque number must be 6-12 digits");
         return;
       }
+      
       // Check if bank name is at least 3 characters
-      if (complementaryPaymentData.bankName.length < 3) {
+      if (complementaryPaymentData.bankName.trim().length < 3) {
         toast.error("Bank name must be at least 3 characters");
         return;
       }
-    } else if (complementaryPaymentData.paymentMode === "netbanking" && !complementaryPaymentData.neftNumber) {
-      toast.error("Please enter NEFT/IMPS number for net banking");
-      return;
-    } else if (complementaryPaymentData.paymentMode === "upi" && !complementaryPaymentData.utrNumber) {
-      toast.error("Please enter UTR number for UPI payment");
-      return;
+      
+      // Check bank name format
+      if (!/^[A-Za-z\s\-&.]+$/.test(complementaryPaymentData.bankName.trim())) {
+        toast.error("Bank name should only contain letters, spaces, hyphens, ampersands and periods");
+        return;
+      }
+      
+      // Check for consecutive spaces in bank name
+      if (/\s{2,}/.test(complementaryPaymentData.bankName)) {
+        toast.error("Bank name should not contain consecutive spaces");
+        return;
+      }
+    } else if (complementaryPaymentData.paymentMode === "netbanking") {
+      if (!complementaryPaymentData.neftNumber?.trim()) {
+        toast.error("NEFT/IMPS number is required for net banking");
+        return;
+      }
+      
+      // Validate NEFT number format
+      if (!/^[A-Za-z0-9]{11,18}$/.test(complementaryPaymentData.neftNumber.trim())) {
+        toast.error("NEFT/IMPS number must be 11-18 alphanumeric characters");
+        return;
+      }
+      
+      // Check that NEFT number contains both letters and numbers
+      if (!/^(?=.*[A-Za-z])(?=.*\d)/.test(complementaryPaymentData.neftNumber.trim())) {
+        toast.error("NEFT/IMPS number should contain both letters and numbers");
+        return;
+      }
+    } else if (complementaryPaymentData.paymentMode === "upi") {
+      if (!complementaryPaymentData.utrNumber?.trim()) {
+        toast.error("UTR number is required for UPI payment");
+        return;
+      }
+      
+      // Validate UTR number format
+      if (!/^[A-Za-z0-9]{16,22}$/.test(complementaryPaymentData.utrNumber.trim())) {
+        toast.error("UTR number must be 16-22 alphanumeric characters");
+        return;
+      }
+      
+      // Check that UTR number contains both letters and numbers
+      if (!/^(?=.*[A-Za-z])(?=.*\d)/.test(complementaryPaymentData.utrNumber.trim())) {
+        toast.error("UTR number should contain both letters and numbers");
+        return;
+      }
     }
 
     if (!originalFormData || !selectedComplementaryPackage) return;
@@ -1072,7 +1175,7 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
 
       // Navigate to memberships list
       queryClient.invalidateQueries({ queryKey: ["memberships"] });
-      navigate("/memberships");
+      navigate("/members");
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message || "Failed to create memberships",
@@ -1754,9 +1857,9 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
       <Dialog
         open={showComplementaryPrompt}
         onOpenChange={setShowComplementaryPrompt}
-        
+        modal={false}
       >
-        <DialogContent className="max-w-[95%] max-h-[95%] overflow-auto">
+        <DialogContent className="max-w-[95%] max-h-[95%] overflow-auto" onPointerDownOutside={(e) => e.preventDefault()}>
           <DialogHeader className="border-b pb-4">
             <DialogTitle className="text-xl">
               Would you like to add {isAddingVenue ?  "an HO": "a VENUE" }{" "}
@@ -1952,9 +2055,31 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                     <span>Total:</span>
                     <span className="text-primary">
                       {(() => {
-                       
-                        // Return the formatted total
-                        return formatCurrency(selectedComplementaryPackage?.totalPrice);
+                        // Calculate total based on basic fees and tax rates
+                        const basicFees = Number(selectedComplementaryPackage?.basicFees) || 0;
+                        let totalTax = 0;
+                        
+                        // Debug logging
+                        console.log('Calculating total for complementary package:');
+                        console.log('Basic Fees:', basicFees, 'Type:', typeof basicFees);
+                        console.log('CGST Rate:', originalFormData?.cgstRate);
+                        console.log('SGST Rate:', originalFormData?.sgstRate);
+                        console.log('IGST Rate:', originalFormData?.igstRate);
+                        
+                        if (originalFormData?.igstRate != null && Number(originalFormData.igstRate) > 0) {
+                          // Outside Maharashtra - IGST
+                          totalTax = (basicFees * Number(originalFormData.igstRate)) / 100;
+                        } else if (originalFormData?.cgstRate != null && originalFormData?.sgstRate != null) {
+                          // Maharashtra - CGST + SGST
+                          totalTax = (basicFees * Number(originalFormData.cgstRate)) / 100 + 
+                                    (basicFees * Number(originalFormData.sgstRate)) / 100;
+                        }
+                        
+                        console.log('Total Tax:', totalTax);
+                        const totalAmount = basicFees + totalTax;
+                        console.log('Total Amount:', totalAmount);
+                        
+                        return formatCurrency(totalAmount);
                       })()}
                     </span>
                   </div>
@@ -1971,7 +2096,7 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                   {/* Payment Mode and Date */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label>Payment Mode *</Label>
+                      <Label className="mb-2">Payment Mode *</Label>
                       <Select 
                         defaultValue={originalFormData?.paymentMode || "cash"}
                         onValueChange={(value) => {
@@ -2002,8 +2127,8 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
 
                     {/* Payment Date */}
                     <div>
-                      <Label>Payment Date *</Label>
-                      <DatetimePicker
+                      <Label className="mb-2">Payment Date *</Label>
+                      <DatePicker
                         value={complementaryPaymentData.paymentDate}
                         onChange={(value) => {
                           if (value) {
@@ -2013,7 +2138,7 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                             }))
                           }
                         }}
-                        format={[['months', 'days', 'years'], []]}
+                        placeholder="Select payment date"
                       />
                     </div>
                   </div>
@@ -2028,7 +2153,7 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                       <div className="grid grid-cols-3 gap-4">
                         {/* Cheque Number */}
                         <div>
-                          <Label>Cheque Number</Label>
+                          <Label className="mb-2">Cheque Number</Label>
                           <Input
                             placeholder="Enter 6-12 digit number"
                             value={complementaryPaymentData.chequeNumber || ""}
@@ -2044,8 +2169,8 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
 
                         {/* Cheque Date */}
                         <div>
-                          <Label>Cheque Date</Label>
-                          <DatetimePicker
+                          <Label className="mb-2">Cheque Date</Label>
+                          <DatePicker
                             value={complementaryPaymentData.chequeDate || new Date()}
                             onChange={(value) => {
                               setComplementaryPaymentData((prev: ComplementaryPaymentData) => ({
@@ -2053,13 +2178,13 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
                                 chequeDate: value || null
                               }))
                             }}
-                            format={[['months', 'days', 'years'], []]}
+                            placeholder="Select cheque date"
                           />
                         </div>
 
                         {/* Bank Name */}
                         <div>
-                          <Label>Bank Name</Label>
+                          <Label className="mb-2">Bank Name</Label>
                           <Input
                             placeholder="Enter bank name"
                             value={complementaryPaymentData.bankName || ""}
@@ -2085,7 +2210,7 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
 
                       {/* NEFT Number */}
                       <div>
-                        <Label>NEFT/IMPS Number</Label>
+                        <Label className="mb-2">NEFT/IMPS Number</Label>
                         <Input
                           placeholder="Enter NEFT/IMPS reference number"
                           value={complementaryPaymentData.neftNumber || ""}
@@ -2110,7 +2235,7 @@ export default function Membershipform({ mode }: { mode: "create" | "edit" }) {
 
                       {/* UTR Number */}
                       <div>
-                        <Label>UTR Number</Label>
+                        <Label className="mb-2">UTR Number</Label>
                         <Input
                           placeholder="Enter UPI transaction reference"
                           value={complementaryPaymentData.utrNumber || ""}

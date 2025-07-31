@@ -219,7 +219,7 @@ const DirectThankYouSlipForm = () => {
   if (loading) {
     return (
       <div className="container mx-auto py-6">
-        <Card className="max-w-3xl mx-auto">
+        <Card className="max-w-full mx-auto">
           <CardContent className="pt-6">
             <div className="text-center py-4">Loading chapter data...</div>
           </CardContent>
@@ -229,9 +229,9 @@ const DirectThankYouSlipForm = () => {
   }
 
   if (chapters.length === 0 && !loading) {
-    return (
+    return (  
       <div className="container mx-auto py-6">
-        <Card className="max-w-3xl mx-auto">
+        <Card className="max-w-full mx-auto">
           <CardContent className="pt-6">
             <div className="text-center py-4">
               <p className="text-red-500">No chapters found in the system.</p>
@@ -248,7 +248,7 @@ const DirectThankYouSlipForm = () => {
 
   return (
     <div className="container mx-auto py-6">
-      <Card className="max-w-3xl mx-auto">
+      <Card className="max-w-full mx-auto">
         <CardHeader className="pb-3">
           <CardTitle className="text-2xl">Create Direct Deal</CardTitle>
           <CardDescription>
@@ -433,7 +433,7 @@ const DirectThankYouSlipForm = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Narration <span className="text-red-500">*</span>
+                      Narration
                     </FormLabel>
                     <FormControl>
                       <Textarea
@@ -457,7 +457,7 @@ const DirectThankYouSlipForm = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Testimony <span className="text-red-500">*</span>
+                      Testimony
                     </FormLabel>
                     <FormControl>
                       <Textarea

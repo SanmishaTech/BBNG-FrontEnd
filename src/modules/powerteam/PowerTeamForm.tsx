@@ -125,7 +125,8 @@ const PowerTeamForm: React.FC<PowerTeamFormProps> = ({ mode }) => {
       navigate('/powerteams'); // Adjust if your route is different
     },
     onError: (error) => {
-      toast.error(`Failed to create PowerTeam: ${error.message}`);
+      console.log(error)
+      toast.error(`Failed to create PowerTeam: ${error?.response?.data?.error?.message}`);
     },
   });
 
@@ -238,7 +239,9 @@ const PowerTeamForm: React.FC<PowerTeamFormProps> = ({ mode }) => {
                         <CommandList>
                           <CommandEmpty>No categories found.</CommandEmpty>
                           <CommandGroup>
-                            {categories.map((category) => (
+                            {categories
+                              .filter(category => category && category.name && category.id)
+                              .map((category) => (
                               <CommandItem
                                 value={category.name} // Ensure this value is unique enough for CommandItem behavior or use category.id.toString()
                                 key={category.id}

@@ -1,3 +1,5 @@
+
+import axios from 'axios';
 import { get, post, del, put } from './apiService'; // Use consistent API service
 
 // No need for API_URL prefix as apiService handles this
@@ -38,8 +40,14 @@ export interface ZoneDetailsWithRoles {
  * @returns The list of zone role assignments.
  */
 export const getZoneRoles = async (zoneId: number): Promise<ZoneDetailsWithRoles> => {
-  const response = await get(`/zones/${zoneId}/roles`);
-  return response as ZoneDetailsWithRoles;
+  const token = localStorage.getItem('authToken');
+  const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/zones/${zoneId}/roles`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  console.log('GET ZONE ROLES', response.data);
+  return response.data as ZoneDetailsWithRoles;
 };
 
 /**
@@ -120,6 +128,7 @@ export const searchMembersForZoneAssignment = async (searchQuery: string, chapte
  */
 export const getZoneDetails = async (zoneId: number): Promise<{ id: number; name: string; active: boolean }> => {
   const response = await get(`/zones/${zoneId}`);
+  console.log("GET ZONE DETAILS", response)
   return response;
 };
 

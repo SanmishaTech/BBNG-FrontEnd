@@ -44,8 +44,8 @@ const formSchema = z.object({
   chapterId: z.number(),
   toWhom: z.string().min(1, "Recipient is required"),
   amount: z.string().min(1, "Amount is required"),
-  narration: z.string().min(1, "Narration is required"),
-  testimony: z.string().min(1, "Testimony is required"),
+  narration: z.string().optional(),
+  testimony: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -321,9 +321,9 @@ const ThankYouSlipForm = () => {
                     name="narration"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
-                          Narration <span className="text-red-500">*</span>
-                        </FormLabel>
+                      <FormLabel>
+                        Narration
+                      </FormLabel>
                         <FormControl>
                           <Textarea
                             placeholder="Enter narration"
@@ -348,7 +348,7 @@ const ThankYouSlipForm = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Testimony <span className="text-red-500">*</span>
+                          Testimony
                         </FormLabel>
                         <FormControl>
                           <Textarea

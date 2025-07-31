@@ -154,7 +154,7 @@ const DirectThankYouSlip: React.FC = () => {
 
   return (
     <div className="p-6">
-      <Card className="w-full max-w-4xl mx-auto">
+      <Card className="w-full w-full mx-auto">
         <CardHeader>
           <CardTitle>Create Done Deal</CardTitle>
           <CardDescription>Create a new done deal for a member</CardDescription>

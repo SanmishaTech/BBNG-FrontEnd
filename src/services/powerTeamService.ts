@@ -13,7 +13,7 @@ import {
 
 // --- Configuration ---
 // TODO: Replace with your actual API base URL and token retrieval logic
-const API_BASE_URL = "http://47.128.201.96/api"; // Adjust as per your setup
+const API_BASE_URL = "http://localhost:3000/api"; // Adjust as per your setup
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -72,7 +72,8 @@ export const getCategories = async (params?: {
       "/categories",
       { params }
     );
-    return response.data;
+    console.log("SSSSSSSSSAD", response.data)
+    return response?.data?.data;
   } catch (error) {
     console.error("Failed to fetch categories:", error);
     throw error;
@@ -113,7 +114,7 @@ export const getSubCategoriesByCategoryId = async (
   const response = await apiClient.get<SubCategory[]>(
     `/subcategories/category/${categoryId}`
   );
-  return response.data;
+  return response.data.data;
 };
 
 // --- PowerTeam API ---
@@ -134,7 +135,7 @@ export const getPowerTeams = async (params?: {
       "/powerteams",
       { params }
     );
-    return response.data;
+    return response.data.data;
   } catch (error) {
     console.error("Failed to fetch power teams:", error);
     throw error;
@@ -148,7 +149,7 @@ export const getPowerTeams = async (params?: {
 export const getPowerTeamById = async (id: number): Promise<PowerTeam> => {
   try {
     const response = await apiClient.get<PowerTeam>(`/powerteams/${id}`);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     console.error(`Failed to fetch power team with ID ${id}:`, error);
     throw error;
@@ -167,7 +168,7 @@ export const createPowerTeam = async (
       "/powerteams",
       powerTeamData
     );
-    return response.data;
+    return response.data.data;
   } catch (error) {
     console.error("Failed to create power team:", error);
     // Consider more specific error handling, e.g., for validation errors
@@ -189,7 +190,7 @@ export const updatePowerTeam = async (
       `/powerteams/${id}`,
       powerTeamData
     );
-    return response.data;
+    return response.data.data;
   } catch (error) {
     console.error(`Failed to update power team with ID ${id}:`, error);
     throw error;
@@ -207,7 +208,7 @@ export const deletePowerTeam = async (
     const response = await apiClient.delete<{ message: string }>(
       `/powerteams/${id}`
     );
-    return response.data;
+    return response.data.data;
   } catch (error) {
     console.error(`Failed to delete power team with ID ${id}:`, error);
     throw error;

@@ -298,7 +298,7 @@ const ReceivedReferences = () => {
                   navigate(`/references/${reference.id}/thank-you-slip`);
                 }}
               >
-                Send Thank You Slip
+                Mark Done Deal
               </Button>
             </div>
           ) : (

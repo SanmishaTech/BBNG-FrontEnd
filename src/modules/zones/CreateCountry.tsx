@@ -54,7 +54,8 @@ const CreateCountry: React.FC<CreateCountryProps> = ({ isOpen, onClose }) => {
     onSuccess: (data) => {
       toast.success("Region created successfully! You can now assign roles.");
       queryClient.invalidateQueries({ queryKey: ["zones"] });
-      setNewlyCreatedCountry(data);
+      // setNewlyCreatedCountry(data);
+      handleCloseDialog()
       setValue("name", data.name);
     },
     onError: (error: any) => {

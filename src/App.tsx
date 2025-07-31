@@ -1,5 +1,4 @@
-//Vipul
-import { useEffect } from "react";
+ import { useEffect } from "react";
 import { appName } from "./config"; // Import appName from config
 import {
   BrowserRouter as Router,
@@ -51,7 +50,7 @@ import {
 import {
   DirectThankYouSlipForm,
   ThankYouSlipList,
-  ThankYouSlipDetail
+  ThankYouSlipDetail,
 } from "./modules/thankYouSlip";
 import ReferenceRouter from "./modules/reference/ReferenceRouter";
 import Chaptermeeting from "./modules/chaptermeeting/ChapterMeetingList";
@@ -68,9 +67,10 @@ import MembershipReport from "./modules/report/MembershipReport";
 import Dashboard from "./modules/Dashboard/dashboard";
 import ChapterPerformanceDashboard from "./modules/Dashboard/ChapterPerformanceDashboard";
 import ChapterVisitorList from "./modules/visitor/ChapterVisitorList";
-import SubCategories from "./modules/subCategory/subCategoryList"
+import SubCategories from "./modules/subCategory/subCategoryList";
 import PowerTeamList from "./modules/powerteam/PowerTeamList";
 import PowerTeamForm from "./modules/powerteam/PowerTeamForm";
+import { PerformanceDashboard } from "./modules/performanceDashboard";
 
 import { OneToOneList, OneToOneForm } from "./modules/oneToOne";
 import MemberSearch from "./modules/member/MemberSearch";
@@ -127,6 +127,14 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <ChapterPerformanceDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/performance-dashboard"
+              element={
+                <ProtectedRoute>
+                  <PerformanceDashboard />
                 </ProtectedRoute>
               }
             />
@@ -368,7 +376,7 @@ const App = () => {
             <Route
               path="/memberships/add"
               element={
-                <ProtectedRoute roles={['admin']}>
+                <ProtectedRoute roles={["admin"]}>
                   <CreateMembership />
                 </ProtectedRoute>
               }
@@ -376,7 +384,7 @@ const App = () => {
             <Route
               path="/memberships/:memberId/edit"
               element={
-                <ProtectedRoute roles={['admin']}>
+                <ProtectedRoute roles={["admin"]}>
                   <EditMembership />
                 </ProtectedRoute>
               }
@@ -384,7 +392,7 @@ const App = () => {
             <Route
               path="/members/:memberId/memberships/add"
               element={
-                <ProtectedRoute roles={['admin']}>
+                <ProtectedRoute roles={["admin"]}>
                   <CreateMembership />
                 </ProtectedRoute>
               }
@@ -470,7 +478,7 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
-            
+
             {/* Thank You Slip Routes */}
             <Route
               path="/dashboard/done-deal"
@@ -496,7 +504,7 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
-            
+
             <Route
               path="/memberreports"
               element={

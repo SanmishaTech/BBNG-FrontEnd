@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +10,8 @@ import { Button } from "@/components/ui";
 import { Loader } from "lucide-react";
 import ZoneRoleEditor from "./ZoneRoleAssignment"; // Import the enhanced editor component
 import { useQuery } from "@tanstack/react-query";
-import { get } from "@/services/apiService";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 interface EditCountryProps {
   countryId: number | null;
@@ -19,15 +20,19 @@ interface EditCountryProps {
 }
 
 const EditCountry = ({ countryId, isOpen, onClose }: EditCountryProps) => {
+  const navigate = useNavigate();
   // Just need to fetch initial data to check if loading
   const { data: countryData, isLoading } = useQuery({
-    queryKey: ["zones", countryId],
+    queryKey: ["zonese", countryId],
     queryFn: async () => {
-      const response = await get(`/zones/${countryId}`);
-      return response;
+      const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/zones/${countryId}`);
+      return data; // return only the data object
     },
-    enabled: !!countryId && isOpen,
   });
+
+    useEffect(() => {
+     console.log("COUNTRY DATA", countryData)
+  }, [countryData, navigate]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -45,11 +50,10 @@ const EditCountry = ({ countryId, isOpen, onClose }: EditCountryProps) => {
             {countryId && (
               <div style={{ margin: "-16px" }}>
                 {" "}
-                {/* Negative margin to extend to dialog edges */}
-                <ZoneRoleEditor
+                  <ZoneRoleEditor
                   zoneId={countryId}
                   zoneName={countryData?.name}
-                />
+                   />
               </div>
             )}
 
